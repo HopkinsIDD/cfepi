@@ -64,21 +64,20 @@ int main(int argc, char** argv){
   nvar = 3;
   init = calloc(nvar,sizeof(int));
   // Real Values
+  /*
   ntime = 365;
   init[0] = 399990;
   // init[0] = 190;
   init[1] = 10;
   init[2] = 0;
   ntrial = 200;
-  /*
+  */
   //Testing Values
   ntime = 100;
   init[0] = 3990;
-  // init[0] = 190;
   init[1] = 10;
   init[2] = 0;
-  ntrial = 1;
-  */
+  ntrial = 100;
 
   npop = 0;
   for(var = 0; var < nvar; ++var){
