@@ -1,11 +1,18 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pcg_variants.h>
+#include "pcg_variants.h"
 #include <tgmath.h>
 #include <assert.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+
+// R specific headers
+//#include <R.h>
+//#include <Rinternals.h>
+//#include <Rmath.h>
+//#include <R_ext/Rdynload.h>
+//#include <Rdefines.h>
 
 #define IND(i,j,n) ((i) * (n) + (j))
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))

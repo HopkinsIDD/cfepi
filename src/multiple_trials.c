@@ -1,12 +1,12 @@
-						\
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pcg_variants.h>
+#include "pcg_variants.h"
 #include <tgmath.h>
 #include <assert.h>
-#include "counterfactual.c"
 #include <time.h>
+
+#include "counterfactual.c"
 
 #define IND(i,j,n) ((i) * (n) + (j))
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
@@ -16,6 +16,7 @@ int no_interventionBeta(int,int,int,int,int);
 void no_interventionSusceptible(int**,int,int,int);
 int interventionBeta(int,int,int,int,int);
 void interventionSusceptible(int**,int,int,int);
+void testfun();
 
 int vaccination_occurred;
 int vaccination_time;
@@ -180,4 +181,8 @@ int interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
     return(0);
   }
   return(1);
+}
+
+void testfun(){
+  printf("Hello World\n");
 }
