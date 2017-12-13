@@ -8,6 +8,6 @@ SCRIPT=`realpath $0`
 SCRIPTPATH=`dirname $SCRIPT`
 cd $SCRIPTPATH
 
-gcc -pg -g3 -Og $SCRIPTPATH/multiple_trials.c -lgsl -lgslcblas -lm -lpcg_random -o $SCRIPTPATH/multipleTrials
+gcc -pg -g3 -Og $SCRIPTPATH/src/multiple_trials.c -lgsl -lgslcblas -lm -lpcg_random -o $SCRIPTPATH/multipleTrials
 
 $SCRIPTPATH/multipleTrials
