@@ -1,16 +1,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "pcg_variants.h"
-#include <tgmath.h>
 #include <assert.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
 
 // R specific headers
-//#include <R.h>
+#include <R.h>
 //#include <Rinternals.h>
-//#include <Rmath.h>
+#include <Rmath.h>
 //#include <R_ext/Rdynload.h>
 //#include <Rdefines.h>
 
@@ -18,27 +14,51 @@
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
 #define IND5(i,j,k,l,m,n,o,p,q) ((i) * (n) * (o) * (p) * (q) + (j) * (o) * (p) *(q) + (k) * (p) * (q) + (l) * (q) + (m))
 
-// ( (int) pcg32_boundedrand_r(&rng,INT_MAX-1) + INT_MIN);
 
-void runCounterfactualAnalysis(char*,int*, int, int, float*, float*,char*,char*,gsl_rng*);
-void runFullCounterfactualAnalysis(int*, int, int, float*, float*,char*,char*,gsl_rng*);
-void runFastCounterfactualAnalysis(int*, int, int, float*, float*,char*,char*,gsl_rng*);
+void runCounterfactualAnalysis(char*,int*, int, int, float*, float*,char*,char*);
+void runFullCounterfactualAnalysis(int*, int, int, float*, float*,char*,char*);
+void runFastCounterfactualAnalysis(int*, int, int, float*, float*,char*,char*);
 void constructTimeSeries(int* ,int, int,int (*reduceBeta)(int,int,int,int,int),void (*eliminateSusceptible)(int**, int,int,int),char*,char*,char*);
+//Fake R functions
+void sample(int**, int,int);
 
-void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname, char* ifname,gsl_rng *rng){
+
+// A utility function to swap to integers
+void swap (int *a, int *b){
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
+/*
+ * int* (*output) an integer vector to return with the sampes in it
+ * int n          The original number to sample from
+ * int k          The number of samples to draw
+*/
+void sample(int** output, int n, int k){
+  int i,j;
+  for (i = 0; i < k; i++){
+    // Pick a random index from 0 to i
+    j = floor(runif(0,i+1));
+    if(j == i + 1){j = i;}
+    // Swap arr[i] with the element at random index
+    swap(&(*output)[i], &(*output)[j]);
+  }
+}
+
+void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname, char* ifname){
   if(strcmp(type,"Full")==0){
-    runFullCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname,rng);
+    runFullCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
   }
   if(strcmp(type,"Fast")==0){
-    runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname,rng);
+    runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
   }
   fprintf(stderr,"type %s is invalid\n",type);
   exit(1);
 }
 
-void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname,char* ifname,gsl_rng *rng){
+void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname,char* ifname){
   int npop,var1,var2,time,person1,person2,counter,tmp,interaction,ninteraction,index;
   double test;
   FILE *tfp;
@@ -94,7 +114,7 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
 	if(possibleStates[var1][person1] == 0) continue;
 	for(var2 = 0; var2 <nvar; ++ var2){
 	  if(transitions[IND(var1,var2,nvar)] > 0){
-	    if(( (float) ldexp(pcg32_random(), -32)) < transitions[IND(var1,var2,nvar)]){
+	    if(runif(0.0,1.0) < transitions[IND(var1,var2,nvar)]){
 	      // fprintf(tfp,"%d,%d,%d,%d,%d\n",var1,var2,time,person1,actualTransitions[IND4(var1,var2,time,person1,nvar,ntime,npop)]);
 	      // fprintf(tfp,"%d:%d:%d->%d\n",time,person1,var1,var2);
               // fprintf(tfp,"t:");
@@ -108,21 +128,13 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
           }
 	  if(interactions[IND(var2,var1,nvar)] > 0){
 	    // Generate number of interactions;
-	    ninteraction = gsl_ran_binomial(rng,interactions[IND(var2,var1,nvar)],npop);
-	    for(interaction = 0; interaction < ninteraction; ++interaction){
-	      // Generate interaction
-	      //check to make sure targets is big enough...
-	      index = pcg32_boundedrand(npop - interaction - 1) + 1;
-	      if(targets[index] != person1){
-		tmp = targets[interaction];
-		targets[interaction] = targets[index];
-		targets[index] = tmp;
-	      }
+	    ninteraction = rbinom(interactions[IND(var2,var1,nvar)],npop);
+	    // Generate interactions
+            sample(&targets,npop,ninteraction);
+            for(interaction = 0; interaction < ninteraction; ++interaction){
 	      if(possibleStates[var2][targets[interaction] ]){
-		// fprintf(ifp,"%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
-		// printf("%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
 	        fwrite(&time,sizeof(time),1,ifp);
-	        fwrite(&(targets[interaction]),sizeof(*targets),1,ifp);
+	        fwrite(&(targets[interaction] ),sizeof(targets[interaction]),1,ifp);
 	        fwrite(&person1,sizeof(person1),1,ifp);
 	        fwrite(&var2,sizeof(var2),1,ifp);
 	        fwrite(&var1,sizeof(var1),1,ifp);
@@ -150,7 +162,7 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
   free(targets);
 }
 
-void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions, char* tfname, char* ifname, gsl_rng *rng){
+void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions, char* tfname, char* ifname){
   int npop,var1,var2,time,person1,person2,counter,tmp;
   double test;
   FILE *tfp;
@@ -201,7 +213,7 @@ void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
 	if(possibleStates[var1][person1] == 0) continue;
 	for(var2 = 0; var2 <nvar; ++ var2){
 	  if(transitions[IND(var1,var2,nvar)] > 0){
-	    if(( (float) ldexp(pcg32_random(), -32)) < transitions[IND(var1,var2,nvar)]){
+	    if(runif(0.0,1.0) < transitions[IND(var1,var2,nvar)]){
 	      // printf("Here\n");
 	      // fprintf(tfp,"%d,%d,%d,%d,%d\n",var1,var2,time,person1,actualTransitions[IND4(var1,var2,time,person1,nvar,ntime,npop)]);
 	      fprintf(tfp,"%d:%d:%d->%d\n",time,person1,var1,var2);
@@ -212,7 +224,7 @@ void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
 	    for(person2=0;person2<npop;++person2){
 	      if(possibleStates[var2][person2] == 0) continue;
 	      // actualInteractions[IND5(var1,var2,time,person1,person2,nvar,ntime,npop,npop)] =
-	      if(( (float) ldexp(pcg32_random(), -32)) < interactions[IND(var1,var2,nvar)]){
+	      if(runif(0.0,1.0) < interactions[IND(var1,var2,nvar)]){
 	        fprintf(ifp,"%d:%d-%d:%d->%d\n",time,person1,person2,var1,var2);
 	        // fprintf(ifp,"%d,%d,%d,%d,%d,%d\n",time,var1,var2,person1,person2,actualInteractions[IND5(var1,var2,time,person1,person2,nvar,ntime,npop,npop)]);
 	        nextPossibleStates[var2][person1] += 1;

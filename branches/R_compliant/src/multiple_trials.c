@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <time.h>
 
-#include "counterfactual.c"
+#include "new.counterfactual.c"
 
 #define IND(i,j,n) ((i) * (n) + (j))
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
@@ -25,12 +25,8 @@ float vaccination_percent;
 float distancing_percent;
 int distancing_time;
 
-int main(int argc, char** argv){
-  if(argc != 0+1){
-    fprintf(stderr,"Wrong number of arguments provided.\n");
-  }
-
-  int nvar,ntime,npop,person,trial,ntrial,var;
+void main(){
+  int nvar,ntime,npop,person,trial,ntrial,var,i,ni;
   int nondeterministic_seed = 0;
   float beta,gamma;
   int* init;
@@ -39,29 +35,8 @@ int main(int argc, char** argv){
   char fn[1000];
   char tfn[1000];
   char ifn[1000];
-  const gsl_rng_type * T;
-
-  gsl_rng * rng;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  rng = gsl_rng_alloc (T);
-
-
-  //Deal with seeding random number generator:
-  if (nondeterministic_seed) {
-    // Seed with external entropy
-
-    uint64_t seeds[2];
-    // This line was originally uncommented...
-    // entropy_getbytes((void*)seeds, sizeof(seeds));
-    pcg32_srandom(seeds[0], seeds[1]);
-  } else {
-    // Seed with a fixed constant
-
-    pcg32_srandom(time(NULL), 54u);
-  }
   
-  
+  GetRNGstate();
   nvar = 3;
   init = calloc(nvar,sizeof(int));
   // Real Values
@@ -104,16 +79,16 @@ int main(int argc, char** argv){
   //Only store the positive elements of the interaction matrix
   interactions[IND(0,1,nvar)] = beta/npop;
 
-
   for(trial = 0; trial < ntrial; ++trial){
     printf("Running Trial %d\n",trial);
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.0.%d.csv",trial);
     sprintf(tfn,"output/transition.0.%d.csv",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,rng);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,rng);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    return;
   }
 
   for(trial = 0; trial < ntrial; ++trial){
@@ -160,7 +135,7 @@ int main(int argc, char** argv){
   free(transitions);
   free(interactions);
   free(init);
-  gsl_rng_free(rng);
+  PutRNGstate();
 }
 
 void no_interventionSusceptible(int** states,int time,int ntime,int npop){
@@ -177,12 +152,8 @@ int interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
   if(itime <= distancing_time){
     return(1);
   }
-  if(ldexp(pcg32_random(), -32) < distancing_percent){
+  if(runif(0.0,1.0) < distancing_percent){
     return(0);
   }
   return(1);
-}
-
-void testfun(){
-  printf("Hello World\n");
 }
