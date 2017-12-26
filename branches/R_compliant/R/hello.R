@@ -186,3 +186,6 @@
 #     min(min(melted.quantile.experimental$value),min(melted.quantile.control$value)),
 #     max(max(melted.quantile.experimental$value),max(melted.quantile.control$value))
 #   )
+
+# dyn.load('src/multiple_trials.dll')
+# .C('main')
