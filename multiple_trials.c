@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "counterfactual.h"
+#include "src/counterfactual.h"
 
 // R specific headers
 #include <R.h>
@@ -39,7 +39,6 @@ int main(){
   char tfn[1000];
   char ifn[1000];
   
-  GetRNGstate();
   nvar = 3;
   init = calloc(nvar,sizeof(int));
   // Real Values
@@ -140,7 +139,6 @@ int main(){
   free(transitions);
   free(interactions);
   free(init);
-  PutRNGstate();
 }
 
 void no_interventionSusceptible(int** states,int time,int ntime,int npop){
