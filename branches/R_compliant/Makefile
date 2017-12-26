@@ -16,7 +16,7 @@ OBJECTS = {multiple_trials.c,counterfactual.c}
 .Phony=all
 all: library executables
 .Phony=library
-library: counterfactual.so multiple_trials.so
+library: counterfactual.so multiple_trials.so test.so
 .Phony=executables
 executables: multipleTrials
 .Phony=run
@@ -27,6 +27,9 @@ memcheck: executables library
 	@echo "memcheck:"
 	valgrind $(VOPTS) ./multipleTrials
 	valgrind $(VOPTS) Rscript tmp.R
+.Phony=callcheck
+callcheck: test.so
+	Rscript tmp2.R
 counterfactual.so:
 	@echo "counterfactual.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
@@ -36,6 +39,10 @@ multiple_trials.so:
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/multiple_trials.c -o multiple_trials.so
 	# $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c -o multiple_trials.so
 	$(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
+test.so:
+	@echo "test.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RC) $(SRC)/test.c
 
 multipleTrials:
 	@echo "multipleTrials:"
