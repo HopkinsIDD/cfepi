@@ -11,7 +11,7 @@ RLINKS= -L/usr/local/lib/R/lib -lR
 # RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
 
-OBJECTS = {multiple_trials.c,new.counterfactual.c}
+OBJECTS = {multiple_trials.c,counterfactual.c}
 
 .Phony=all
 all: library executables
@@ -29,21 +29,21 @@ memcheck: executables library
 	valgrind $(VOPTS) Rscript tmp.R
 counterfactual.so:
 	@echo "counterfactual.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/new.counterfactual.c -o counterfactual.so
-	$(RC) $(SRC)/new.counterfactual.c
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RC) $(SRC)/counterfactual.c
 multiple_trials.so:
 	@echo "multiple_trials.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/multiple_trials.c -o multiple_trials.so
-	# $(RC) $(SRC)/multiple_trials.c $(SRC)/new.counterfactual.c -o multiple_trials.so
-	$(RC) $(SRC)/multiple_trials.c $(SRC)/new.counterfactual.c
+	# $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c -o multiple_trials.so
+	$(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
 
 multipleTrials:
 	@echo "multipleTrials:"
-	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/new.counterfactual.c -o multipleTrials $(LINKS) $(RLINKS)
+	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c -o multipleTrials $(LINKS) $(RLINKS)
 .Phony=simultaneous
 simultaneous:
 	@echo "simultaneous:"
-	$(RC) $(SRC)/multiple_trials.c $(SRC)/new.counterfactual.c
+	$(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
 	
 .Phony=clean
 clean:
