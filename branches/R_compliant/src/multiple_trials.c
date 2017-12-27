@@ -30,7 +30,7 @@ double distancing_percent;
 int distancing_time;
 
 int main(){
-  int nvar,ntime,npop,trial,ntrial,var;
+  int nvar,ntime,npop,trial,ntrial,var,var2;
   double beta,gamma;
   int* init;
   double* transitions;
@@ -84,6 +84,25 @@ int main(){
 
   for(trial = 0; trial < ntrial; ++trial){
     printf("Running Trial %d\n",trial);
+    printf("init:");
+    for(var = 0; var < nvar; ++var){
+      printf(" %d",init[var]);
+    }
+    printf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
+    for(var = 0; var < nvar; ++var){
+      for(var2 = 0; var2 < nvar; ++var2){
+        printf(" %f",transitions[IND(var,var2,nvar)]);
+      }
+      printf("\n");
+    }
+    printf("\ninteractions:\n");
+    for(var = 0; var < nvar; ++var){
+      for(var2 = 0; var2 < nvar; ++var2){
+        printf(" %f",interactions[IND(var,var2,nvar)]);
+      }
+      printf("\n");
+    }
+    printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.0.%d.csv",trial);
     sprintf(tfn,"output/transition.0.%d.csv",trial);
@@ -141,24 +160,4 @@ int main(){
   free(interactions);
   free(init);
   PutRNGstate();
-}
-
-void no_interventionSusceptible(int** states,int time,int ntime,int npop){
-}
-
-int no_interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
-  return(1);
-}
-
-void interventionSusceptible(int** states,int time,int ntime,int npop){
-}
-
-int interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
-  if(itime <= distancing_time){
-    return(1);
-  }
-  if(runif(0.0,1.0) < distancing_percent){
-    return(0);
-  }
-  return(1);
 }

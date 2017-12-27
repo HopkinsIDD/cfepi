@@ -10,7 +10,7 @@ LINKS= -lm
 RLINKS= -L/usr/local/lib/R/lib -lR
 # RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
-RDBG = MAKEFLAGS="CFLAGS=-g3"
+RDBG = MAKEFLAGS="CFLAGS=-pg3"
 
 OBJECTS = {multiple_trials.c,counterfactual.c}
 
@@ -26,9 +26,9 @@ run: executables
 .Phony=memcheck
 memcheck: executables library
 	@echo "memcheck:"
-	valgrind $(VOPTS) Rscript test.R -d valgrind
 	valgrind $(VOPTS) ./multipleTrials
 	valgrind $(VOPTS) Rscript tmp.R 
+	valgrind $(VOPTS) Rscript test.R -d valgrind
 .Phony=callcheck
 callcheck: test.so
 	Rscript tmp2.R
