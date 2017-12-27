@@ -75,14 +75,56 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   
   //Cleanup starts here
 
-  UNPROTECT(1);
-  free(transitions);
-  free(interactions);
-  free(filename);
-  free(init);
   PutRNGstate();
-  c2Rdataframe(output,nvar,ntime,&Routput);
-  return(Routput);
+  return(R_NilValue);
+}
+
+SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptible, SEXP Rntime, SEXP Rntrial){
+  double* output;
+  SEXP Routput;
+  int* init;
+  int nvar,nvar1,nvar2,ntime,trial,ntrial;
+  char* filename;
+  char ifn[1000];
+  char tfn[1000];
+  char fn[1000];
+  int var,var2;
+
+  GetRNGstate();
+  
+  R2cstring(Rfilename,&filename);
+  R2cvecint(RinitialConditions,&init,&nvar);
+  R2cint(Rntime,&ntime);
+  R2cint(Rntrial,&ntrial);
+
+  //Things are loaded now
+
+  for(trial = 0; trial < ntrial; ++trial){
+    printf("Running Trial %d\n",trial);
+    sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
+    sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
+    sprintf(fn,"output/%s.noint.%d.csv",filename,trial);
+    printf("init:");
+    for(var = 0; var < nvar; ++var){
+      printf(" %d",init[var]);
+    }
+    printf("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
+    constructTimeSeries(
+      init,
+      nvar,
+      ntime,
+      &no_interventionBeta,
+      &no_interventionSusceptible,
+      tfn,
+      ifn,
+      fn
+    );
+  }
+  
+  //Cleanup starts here
+
+  PutRNGstate();
+  return(R_NilValue);
 }
 
 /*

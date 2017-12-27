@@ -12,5 +12,7 @@ void constructTimeSeries(int* ,int, int,int (*reduceBeta)(int,int,int,int,int),v
 //Fake R functions
 void sample(int**, int,int);
 void swap(int*,int*);
+void no_interventionSusceptible(int**,int,int,int);
+int no_interventionBeta(int,int,int,int,int);
 
 #endif //COUNTERFACTUAL_H_
