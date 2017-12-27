@@ -13,10 +13,6 @@ ntrial <- 1
 
 # dyn.load('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
 # dyn.load('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
-# .Call('setupCounterfactualAnalysis',"first_counterfactual",init,inter,trans,ntime,ntrial)
-# dyn.unload('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
-# dyn.unload('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
-
 dyn.load('src/counterfactual.dll')
 .Call('setupCounterfactualAnalysis',
   "first_counterfactual",
@@ -35,4 +31,6 @@ dyn.load('src/counterfactual.dll')
   ntrial
 )
 dyn.unload('src/counterfactual.dll')
+# dyn.unload('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
+# dyn.unload('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
 results <- read.csv('output/first_counterfactual.noint.0.csv',header = FALSE)[,-4]
