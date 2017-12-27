@@ -24,17 +24,17 @@ void testfun();
 
 int vaccination_occurred;
 int vaccination_time;
-float vaccination_percent;
+double vaccination_percent;
 
-float distancing_percent;
+double distancing_percent;
 int distancing_time;
 
 int main(){
   int nvar,ntime,npop,trial,ntrial,var;
-  float beta,gamma;
+  double beta,gamma;
   int* init;
-  float* transitions;
-  float* interactions;
+  double* transitions;
+  double* interactions;
   char fn[1000];
   char tfn[1000];
   char ifn[1000];
@@ -74,8 +74,8 @@ int main(){
   distancing_time = 30;
   printf("Expected R0 is %f\n",beta/gamma);
 
-  transitions = calloc(nvar*nvar,sizeof(float));
-  interactions = calloc(nvar*nvar,sizeof(float));
+  transitions = calloc(nvar*nvar,sizeof(double));
+  interactions = calloc(nvar*nvar,sizeof(double));
   //Only store the positive elements of the transition matrix
   transitions[IND(1,2,nvar)] = gamma;
   //Only store the positive elements of the interaction matrix

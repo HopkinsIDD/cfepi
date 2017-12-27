@@ -34,7 +34,7 @@ void sample(int** output, int n, int k){
   }
 }
 
-void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname, char* ifname){
+void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, double* transitions, double* interactions,char* tfname, char* ifname){
   if(strcmp(type,"Full")==0){
     runFullCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
@@ -47,7 +47,7 @@ void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, float*
   return;
 }
 
-void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions,char* tfname,char* ifname){
+void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transitions, double* interactions,char* tfname,char* ifname){
   int npop,var1,var2,time,person1,counter,interaction;
   double ninteraction;
   FILE *tfp;
@@ -129,6 +129,7 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
 	    ninteraction = rbinom(npop,interactions[IND(var2,var1,nvar)]);
             // printf("There should be %f interactions\n",ninteraction);
 	    // Generate interactions
+            printf("\tnpop: %d\n\tninteraction: %d\n",npop,ninteraction);
             sample(&targets,npop,ninteraction);
             for(interaction = 0; interaction < ninteraction; ++interaction){
 	      if(possibleStates[var2][targets[interaction] ]){
@@ -176,7 +177,7 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, float* transit
   free(targets);
 }
 
-void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, float* transitions, float* interactions, char* tfname, char* ifname){
+void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, double* transitions, double* interactions, char* tfname, char* ifname){
   int npop,var1,var2,time,person1,person2,counter;
   FILE *tfp;
   FILE *ifp;
