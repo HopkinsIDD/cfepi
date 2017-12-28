@@ -11,6 +11,9 @@
 //#include <R_ext/Rdynload.h>
 //#include <Rdefines.h>
 
+#define CONSTRUCT_DEBUG 0
+#define RUN_DEBUG 0
+
 // A utility function to swap to integers
 void swap (int *a, int *b){
   int temp = *a;
@@ -52,10 +55,12 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   double ninteraction;
   FILE *tfp;
   FILE *ifp;
-  // FILE *tfp2;
-  // FILE *ifp2;
+  FILE *tfp2;
+  FILE *ifp2;
+  FILE *ofp2;
   char tfn2[1000];
   char ifn2[1000];
+  char ofn2[1000];
   npop = 0;
   for(var1 = 0; var1< nvar; ++var1){
     npop = npop + init[var1];
@@ -78,7 +83,7 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   counter = 0;
   for(var1 = 0; var1 < nvar; ++ var1){
     for(person1 = counter; person1 < (counter + init[var1]); ++ person1){
-      nextPossibleStates[var1][person1] += 1;
+      nextPossibleStates[var1][person1] = 3;
     }
     counter = counter + init[var1];
   }
@@ -89,10 +94,12 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   ifp = fopen(ifname,"wb");
   sprintf(ifn2,"%s.csv",ifname);
   sprintf(tfn2,"%s.csv",tfname);
-  // tfp2 = fopen(tfn2,"w");
-  // ifp2 = fopen(ifn2,"w");
-  // fprintf(ifp2,"Start\n");
-  // fflush(ifp2);
+  sprintf(ofn2,"%s.all.csv",ifname);
+  if(CONSTRUCT_DEBUG==1){
+    tfp2 = fopen(tfn2,"w");
+    ifp2 = fopen(ifn2,"w");
+    ofp2 = fopen(ofn2, "w");
+  }
 
   targets = malloc(npop * sizeof(int));
   for(person1 = 0; person1 < npop; ++person1){
@@ -100,10 +107,21 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   }
 
   for(time = 0; time < ntime; ++time){
+    counter = 0;
     for(var1 = 0; var1 < nvar; ++var1){
       for(person1=0;person1<npop;++person1){
 	possibleStates[var1][person1] = nextPossibleStates[var1][person1];
       }
+      for(person1 = 0; person1 < counter; ++person1){
+        nextPossibleStates[var1][person1] = MIN(nextPossibleStates[var1][person1],1);
+      }
+      for(person1 = counter; person1 < (counter + init[var1]); ++ person1){
+        nextPossibleStates[var1][person1] = 2;
+      }
+      for(person1 = (counter + init[var1]); person1 < npop; ++person1){
+        nextPossibleStates[var1][person1] = MIN(nextPossibleStates[var1][person1],1);
+      }
+      counter = counter + init[var1];
     }
       
     for(person1=0;person1<npop;++person1){
@@ -115,13 +133,16 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
 	      // fprintf(tfp,"%d,%d,%d,%d,%d\n",var1,var2,time,person1,actualTransitions[IND4(var1,var2,time,person1,nvar,ntime,npop)]);
 	      // fprintf(tfp,"%d:%d:%d->%d\n",time,person1,var1,var2);
               // fprintf(tfp,"t:");
-	      // fprintf(tfp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
-	      // fprintf(tfp2,"%d:%d:%d->%d\n",sizeof(time),sizeof(person1),sizeof(var1),sizeof(var2));
+	      if(CONSTRUCT_DEBUG==1){
+                fprintf(tfp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
+                fprintf(ofp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
+              }
 	      fwrite(&time,sizeof(time),1,tfp);
 	      fwrite(&person1,sizeof(person1),1,tfp);
 	      fwrite(&var1,sizeof(var1),1,tfp);
 	      fwrite(&var2,sizeof(var2),1,tfp);
-	      nextPossibleStates[var2][person1] += 1;
+	      nextPossibleStates[var2][person1] = 2;
+	      nextPossibleStates[var1][person1] = nextPossibleStates[var1][person1] == 2 ? 2 : 0;
 	    }
           }
 	  if(interactions[IND(var2,var1,nvar)] > 0){
@@ -138,8 +159,10 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
             sample(&targets,npop,ninteraction);
             for(interaction = 0; interaction < ninteraction; ++interaction){
 	      if(possibleStates[var2][targets[interaction] ]){
-                // fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
-                // fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",sizeof(time),sizeof(targets[interaction]),sizeof(person1),sizeof(var2),sizeof(var1) );
+                if(CONSTRUCT_DEBUG==1){
+                  fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
+                  fprintf(ofp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
+                }
 	        /*
 	        fwrite(&time,sizeof(time),1,ifp);
 	        fwrite(&(targets[interaction] ),sizeof(targets[interaction]),1,ifp);
@@ -152,25 +175,36 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
 	        fwrite(&person1,sizeof(int),1,ifp);
 	        fwrite(&var2,sizeof(int),1,ifp);
 	        fwrite(&var1,sizeof(int),1,ifp);
-		nextPossibleStates[var1][ targets[interaction] ] += 1;
+		nextPossibleStates[var1][ targets[interaction] ] = 2;
+		nextPossibleStates[var2][ targets[interaction] ] = nextPossibleStates[var1][targets[interaction]] == 2 ? 2 : 0;
 	      }
 	    }
           }
 	}
       }
     }
+    if(CONSTRUCT_DEBUG==1){
+      for(var1 = 0; var1 < nvar; ++var1){
+        for(person1 = 0 ; person1 < npop; ++person1){
+          fprintf(ofp2,"%d ", nextPossibleStates[var1][person1]);
+        }
+        fprintf(ofp2,"\n");
+      }
+    }
   }
 	  
   fflush(ifp);
   fflush(tfp);
-  // fflush(ifp2);
-  // fflush(tfp2);
   fclose(tfp);
   fclose(ifp);
-  // fclose(tfp2);
-  // fclose(ifp2);
-  // free(actualTransitions);
-  // free(actualInteractions);
+  if(CONSTRUCT_DEBUG==1){
+    fflush(ifp2);
+    fflush(tfp2);
+    fflush(ofp2);
+    fclose(tfp2);
+    fclose(ifp2);
+    fclose(ofp2);
+  }
   for(var1 = 0; var1 < nvar; ++ var1){
     free(possibleStates[var1]);
   }
@@ -287,21 +321,22 @@ void constructTimeSeries(
 ){
   int var,person,time,reading,ttime,tperson,tvar1,tvar2,itime,iperson1,iperson2,ivar1,ivar2,reading_file_1,reading_file_2,npop,err,counter,ctime,mtime;
   FILE *ofp;
-  // FILE *ofp2;
+  FILE *ofp2;
+  char ofn2[1000];
   FILE *tfp;
   FILE *ifp;
   int** states;
   int* cur_states;
   int* state_counts;
-  char ofn2[1000];
 
   npop = 0;
   for(var = 0; var < nvar; ++ var){
     npop = npop + init[var];
   }
   sprintf(ofn2,"%s.csv",outputfilename);
-  // ofp2 = fopen("output/test3.csv","w");
-  // ofp2 = fopen(ofn2,"w");
+  if(RUN_DEBUG==1){
+    ofp2 = fopen(ofn2,"w");
+  }
   state_counts = malloc(nvar*sizeof(int));
   states = malloc((1+ntime)*sizeof(int*));
   if(states == NULL){fprintf(stderr,"Malloc error for states\n");}
@@ -312,7 +347,9 @@ void constructTimeSeries(
   counter = 0;
   for(var = 0; var < nvar; ++ var){
     for(person = counter; person < counter+init[var];++person){
-      // fprintf(ofp2,"person %d: %d\n",person,var);
+      if(RUN_DEBUG==1){
+        fprintf(ofp2,"person %d: %d\n",person,var);
+      }
       for(time = 0; time < (1+ntime); ++time){
 	states[time][person] = var;
 	cur_states[person] = var;
@@ -333,7 +370,9 @@ void constructTimeSeries(
   ttime = 0;
   mtime = 0;
   while(reading == 1){
-    // fprintf(ofp2,"Loop\n");
+    if(RUN_DEBUG==1){
+      fprintf(ofp2,"Loop\n");
+    }
     if(feof(tfp)){
       reading_file_1 = 0;
       if(feof(ifp)){
@@ -352,15 +391,15 @@ void constructTimeSeries(
       fprintf(stderr,"This should not happen\n");
       return;
     }
-    // fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    if(RUN_DEBUG==1){
+      fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    }
     if(reading_file_1){
-      // err = fscanf(tfp,"%d:%d:%d->%d\n",&ttime,&tperson,&tvar1,&tvar2);
       err = fread(&ttime,sizeof(int),1,tfp);
       err += fread(&tperson,sizeof(int),1,tfp);
       err += fread(&tvar1,sizeof(int),1,tfp);
       err += fread(&tvar2,sizeof(int),1,tfp);
       //Error checking
-      // printf("%d:%d:%d->%d\n",ttime,tperson,tvar1,tvar2);
       if((err < 4)){
         if(!feof(tfp)){
           fprintf(stderr,"Only caught %d params/4\n",err);
@@ -372,7 +411,9 @@ void constructTimeSeries(
           tvar2=0;
         }
       } else {
-        // fprintf(ofp2,"%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
+        if(RUN_DEBUG==1){
+          fprintf(ofp2,"%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
+        }
       }
     }
     if(reading_file_2){
@@ -396,9 +437,10 @@ void constructTimeSeries(
           itime=ntime-1;
         }
       } else {
-        // fprintf(ofp2,"%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
+        if(RUN_DEBUG==1){
+          fprintf(ofp2,"%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
+        }
       }
-      // printf("Matched %d/5\n",err);
     }
     reading_file_1 = ttime <= ctime ? 1 : 0 ;
     reading_file_2 = itime <= ctime ? 1 : 0 ;
@@ -409,9 +451,13 @@ void constructTimeSeries(
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
-          // fprintf(ofp2,"%d,",cur_states[person]);
+          if(RUN_DEBUG==1){
+            fprintf(ofp2,"%d,",cur_states[person]);
+          }
         }
-        // fprintf(ofp2,"\n");
+        if(RUN_DEBUG==1){
+          fprintf(ofp2,"\n");
+        }
         // Printf("\t\t\t%d\n",ctime);
         // Beginning of time ctime
         eliminateSusceptibles(states,ctime,ntime,npop);
@@ -484,7 +530,9 @@ void constructTimeSeries(
   free(cur_states);
   free(state_counts);
   fclose(ofp);
-  // fclose(ofp2);
+  if(RUN_DEBUG==1){
+    fclose(ofp2);
+  }
   fclose(tfp);
   fclose(ifp);
 }

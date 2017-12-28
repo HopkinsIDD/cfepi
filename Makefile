@@ -10,7 +10,8 @@ LINKS= -lm
 RLINKS= -L/usr/local/lib/R/lib -lR
 # RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
-RDBG = MAKEFLAGS="CFLAGS=-pg3"
+RDBG = MAKEFLAGS="CFLAGS=-pg -g3"
+RVAL = R -d valgrind --debugger-args="$(VOPTS)"
 
 OBJECTS = {multiple_trials.c,counterfactual.c}
 
