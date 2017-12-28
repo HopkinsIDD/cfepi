@@ -4,6 +4,8 @@
 #define IND(i,j,n) ((i) * (n) + (j))
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
 #define IND5(i,j,k,l,m,n,o,p,q) ((i) * (n) * (o) * (p) * (q) + (j) * (o) * (p) *(q) + (k) * (p) * (q) + (l) * (q) + (m))
+#define MAX(x,y) (x) > (y) ? (x) : (y);
+#define MIN(x,y) (x) < (y) ? (x) : (y);
 
 void runCounterfactualAnalysis(char*,int*, int, int, double*, double*,char*,char*);
 void runFullCounterfactualAnalysis(int*, int, int, double*, double*,char*,char*);
