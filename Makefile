@@ -1,39 +1,67 @@
 # Makefile for building the C language shared library for the CalcMatrixAvg demonstration package.
-CC = gcc
+CC = gcc -g3
+RC = R CMD SHLIB
 SRC=src
 LOPTS= -c -fPIC
-POPTS=-g -O2
-ROPTS = -fPIC -g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORITFY_SOURCE=2 -g -c
-LINKS= -lgsl -lgslcblas -lm
+VOPTS= --track-origins=yes --leak-check=full
+# POPTS=-g -O2
+ROPTS=$(shell R CMD config --cppflags)
+LINKS= -lm
+RLINKS= -L/usr/local/lib/R/lib -lR
+# RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
+RDBG = MAKEFLAGS="CFLAGS=-pg -g3"
+RVAL = R -d valgrind --debugger-args="$(VOPTS)"
 
 OBJECTS = {multiple_trials.c,counterfactual.c}
 
 .Phony=all
-all: library executables Rlib
+all: library executables
 .Phony=library
-library: counterfactual.so multiple_trials.so
+library: counterfactual.so multiple_trials.so test.so rinterface.so
 .Phony=executables
 executables: multipleTrials
-.Phony=Rlib
-Rlib: test.so test2.so
+.Phony=run
 run: executables
 	./multipleTrials
+.Phony=memcheck
+memcheck: executables library
+	@echo "memcheck:"
+	valgrind $(VOPTS) ./multipleTrials
+	valgrind $(VOPTS) Rscript tmp.R 
+	valgrind $(VOPTS) Rscript test.R -d valgrind
+.Phony=callcheck
+callcheck: test.so
+	Rscript tmp2.R
+.Phony=packagetest
+packagetest: rinterface.so counterfactual.so
+	Rscript test.R
 counterfactual.so:
-	$(CC) $(POPTS) $(LOPTS) $(SRC)/counterfactual.c -o counterfactual.so $(LINKS)
+	@echo "counterfactual.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RDBG) $(RC) $(SRC)/counterfactual.c
 multiple_trials.so:
-	$(CC) $(POPTS) $(LOPTS) $(SRC)/multiple_trials.c -o multiple_trials.so $(LINKS)
-multipleTrials:
-	$(CC) $(POPTS) $(SRC)/multiple_trials.c -o multipleTrials $(LINKS)
+	@echo "multiple_trials.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/multiple_trials.c -o multiple_trials.so
+	# $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c -o multiple_trials.so
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
 test.so:
-	$(CC) $(ROPTS) $(SRC)/multiple_trials.c -o test.so $(LINKS)
-test2.so:
-	$(CC) $(ROPTS) $(SRC)/counterfactual.c -o test2.so $(LINKS)
+	@echo "test.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RDBG) $(RC) $(SRC)/test.c
+
+rinterface.so:
+	@echo "rinterface.so"
+	$(RDBG) $(RC) $(SRC)/rinterface.c $(SRC)/counterfactual.c
+
+multipleTrials:
+	@echo "multipleTrials:"
+	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c -o multipleTrials $(LINKS) $(RLINKS)
+.Phony=simultaneous
+simultaneous:
+	@echo "simultaneous:"
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
 	
 .Phony=clean
 clean:
-	-rm *.so multipleTrials output/*
-
-#gcc -std=gnu99 -I/usr/share/R/include -DNDEBUG      -fpic  -g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -c counterfactual.c -o counterfactual.o
-#gcc -std=gnu99 -I/usr/share/R/include -DNDEBUG      -fpic  -g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -c multiple_trials.c -o multiple_trials.o
-#gcc -std=gnu99 -shared -L/usr/lib/R/lib -Wl,-Bsymbolic-functions -Wl,-z,relro -o counterfactual.so counterfactual.o multiple_trials.o -L/usr/lib/R/lib -lR
+	$(RM) *.so src/*.so src/*.o *.o multipleTrials output/* src/*.dll

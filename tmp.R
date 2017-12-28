@@ -1,0 +1,5 @@
+dyn.load('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
+dyn.load('~/svn/counterfactual/branches/R_compliant/src/multiple_trials.so')
+.C('main')
+dyn.unload('~/svn/counterfactual/branches/R_compliant/src/multiple_trials.so')
+dyn.unload('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
