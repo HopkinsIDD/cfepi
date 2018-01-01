@@ -14,19 +14,20 @@
 #define CONSTRUCT_DEBUG 0
 #define RUN_DEBUG 0
 
-// A utility function to swap to integers
-void swap (int *a, int *b){
-  int temp = *a;
+// see header file for type definitions.  All custom types are integers of a particular size.
+// A utility function to swap to people
+void swap (person_t *a, person_t *b){
+  person_t temp = *a;
   *a = *b;
   *b = temp;
 }
 /*
- * int* (*output) an integer vector to return with the sampes in it
- * int n          The original number to sample from
- * int k          The number of samples to draw
+ * person_t* (*output) an integer vector to return with the sampes in it
+ * person_t          n The original number to sample from
+ * person_t          k The number of samples to draw
 */
-void sample(int** output, int n, int k){
-  int i,j;
+void sample(person_t* *output, person_t n, person_t k){
+  person_t i,j;
   for (i = 0; i < k; i++){
     // Pick a random index from 0 to i
     j = runif(i,n+1);
@@ -37,11 +38,7 @@ void sample(int** output, int n, int k){
   }
 }
 
-void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, double* transitions, double* interactions,char* tfname, char* ifname){
-  if(strcmp(type,"Full")==0){
-    runFullCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
-    return;
-  }
+void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname, char* ifname){
   if(strcmp(type,"Fast")==0){
     runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
@@ -50,8 +47,10 @@ void runCounterfactualAnalysis(char* type, int* init,int nvar, int ntime, double
   return;
 }
 
-void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transitions, double* interactions,char* tfname,char* ifname){
-  int npop,var1,var2,time,person1,counter,interaction;
+void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname,char* ifname){
+  var_t var1,var2;
+  person_t person1, npop,interaction,counter;
+  step_t time;
   double ninteraction;
   FILE *tfp;
   FILE *ifp;
@@ -65,9 +64,9 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   for(var1 = 0; var1< nvar; ++var1){
     npop = npop + init[var1];
   }
-  int** possibleStates;
-  int** nextPossibleStates;
-  int* targets;
+  bool_t** possibleStates;
+  bool_t** nextPossibleStates;
+  person_t* targets;
   //Note: To help with memory useage, we may want to modify these to be more efficient
   // actualTransitions = malloc(nvar*nvar*ntime*npop*sizeof(int));
   // actualInteractions = malloc(nvar*nvar*ntime*npop*npop*sizeof(int));
@@ -101,7 +100,9 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
     ofp2 = fopen(ofn2, "w");
   }
 
-  targets = malloc(npop * sizeof(int));
+  printf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  printf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  targets = malloc(npop * sizeof(person_t));
   for(person1 = 0; person1 < npop; ++person1){
     targets[person1] = person1;
   }
@@ -137,10 +138,10 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
                 fprintf(tfp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
                 fprintf(ofp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
               }
-	      fwrite(&time,sizeof(time),1,tfp);
-	      fwrite(&person1,sizeof(person1),1,tfp);
-	      fwrite(&var1,sizeof(var1),1,tfp);
-	      fwrite(&var2,sizeof(var2),1,tfp);
+	      fwrite(&time,sizeof(step_t),1,tfp);
+	      fwrite(&person1,sizeof(person_t),1,tfp);
+	      fwrite(&var1,sizeof(var_t),1,tfp);
+	      fwrite(&var2,sizeof(var_t),1,tfp);
 	      nextPossibleStates[var2][person1] = 2;
 	      nextPossibleStates[var1][person1] = nextPossibleStates[var1][person1] == 2 ? 2 : 0;
 	    }
@@ -170,11 +171,11 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
 	        fwrite(&var2,sizeof(var2),1,ifp);
 	        fwrite(&var1,sizeof(var1),1,ifp);
 	        */
-	        fwrite(&time,sizeof(int),1,ifp);
-	        fwrite(&(targets[interaction] ),sizeof(int),1,ifp);
-	        fwrite(&person1,sizeof(int),1,ifp);
-	        fwrite(&var2,sizeof(int),1,ifp);
-	        fwrite(&var1,sizeof(int),1,ifp);
+	        fwrite(&time,sizeof(step_t),1,ifp);
+	        fwrite(&(targets[interaction] ),sizeof(person_t),1,ifp);
+	        fwrite(&person1,sizeof(person_t),1,ifp);
+	        fwrite(&var2,sizeof(var_t),1,ifp);
+	        fwrite(&var1,sizeof(var_t),1,ifp);
 		nextPossibleStates[var1][ targets[interaction] ] = 2;
 		nextPossibleStates[var2][ targets[interaction] ] = nextPossibleStates[var1][targets[interaction]] == 2 ? 2 : 0;
 	      }
@@ -216,118 +217,29 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   free(targets);
 }
 
-void runFullCounterfactualAnalysis(int* init,int nvar, int ntime, double* transitions, double* interactions, char* tfname, char* ifname){
-  int npop,var1,var2,time,person1,person2,counter;
-  FILE *tfp;
-  FILE *ifp;
-  npop = 0;
-  for(var1 = 0; var1< nvar; ++var1){
-    npop = npop + init[var1];
-  }
-  int** possibleStates;
-  int** nextPossibleStates;
-  //Note: To help with memory useage, we may want to modify these to be more efficient
-  // actualTransitions = malloc(nvar*nvar*ntime*npop*sizeof(int));
-  // actualInteractions = malloc(nvar*nvar*ntime*npop*npop*sizeof(int));
-  possibleStates = calloc(nvar,sizeof(int*));
-  for(var1 = 0; var1 < nvar; ++ var1){
-    possibleStates[var1] = calloc(npop,sizeof(int));
-  }
-  nextPossibleStates = malloc(nvar*sizeof(int*));
-  for(var1 = 0; var1 < nvar; ++ var1){
-    nextPossibleStates[var1] = calloc(npop,sizeof(int));
-  }
-  //Construct initial states:
-  counter = 0;
-  for(var1 = 0; var1 < nvar; ++ var1){
-    for(person1 = counter; person1 < (counter + init[var1]); ++ person1){
-      nextPossibleStates[var1][person1] += 1;
-    }
-    counter = counter + init[var1];
-  }
-  assert(counter == npop);
-
-  // printf("Looping Variables:\n\tnvar is %d\n\tntime is %d\n\tnpop is %d\n",nvar,ntime,npop);
-  tfp = fopen(tfname,"w");
-  ifp = fopen(ifname,"w");
-
-  for(time = 0; time < ntime; ++time){
-    // printf("Time %d of %d\n",time,ntime);
-    for(var1 = 0; var1 < nvar; ++var1){
-      for(person1=0;person1<npop;++person1){
-	possibleStates[var1][person1] = nextPossibleStates[var1][person1];
-      }
-    }
-      
-    for(person1=0;person1<npop;++person1){
-      for(var1 = 0; var1 <nvar; ++var1){
-	if(possibleStates[var1][person1] == 0) continue;
-	for(var2 = 0; var2 <nvar; ++ var2){
-	  if(transitions[IND(var1,var2,nvar)] > 0){
-	    if(runif(0.0,1.0) < transitions[IND(var1,var2,nvar)]){
-	      // printf("Here\n");
-	      // fprintf(tfp,"%d,%d,%d,%d,%d\n",var1,var2,time,person1,actualTransitions[IND4(var1,var2,time,person1,nvar,ntime,npop)]);
-	      fprintf(tfp,"%d:%d:%d->%d\n",time,person1,var1,var2);
-	      nextPossibleStates[var2][person1] += 1;
-	    }
-          }
-	  if(interactions[IND(var1,var2,nvar)] > 0){
-	    for(person2=0;person2<npop;++person2){
-	      if(possibleStates[var2][person2] == 0) continue;
-	      // actualInteractions[IND5(var1,var2,time,person1,person2,nvar,ntime,npop,npop)] =
-	      if(runif(0.0,1.0) < interactions[IND(var1,var2,nvar)]){
-	        fprintf(ifp,"%d:%d-%d:%d->%d\n",time,person1,person2,var1,var2);
-	        // fprintf(ifp,"%d,%d,%d,%d,%d,%d\n",time,var1,var2,person1,person2,actualInteractions[IND5(var1,var2,time,person1,person2,nvar,ntime,npop,npop)]);
-	        nextPossibleStates[var2][person1] += 1;
-	      }
-	    }
-          }
-	}
-      }
-    }
-  }
-  for(person1 = 0;person1 < npop; ++person1){
-    for(var1 = 0; var1 < nvar; ++var1){
-      // printf("%d,",possibleStates[var1][person1]);
-    }
-    // printf("\n");
-  }
-	  
-  fflush(ifp);
-  fflush(tfp);
-  fclose(tfp);
-  fclose(ifp);
-  // free(actualTransitions);
-  // free(actualInteractions);
-  for(var1 = 0; var1 < nvar; ++ var1){
-    free(possibleStates[var1]);
-  }
-  for(var1 = 0; var1 < nvar; ++ var1){
-    free(nextPossibleStates[var1]);
-  }
-  free(possibleStates);
-  free(nextPossibleStates);
-}
-
 void constructTimeSeries(
-  int* init,
-  int nvar,
-  int ntime,
-  int (*reduceBeta)(int,int,int,int,int),
-  void (*eliminateSusceptibles)(int**,int,int,int),
+  person_t* init,
+  var_t nvar,
+  step_t ntime,
+  bool_t (*reduceBeta)(step_t,person_t,person_t,var_t,var_t), // reduceBeta(itime,iperson1,iperson2,ivar1,ivar2)
+  void (*eliminateSusceptibles)(var_t**,step_t,step_t,person_t), // eliminateSusceptibles(states,ctime,ntime,npop);
   char* tfname,
   char* ifname,
   char* outputfilename
 ){
-  int var,person,time,reading,ttime,tperson,tvar1,tvar2,itime,iperson1,iperson2,ivar1,ivar2,reading_file_1,reading_file_2,npop,err,counter,ctime,mtime;
+  int err;
+  var_t var, tvar1,tvar2,ivar1,ivar2;
+  person_t person,tperson,iperson1,iperson2,npop,counter;
+  step_t time, ttime, itime, mtime,ctime;
+  bool_t reading,reading_file_1,reading_file_2;
   FILE *ofp;
   FILE *ofp2;
   char ofn2[1000];
   FILE *tfp;
   FILE *ifp;
-  int** states;
-  int* cur_states;
-  int* state_counts;
+  var_t** states;
+  var_t* cur_states;
+  person_t* state_counts;
 
   npop = 0;
   for(var = 0; var < nvar; ++ var){
@@ -337,12 +249,12 @@ void constructTimeSeries(
   if(RUN_DEBUG==1){
     ofp2 = fopen(ofn2,"w");
   }
-  state_counts = malloc(nvar*sizeof(int));
-  states = malloc((1+ntime)*sizeof(int*));
+  state_counts = malloc(nvar*sizeof(person_t));
+  states = malloc((1+ntime)*sizeof(var_t*));
   if(states == NULL){fprintf(stderr,"Malloc error for states\n");}
-  cur_states = calloc(npop,sizeof(int));
+  cur_states = calloc(npop,sizeof(var_t));
   for(time = 0; time < (ntime+1); ++ time){
-    states[time] = calloc(npop,sizeof(int));
+    states[time] = calloc(npop,sizeof(var_t));
   }
   counter = 0;
   for(var = 0; var < nvar; ++ var){
@@ -395,10 +307,10 @@ void constructTimeSeries(
       fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     }
     if(reading_file_1){
-      err = fread(&ttime,sizeof(int),1,tfp);
-      err += fread(&tperson,sizeof(int),1,tfp);
-      err += fread(&tvar1,sizeof(int),1,tfp);
-      err += fread(&tvar2,sizeof(int),1,tfp);
+      err = fread(&ttime,sizeof(step_t),1,tfp);
+      err += fread(&tperson,sizeof(person_t),1,tfp);
+      err += fread(&tvar1,sizeof(var_t),1,tfp);
+      err += fread(&tvar2,sizeof(var_t),1,tfp);
       //Error checking
       if((err < 4)){
         if(!feof(tfp)){
@@ -418,11 +330,11 @@ void constructTimeSeries(
     }
     if(reading_file_2){
       //err = fscanf(ifp,"%d:%d-%d:%d->%d\n",&itime,&iperson1,&iperson2,&ivar1,&ivar2);
-      err = fread(&itime,sizeof(int),1,ifp);
-      err += fread(&iperson1,sizeof(int),1,ifp);
-      err += fread(&iperson2,sizeof(int),1,ifp);
-      err += fread(&ivar1,sizeof(int),1,ifp);
-      err += fread(&ivar2,sizeof(int),1,ifp);
+      err = fread(&itime,sizeof(step_t),1,ifp);
+      err += fread(&iperson1,sizeof(person_t),1,ifp);
+      err += fread(&iperson2,sizeof(person_t),1,ifp);
+      err += fread(&ivar1,sizeof(var_t),1,ifp);
+      err += fread(&ivar2,sizeof(var_t),1,ifp);
       //Error checking
       // printf("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
       if((err < 5)){
@@ -537,9 +449,9 @@ void constructTimeSeries(
   fclose(ifp);
 }
 
-void no_interventionSusceptible(int** states,int time,int ntime,int npop){
+void no_interventionSusceptible(var_t** states, step_t time, step_t ntime, person_t npop){
 }
 
-int no_interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
+bool_t no_interventionBeta(step_t itime,person_t iperson1,person_t iperson2,var_t ivar1,var_t ivar2){
   return(1);
 }
