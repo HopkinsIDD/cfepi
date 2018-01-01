@@ -16,10 +16,8 @@
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
 #define IND5(i,j,k,l,m,n,o,p,q) ((i) * (n) * (o) * (p) * (q) + (j) * (o) * (p) *(q) + (k) * (p) * (q) + (l) * (q) + (m))
 
-int no_interventionBeta(int,int,int,int,int);
-void no_interventionSusceptible(int**,int,int,int);
-int interventionBeta(int,int,int,int,int);
-void interventionSusceptible(int**,int,int,int);
+void interventionSusceptible(var_t**,step_t,step_t,person_t);
+bool_t interventionBeta(step_t,person_t,person_t,var_t,var_t);
 void testfun();
 
 int vaccination_occurred;
@@ -30,9 +28,12 @@ double distancing_percent;
 int distancing_time;
 
 int main(){
-  int nvar,ntime,npop,trial,ntrial,var,var2;
+  int trial,ntrial;
+  var_t nvar,var,var2;
+  step_t ntime;
+  person_t npop;
   double beta,gamma;
-  int* init;
+  person_t* init;
   double* transitions;
   double* interactions;
   char fn[1000];
@@ -40,7 +41,7 @@ int main(){
   char ifn[1000];
   
   nvar = 3;
-  init = calloc(nvar,sizeof(int));
+  init = calloc(nvar,sizeof(person_t));
   // Real Values
   /*
   ntime = 365;
@@ -158,4 +159,11 @@ int main(){
   free(transitions);
   free(interactions);
   free(init);
+}
+
+void interventionSusceptible(var_t** states, step_t time, step_t ntime, person_t npop){
+}
+
+bool_t interventionBeta(step_t itime,person_t iperson1,person_t iperson2,var_t ivar1,var_t ivar2){
+  return(1);
 }
