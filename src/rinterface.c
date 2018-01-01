@@ -90,14 +90,30 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   char fn[1000];
   int var,var2;
 
+  beta_t no_intervention_unparametrized_reduceBeta;
+  param_beta_t param_beta;
+  saved_beta_t no_intervention_reduceBeta;
+
+  susceptible_t no_intervention_unparametrized_eliminateSusceptibles;
+  param_susceptible_t param_susceptible;
+  saved_susceptible_t no_intervention_eliminateSusceptibles;
+
   GetRNGstate();
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
   R2cint(Rntime,&ntime);
   R2cint(Rntrial,&ntrial);
-
   //Things are loaded now
+
+  //Set the parameters (This should eventually be based on the R input)
+  param_beta.time = 5;
+  param_susceptible.time = 5;
+  no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrized_reduceBeta,param_beta);
+  // intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
+  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrized_eliminateSusceptibles,param_susceptible);
+  // intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrized_eliminateSusceptibles,param_susceptible);
+  
 
   for(trial = 0; trial < ntrial; ++trial){
     printf("Running Trial %d\n",trial);
@@ -113,8 +129,8 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
       init,
       nvar,
       ntime,
-      &no_interventionBeta,
-      &no_interventionSusceptible,
+      no_intervention_reduceBeta,
+      no_intervention_eliminateSusceptibles,
       tfn,
       ifn,
       fn

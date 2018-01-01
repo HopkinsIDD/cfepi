@@ -221,8 +221,8 @@ void constructTimeSeries(
   person_t* init,
   var_t nvar,
   step_t ntime,
-  bool_t (*reduceBeta)(step_t,person_t,person_t,var_t,var_t), // reduceBeta(itime,iperson1,iperson2,ivar1,ivar2)
-  void (*eliminateSusceptibles)(var_t**,step_t,step_t,person_t), // eliminateSusceptibles(states,ctime,ntime,npop);
+  saved_beta_t reduceBeta,
+  saved_susceptible_t eliminateSusceptibles,
   char* tfname,
   char* ifname,
   char* outputfilename
@@ -372,7 +372,7 @@ void constructTimeSeries(
         }
         // Printf("\t\t\t%d\n",ctime);
         // Beginning of time ctime
-        eliminateSusceptibles(states,ctime,ntime,npop);
+        invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
       }
     }
     reading_file_1 = ttime <= ctime ? 1 : 0 ;
@@ -402,7 +402,7 @@ void constructTimeSeries(
       (states[itime][iperson1] == ivar1) &&
       (states[itime][iperson1] == states[itime+1][iperson1]) &&
       (states[itime][iperson2] == ivar2) &&
-      (reduceBeta(itime,iperson1,iperson2,ivar1,ivar2) != 0) &&
+      (invoke_beta_t(reduceBeta,itime,iperson1,iperson2,ivar1,ivar2) != 0) &&
       reading_file_2
     ){
       cur_states[iperson1] = ivar2;
@@ -414,7 +414,7 @@ void constructTimeSeries(
     for(person=0;person<npop;++person){
       states[ctime][person] = cur_states[person];
     }
-    eliminateSusceptibles(states,ctime,ntime,npop);
+    invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
   }
 ///   for(person = 0; person < npop; ++person){
 ///     for(time = 0; time < (1+ntime); ++time){
@@ -447,11 +447,4 @@ void constructTimeSeries(
   }
   fclose(tfp);
   fclose(ifp);
-}
-
-void no_interventionSusceptible(var_t** states, step_t time, step_t ntime, person_t npop){
-}
-
-bool_t no_interventionBeta(step_t itime,person_t iperson1,person_t iperson2,var_t ivar1,var_t ivar2){
-  return(1);
 }

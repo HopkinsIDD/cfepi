@@ -18,7 +18,7 @@ OBJECTS = {multiple_trials.c,counterfactual.c}
 .Phony=all
 all: library executables
 .Phony=library
-library: counterfactual.so multiple_trials.so test.so rinterface.so
+library: counterfactual.so multiple_trials.so test.so rinterface.so twofunctions.so
 .Phony=executables
 executables: multipleTrials
 .Phony=run
@@ -34,17 +34,21 @@ memcheck: executables library
 callcheck: test.so
 	Rscript tmp2.R
 .Phony=packagetest
-packagetest: rinterface.so counterfactual.so
+packagetest: rinterface.so counterfactual.so twofunctions.so
 	Rscript test.R
 counterfactual.so:
 	@echo "counterfactual.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
-	$(RDBG) $(RC) $(SRC)/counterfactual.c
+	$(RDBG) $(RC) $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 multiple_trials.so:
 	@echo "multiple_trials.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/multiple_trials.c -o multiple_trials.so
 	# $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c -o multiple_trials.so
-	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
+twofunctions.so:
+	@echo "twofunctions.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RDBG) $(RC) $(SRC)/twofunctions.c
 test.so:
 	@echo "test.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
@@ -52,15 +56,15 @@ test.so:
 
 rinterface.so:
 	@echo "rinterface.so"
-	$(RDBG) $(RC) $(SRC)/rinterface.c $(SRC)/counterfactual.c
+	$(RDBG) $(RC) $(SRC)/rinterface.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 
 multipleTrials:
 	@echo "multipleTrials:"
-	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c -o multipleTrials $(LINKS) $(RLINKS)
+	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c -o multipleTrials $(LINKS) $(RLINKS)
 .Phony=simultaneous
 simultaneous:
 	@echo "simultaneous:"
-	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 	
 .Phony=clean
 clean:

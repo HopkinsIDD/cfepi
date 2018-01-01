@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "src/twofunctions.h"
 #include "src/counterfactual.h"
 
 // R specific headers
@@ -16,8 +17,6 @@
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
 #define IND5(i,j,k,l,m,n,o,p,q) ((i) * (n) * (o) * (p) * (q) + (j) * (o) * (p) *(q) + (k) * (p) * (q) + (l) * (q) + (m))
 
-void interventionSusceptible(var_t**,step_t,step_t,person_t);
-bool_t interventionBeta(step_t,person_t,person_t,var_t,var_t);
 void testfun();
 
 int vaccination_occurred;
@@ -39,6 +38,28 @@ int main(){
   char fn[1000];
   char tfn[1000];
   char ifn[1000];
+  beta_t no_intervention_unparametrizedBeta, intervention_unparametrizedBeta;
+  susceptible_t no_intervention_unparametrizedSusceptible, intervention_unparametrizedSusceptible;
+  param_beta_t beta_pars;
+  param_susceptible_t susceptible_pars;
+  saved_beta_t no_intervention_reduceBeta, intervention_reduceBeta;
+  saved_susceptible_t no_intervention_eliminateSusceptibles, intervention_eliminateSusceptibles;
+
+  //get pointers to the original functions
+  no_intervention_unparametrizedBeta = *no_interventionBeta;
+  intervention_unparametrizedBeta = *interventionBeta;
+  no_intervention_unparametrizedSusceptible = *no_interventionSusceptible;
+  intervention_unparametrizedSusceptible = *interventionSusceptible;
+  
+  //Set the parameters, this will normally be done from within R.
+  beta_pars.time = 5;
+  susceptible_pars.time = 5;
+  
+  no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrizedBeta,beta_pars);
+  intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrizedBeta,beta_pars);
+  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrizedSusceptible,susceptible_pars);
+  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrizedSusceptible,susceptible_pars);
+  
   
   nvar = 3;
   init = calloc(nvar,sizeof(person_t));
@@ -102,14 +123,14 @@ int main(){
       }
       printf("\n");
     }
-    printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
+    //printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.0.%d.csv",trial);
     sprintf(tfn,"output/transition.0.%d.csv",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     // return(0);
   }
 
@@ -119,12 +140,14 @@ int main(){
     sprintf(tfn,"output/transition.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     fflush(stdout);
+    printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
+    return(0);
     constructTimeSeries(
       init,
       nvar,
       ntime,
-      &no_interventionBeta,
-      &no_interventionSusceptible,
+      no_intervention_reduceBeta,
+      no_intervention_eliminateSusceptibles,
       tfn,
       ifn,
       fn
@@ -135,8 +158,8 @@ int main(){
       init,
       nvar,
       ntime,
-      &interventionBeta,
-      &interventionSusceptible,
+      intervention_reduceBeta,
+      intervention_eliminateSusceptibles,
       tfn,
       ifn,
       fn
@@ -148,8 +171,8 @@ int main(){
       init,
       nvar,
       ntime,
-      &no_interventionBeta,
-      &no_interventionSusceptible,
+      no_intervention_reduceBeta,
+      no_intervention_eliminateSusceptibles,
       tfn,
       ifn,
       fn
@@ -159,11 +182,4 @@ int main(){
   free(transitions);
   free(interactions);
   free(init);
-}
-
-void interventionSusceptible(var_t** states, step_t time, step_t ntime, person_t npop){
-}
-
-bool_t interventionBeta(step_t itime,person_t iperson1,person_t iperson2,var_t ivar1,var_t ivar2){
-  return(1);
 }
