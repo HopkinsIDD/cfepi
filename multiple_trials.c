@@ -64,19 +64,17 @@ int main(){
   nvar = 3;
   init = calloc(nvar,sizeof(person_t));
   // Real Values
-  /*
   ntime = 365;
-  init[0] = 399990;
+  init[0] = 3999990;
   // init[0] = 190;
   init[1] = 10;
   init[2] = 0;
   ntrial = 200;
-  */
   //Testing Values
-  ntime = 100;
-  init[0] = 3990;
-  init[1] = 10;
-  init[2] = 0;
+  // ntime = 100;
+  // init[0] = 3990;
+  // init[1] = 10;
+  // init[2] = 0;
   ntrial = 1;
 
   npop = 0;
@@ -125,23 +123,22 @@ int main(){
     }
     //printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
-    sprintf(ifn,"output/interaction.0.%d.csv",trial);
-    sprintf(tfn,"output/transition.0.%d.csv",trial);
-    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
+    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    sprintf(ifn,"output/first_counterfactual.i.1.%d.csv",trial);
+    sprintf(tfn,"output/first_counterfactual.t.1.%d.csv",trial);
     // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     // return(0);
   }
 
   for(trial = 0; trial < ntrial; ++trial){
     printf("Evaluating Trial %d\n",trial);
-    sprintf(ifn,"output/interaction.0.%d.csv",trial);
-    sprintf(tfn,"output/transition.0.%d.csv",trial);
+    sprintf(ifn,"output/first_counterfactual.i.0.%d.csv",trial);
+    sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     fflush(stdout);
     printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
-    return(0);
     constructTimeSeries(
       init,
       nvar,
@@ -164,8 +161,8 @@ int main(){
       ifn,
       fn
     );
-    sprintf(ifn,"output/interaction.1.%d.csv",trial);
-    sprintf(tfn,"output/transition.1.%d.csv",trial);
+    sprintf(ifn,"output/first_counterfactual.i.1.%d.csv",trial);
+    sprintf(tfn,"output/first_counterfactual.t.1.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",1,trial);
     constructTimeSeries(
       init,

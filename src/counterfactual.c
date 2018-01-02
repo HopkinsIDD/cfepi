@@ -245,6 +245,9 @@ void constructTimeSeries(
   for(var = 0; var < nvar; ++ var){
     npop = npop + init[var];
   }
+  if(RUN_DEBUG == 1){
+    printf("npop is %d\n",npop);
+  }
   sprintf(ofn2,"%s.csv",outputfilename);
   if(RUN_DEBUG==1){
     ofp2 = fopen(ofn2,"w");
@@ -325,6 +328,7 @@ void constructTimeSeries(
       } else {
         if(RUN_DEBUG==1){
           fprintf(ofp2,"%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
+          fflush(ofp2);
         }
       }
     }
@@ -360,6 +364,7 @@ void constructTimeSeries(
     // printf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
       while(ctime < mtime){
+        printf("time %d\n",ctime);
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];

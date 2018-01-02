@@ -18,14 +18,14 @@ ntrial <- 1
 # dyn.load('src/counterfactual.dll')
 dyn.load('src/counterfactual.so')
 dyn.load('src/rinterface.so')
-# .Call('setupCounterfactualAnalysis',
-#   "first_counterfactual",
-#   init,
-#   inter,
-#   trans,
-#   ntime,
-#   ntrial
-# )
+.Call('setupCounterfactualAnalysis',
+  "first_counterfactual",
+  init,
+  inter,
+  trans,
+  ntime,
+  ntrial
+)
 .Call('runIntervention',
   "first_counterfactual",
   init,
