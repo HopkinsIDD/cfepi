@@ -1,0 +1,175 @@
+---
+title: "Counterfactual"
+output: revealjs::revealjs_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model Setup
+
+For testing, we did a simple SIR model with the following equations
+
+\begin{align*}
+   \textrm{d}S &= -IS \beta
+\\ \textrm{d}I &= IS \beta - I \gamma
+\\ \textrm{d}R &= I \gamma
+\end{align*}
+
+```{r,echo=FALSE}
+init = c(S = 3990, I = 10, R = 0)
+beta = c("beta"= .4/sum(init))
+gamma = c("gamma" = .2)
+transitions = matrix(0,3,3,dimnames= list(c("S","I","R"),c("S","I","R")))
+interactions = array(0,c(3,3,3),dimnames = list(c("S","I","R"),c("S","I","R"),c("S","I","R")))
+transitions[2,3] = gamma
+interactions[1,2,2] = beta
+tstart = 30
+distancing_percentage = .01
+```
+For initial conditions, we took $S = `r init["S"]`$, $I = `r init["I"]`$ and $R = `r init["R"]`$.  
+For the intervention, we said that any infectious contacts after time `r tstart`, had a `r distancing_percentage` chance not to occur.
+
+```{r, echo=FALSE, message=FALSE}
+library(dplyr)
+library(readr)
+library(ggplot2)
+input_dir <-
+  "~/svn/counterfactual/branches/R_compliant/output/"
+input_files <- list.files(input_dir)
+no_intervention_0_files <-
+  input_files[
+    startsWith(
+      input_files,
+      "first_counterfactual.noint.0"
+    )
+  ]
+no_intervention_1_files <-
+  input_files[
+    startsWith(
+      input_files,
+      "first_counterfactual.noint.1"
+    )
+  ]
+intervention_0_files <-
+  input_files[
+    startsWith(
+      input_files,
+      "first_counterfactual.int.0"
+    )
+  ]
+
+intervention_0_data <-
+  bind_rows(
+    lapply(
+      paste(input_dir,intervention_0_files,sep='/'),
+      function(fname){
+        data <- read_csv(fname,col_names = FALSE)
+        data <- data[,-ncol(data)]
+        return(
+          mutate(
+            data,
+            file = fname,
+            t = 1:nrow(data)
+          )
+        )
+      }
+    )
+  )
+no_intervention_0_data <-
+  bind_rows(
+    lapply(
+      paste(input_dir,no_intervention_0_files,sep='/'),
+      function(fname){
+        data <- read_csv(fname,col_names = FALSE)
+        data <- data[,-ncol(data)]
+        return(
+          mutate(
+            data,
+            file = fname,
+            t = 1:nrow(data)
+          )
+        )
+      }
+    )
+  )
+no_intervention_1_data <-
+    bind_rows(
+    lapply(
+      paste(input_dir,no_intervention_1_files,sep='/'),
+      function(fname){
+        data <- read_csv(fname,col_names = FALSE)
+        data <- data[,-ncol(data)]
+        return(
+          mutate(
+            data,
+            file = fname,
+            t = 1:nrow(data)
+          )
+        )
+      }
+    )
+  )
+intervention_same <- intervention_0_data
+intervention_different <- intervention_0_data
+for(column in names(intervention_same)[startsWith(names(intervention_same),"X")]){
+  intervention_same[[column]] =
+    intervention_0_data[[column]] -
+    no_intervention_0_data[[column]]
+}
+for(column in names(intervention_different)[startsWith(names(intervention_different),"X")]){
+  intervention_different[[column]] =
+    intervention_0_data[[column]] -
+    no_intervention_1_data[[column]]
+}
+intervention_same <-
+  filter(intervention_same,t<100)
+intervention_different <-
+  filter(intervention_different,t<100)
+```
+
+## Figure 1: Same Transmission
+```{r,echo=FALSE}
+ggplot(intervention_same,aes(x=t,group=file)) +
+  # geom_line(aes(y=X1,col='S'),alpha=.1) +
+  # geom_line(aes(y=X2,col='I'),alpha=.1) +
+  geom_line(aes(y=X3,col='R'),alpha=.1)
+```
+
+## Figure 2: Different Transmission
+
+```{r,echo=FALSE}
+ggplot(intervention_different,aes(x=t,group=file)) +
+  # geom_line(aes(y=X1,col='S'),alpha=.1) +
+  # geom_line(aes(y=X2,col='I'),alpha=.1) +
+  geom_line(aes(y=-X3,col='R'),alpha=.1)
+```
+
+## Observations
+ - The same transmission case is less variable, (`r range(intervention_same$X3)`) vs (`r range(intervention_different$X3)`)
+ - The probability of introducing more cases is much lower in the same transmission case `r mean(intervention_same$X3 > 0)` vs `r mean(intervention_different$X3 > 0)`
+ - The effect before time `r tstart` is correct only in the same transmission case
+ ```{r,echo=FALSE}
+intervention_0_data %>%
+  group_by(file) %>%
+  summarize(peak_time = which.max(X2)) %>%
+  ungroup() %>%
+  select(-file) ->
+  intervention_0_peak_time
+no_intervention_0_data %>%
+  group_by(file) %>%
+  summarize(peak_time = which.max(X2)) %>%
+  ungroup() %>%
+  select(-file) ->
+  no_intervention_0_peak_time
+no_intervention_1_data %>%
+  group_by(file) %>%
+  summarize(peak_time = which.max(X2)) %>%
+  ungroup() %>%
+  select(-file) ->
+  no_intervention_1_peak_time
+same_peak_change <- (no_intervention_0_peak_time - intervention_0_peak_time)
+different_peak_change <- no_intervention_1_peak_time - intervention_0_peak_time
+```
+ - The effect on peak time is more stable in the same transmission case (mean `r mean(same_peak_change[[1]])`, sd `r sd(same_peak_change[[1]])`) vs (mean `r mean(different_peak_change[[1]])`, sd `r sd(different_peak_change[[1]])`)
