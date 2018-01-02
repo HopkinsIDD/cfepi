@@ -15,6 +15,8 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   char* filename;
   char ifn[1000];
   char tfn[1000];
+  char ifn2[1000];
+  char tfn2[1000];
   int var,var2;
 
   GetRNGstate();
@@ -48,6 +50,8 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
     printf("Running Trial %d\n",trial);
     sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
     sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
+    sprintf(ifn2,"output/%s.i.1.%d.csv",filename,trial);
+    sprintf(tfn2,"output/%s.t.1.%d.csv",filename,trial);
     printf("init:");
     for(var = 0; var < nvar; ++var){
       printf(" %d",init[var]);
@@ -68,6 +72,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
     }
     printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn2,ifn2);
     // sprintf(ifn,"output/%s.i.1.%d.csv",trial);
     // sprintf(tfn,"output/%s.t.1.%d.csv",trial);
     // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
@@ -88,6 +93,10 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   char ifn[1000];
   char tfn[1000];
   char fn[1000];
+  char ifn2[1000];
+  char tfn2[1000];
+  char fn2[1000];
+  char fn3[1000];
   int var,var2;
 
   GetRNGstate();
@@ -103,7 +112,11 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     printf("Running Trial %d\n",trial);
     sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
     sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
-    sprintf(fn,"output/%s.noint.%d.csv",filename,trial);
+    sprintf(fn,"output/%s.noint.0.%d.csv",filename,trial);
+    sprintf(ifn2,"output/%s.i.1.%d.csv",filename,trial);
+    sprintf(tfn2,"output/%s.t.1.%d.csv",filename,trial);
+    sprintf(fn2,"output/%s.int.0.%d.csv",filename,trial);
+    sprintf(fn3,"output/%s.noint.1.%d.csv",filename,trial);
     printf("init:");
     for(var = 0; var < nvar; ++var){
       printf(" %d",init[var]);
@@ -118,6 +131,26 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
       tfn,
       ifn,
       fn
+    );
+    constructTimeSeries(
+      init,
+      nvar,
+      ntime,
+      &interventionBeta,
+      &interventionSusceptible,
+      tfn,
+      ifn,
+      fn2
+    );
+    constructTimeSeries(
+      init,
+      nvar,
+      ntime,
+      &no_interventionBeta,
+      &no_interventionSusceptible,
+      tfn2,
+      ifn2,
+      fn3
     );
   }
   

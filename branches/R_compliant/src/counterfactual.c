@@ -68,9 +68,6 @@ void runFastCounterfactualAnalysis(int* init,int nvar, int ntime, double* transi
   int** possibleStates;
   int** nextPossibleStates;
   int* targets;
-  //Note: To help with memory useage, we may want to modify these to be more efficient
-  // actualTransitions = malloc(nvar*nvar*ntime*npop*sizeof(int));
-  // actualInteractions = malloc(nvar*nvar*ntime*npop*npop*sizeof(int));
   possibleStates = calloc(nvar,sizeof(int*));
   for(var1 = 0; var1 < nvar; ++ var1){
     possibleStates[var1] = calloc(npop,sizeof(int));
@@ -541,5 +538,19 @@ void no_interventionSusceptible(int** states,int time,int ntime,int npop){
 }
 
 int no_interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
+  return(1);
+}
+void interventionSusceptible(int** states,int time,int ntime,int npop){
+}
+
+int interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
+  double distancing_percent = .01;
+  int distancing_time = 30;
+  if(itime <= distancing_time){
+    return(1);
+  }
+  if(runif(0,1) < distancing_percent){
+    return(0);
+  }
   return(1);
 }

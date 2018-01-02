@@ -5,7 +5,7 @@ trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)
 trans[3,2] <- .2
 inter[2,1] <- .4
-init <- c(3999990,10,0)
+init <- c(3990,10,0)
 # init <- c(390,10,0)
 npop <- sum(init)
 inter <- inter/npop
@@ -34,4 +34,6 @@ dyn.load('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
 # dyn.unload('src/counterfactual.dll')
 dyn.unload('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
 dyn.unload('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
-results <- read.csv('output/first_counterfactual.noint.0.csv',header = FALSE)[,-4]
+results <- read.csv('output/first_counterfactual.noint.0.0.csv',header = FALSE)[,-4]
+results2 <- read.csv('output/first_counterfactual.int.0.0.csv',header = FALSE)[,-4]
+results3 <- read.csv('output/first_counterfactual.noint.1.0.csv',header = FALSE)[,-4]

@@ -161,3 +161,16 @@ int main(){
   free(init);
   PutRNGstate();
 }
+
+void interventionSusceptible(int** states,int time,int ntime,int npop){
+}
+
+int interventionBeta(int itime,int iperson1,int iperson2,int ivar1,int ivar2){
+  if(itime <= distancing_time){
+    return(1);
+  }
+  if(ldexp(pcg32_random(), -32) < distancing_percent){
+    return(0);
+  }
+  return(1);
+}
