@@ -1,0 +1,42 @@
+---
+title: "Engineering Summary"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The task of running a counterfactual is split into two parts.  The setup and the run.  Setup runs the simulation, and stores all possible interactions and state transitions.  Run turns that information into counts of which people are in which state each time step.
+
+During setup, we obtain all possible infectious contacts, and all possible transitions.  In order to lessen the amount of storage space we need, we make assumptions about some infectious contacts and transitions being impossible.  We save the output to two files.  (Current size is ~$5$GB for $1$ trial of $4$ million people at $365$ time steps)
+
+During run, we read all possible infections from the output files, and use that to determine which individuals are in the population at which time.
+
+## Parameters
+
+### Initial Conditions
+
+The initial conditions are an integer vector with one entry for each state of the model.  Each entry contains the number of individuals in that state at the beginning of the simulation.
+
+```{r}
+initial_conditions <- c(S=3999990,I=10,R=0)
+```
+
+We also obtain several
+
+### Interaction Matrix
+
+### Transition Matrix
+
+## Setup
+
+## Run
+
+## Limitations
+
+### Population
+The model can only currently handle fixed population
+
+### Assumptions
+By our modeling assumptions, an intervention cannot cause people to transition states into an existing state that they did not start in.  Moreover, we assume that transitions between existing states other than infection are not affected by the intervention.  We may relax these assumptions later.

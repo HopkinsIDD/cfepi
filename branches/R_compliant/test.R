@@ -10,7 +10,7 @@ init <- c(3990,10,0)
 npop <- sum(init)
 inter <- inter/npop
 ntime <- 365
-ntrial <- 1
+ntrial <- 1000
 
 dyn.load('~/svn/counterfactual/branches/R_compliant/src/counterfactual.so')
 dyn.load('~/svn/counterfactual/branches/R_compliant/src/rinterface.so')
