@@ -7,6 +7,8 @@ output: revealjs::revealjs_presentation
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+
 ## Model Setup
 
 For testing, we did a simple SIR model with the following equations
@@ -173,3 +175,22 @@ same_peak_change <- (no_intervention_0_peak_time - intervention_0_peak_time)
 different_peak_change <- no_intervention_1_peak_time - intervention_0_peak_time
 ```
  - The effect on peak time is more stable in the same transmission case (mean `r mean(same_peak_change[[1]])`, sd `r sd(same_peak_change[[1]])`) vs (mean `r mean(different_peak_change[[1]])`, sd `r sd(different_peak_change[[1]])`)
+
+## Test
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\draw[circle] (4,0) node (P1) {1};
+%\node[circle] (P1) at (4,0) {1};
+\node (P11) at (2,-1) {2};
+\node (P12) at (6,-1) {2};
+\node (P111) at (0,-2) {3};
+\node (P112) at (1,-2) {3};
+\node (P113) at (2,-2) {3};
+\node (P114) at (3,-2) {3};
+\node (P121) at (5,-2) {3};
+\node (P122) at (6,-2) {3};
+\node (P123) at (7,-2) {3};
+\draw (P1) -- (P11) -- (P111);
+\draw (P1) -- (P12) -- (P121);
+\end{tikzpicture}
+```
