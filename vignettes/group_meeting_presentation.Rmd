@@ -1,5 +1,4 @@
 ---
-title: "Counterfactual"
 output: revealjs::revealjs_presentation
 ---
 
@@ -7,7 +6,12 @@ output: revealjs::revealjs_presentation
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Counterfactual 
+We want to simulate the effect of an intervention on an epidemic.  Other approaches simulate two epidemics: one with the intervention and one without.
 
+We want to compare on the same epidemic.  We determine all of the possible state transmission events, and then use these to construct two epidemic curves.
+
+We keep track of transmission events that would not be relevant, but might become relevant in case of an intervention.
 
 ## Model Setup
 
@@ -176,21 +180,176 @@ different_peak_change <- no_intervention_1_peak_time - intervention_0_peak_time
 ```
  - The effect on peak time is more stable in the same transmission case (mean `r mean(same_peak_change[[1]])`, sd `r sd(same_peak_change[[1]])`) vs (mean `r mean(different_peak_change[[1]])`, sd `r sd(different_peak_change[[1]])`)
 
-## Test
+## Figure 3: Transmission Chain
 ```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
 \begin{tikzpicture}
-\draw[circle] (4,0) node (P1) {1};
-%\node[circle] (P1) at (4,0) {1};
-\node (P11) at (2,-1) {2};
-\node (P12) at (6,-1) {2};
-\node (P111) at (0,-2) {3};
-\node (P112) at (1,-2) {3};
-\node (P113) at (2,-2) {3};
-\node (P114) at (3,-2) {3};
-\node (P121) at (5,-2) {3};
-\node (P122) at (6,-2) {3};
-\node (P123) at (7,-2) {3};
-\draw (P1) -- (P11) -- (P111);
+\node[draw, fill = red!30, circle,radius=.1] (P1) at (4,0) {};
+
+\node[draw, fill = red!30, circle] (P11) at (2,-2) {};
+\node[draw, fill = red!30, circle] (P12) at (6,-2) {};
+
+\node[draw, fill = red!30, circle] (P111) at (0.25,-4) {};
+\node[draw, fill = red!30, circle] (P112) at (1.5,-4) {};
+\node[draw, fill = red!30, circle] (P113) at (2.75,-4) {};
+\node[draw, fill = red!30, circle] (P114) at (3.3,-4) {};
+\node[draw, fill = blue!30, circle] (P121) at (4,-4) {};
+\node[draw, fill = red!30, circle] (P122) at (5.25,-4) {};
+\node[draw, fill = red!30, circle] (P123) at (6.75,-4) {};
+
+\node[draw, fill = red!30, circle] (P1111) at (0,-6) {};
+\node[draw, fill = red!30, circle] (P1112) at (.5,-6) {};
+\node[draw, fill = red!30, circle] (P1121) at (1,-6) {};
+\node[draw, fill = red!30, circle] (P1122) at (1.5,-6) {};
+\node[draw, fill = red!30, circle] (P1123) at (2,-6) {};
+\node[draw, fill = red!30, circle] (P1131) at (2.5,-6) {};
+\node[draw, fill = red!30, circle] (P1132) at (3,-6) {};
+\node[draw, fill = blue!30, circle] (P1211) at (3.5,-6) {};
+\node[draw, fill = blue!30, circle] (P1212) at (4,-6) {};
+\node[draw, fill = red!30, circle] (P1213) at (4.5,-6) {};
+\node[draw, fill = red!30, circle] (P1221) at (5,-6) {};
+\node[draw, fill = red!30, circle] (P1222) at (5.5,-6) {};
+\node[draw, fill = red!30, circle] (P1231) at (6,-6) {};
+\node[draw, fill = red!30, circle] (P1232) at (6.5,-6) {};
+\node[draw, fill = red!30, circle] (P1233) at (7,-6) {};
+\node[draw, fill = red!30, circle] (P1234) at (7.5,-6) {};
+
+\node at (-1,0) {$t=0$};
+\node at (-1,-2) {$t=1$};
+\node at (-1,-4) {$t=2$};
+\node at (-1,-6) {$t=3$};
+
+\draw (P1) -- (P11) -- (P111) -- (P1111);
+\draw (P111) -- (P1112);
+\draw (P11) -- (P112) -- (P1121);
+\draw (P112) -- (P1122);
+\draw (P112) -- (P1123);
+\draw (P11) -- (P113) -- (P1131);
+\draw (P113) -- (P1132);
+\draw (P11) -- (P114);
 \draw (P1) -- (P12) -- (P121);
+\draw[blue] (P121) -- (P1211);
+\draw[blue] (P121) -- (P1212);
+\draw[blue] (P121) -- (P1213);
+\draw[dashed] (P122) -- (P1213);
+\draw (P12) -- (P122) -- (P1221);
+\draw (P122) -- (P1222);
+\draw (P12) -- (P123) -- (P1231);
+\draw (P123) -- (P1232);
+\draw (P123) -- (P1233);
+\draw (P123) -- (P1234);
 \end{tikzpicture}
 ```
+
+-----
+
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node[draw, fill = red!30, circle,radius=.1] (I) at (0,0) {I};
+
+\node[draw, fill = green!30, circle] (R) at (3,0) {R};
+\draw[->] (I) -> node[above] {$\gamma$} (R);
+\end{tikzpicture}
+```
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node[draw, fill = blue!30, circle,radius=.1] (S) at (0,0) {S};
+\node[draw, fill = red!30, circle,radius=.1] (I1) at (0,1) {I};
+\node[draw, fill = red!30, circle] (I2) at (3,0) {I};
+\draw[->] (S) -> node[above] {$\beta$} (I2);
+\draw[dashed] (S) -- (I1) ;
+\end{tikzpicture}
+```
+
+
+
+## Methods
+
+Currently, we have two matrices controlling the transmission.  We have a transition matrix, and an interaction array.
+
+#### Transition Matrix
+
+ - $T$ is an $n \times n$ matrix, where $n$ is the number of states.
+ - $T[i,j]$ is the probability of going from state $i$ to $j$.
+ - $diag(T)$ is $0$.
+ 
+#### Interaction Array
+ - $I$ is an $n \times n \times n$ array, where $n$ is the number of states.
+ - $I[i,j,k]$ is the probability $i$ meets $j$ and becomes $k$.
+ - We can simplify this array into one or more matrices.
+
+## Modeling assumptions
+
+### Ideal Assumptions
+
+   + The intervention cannot cause new infectious contacts
+   + The intervention cannot prevent recovery
+   
+### Current Assumptions
+
+   + An intervention cannot prevent state transition.
+   + An intervention cannot introduce new interactions.
+   + An intervention cannot transition to existing states except its initial state.
+
+## Susceptible Depletion
+ - Move susceptibles to other states (and back?)
+ - Takes all current states and time
+ 
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node at (-1,0) {$t=0$};
+\node at (-1,-1) {$t=1$};
+\node at (-1,-2) {$t=2$};
+\node at (-1,-3) {$t=3$};
+\node[draw, fill = blue!30, circle,radius=.1] (S1) at (0,0) {$P_1^*$};
+\node[draw, fill = yellow!60, circle,radius=.1] (S2) at (0,-1) {$P_1^*$};
+\node[draw, fill = yellow!60, circle,radius=.1] (S3) at (0,-2) {$P_1^*$};
+\node[draw, fill = blue!30, circle,radius=.1] (S4) at (0,-3) {$P_1^*$};
+
+\node[draw, fill = blue!30, circle,radius=.1] (N1) at (4,0) {$P_1$};
+\node[draw, fill = blue!30, circle,radius=.1] (N2) at (4,-1) {$P_1$};
+\node[draw, fill = red!30, circle,radius=.1] (N3) at (4,-2) {$P_1$};
+\node[draw, fill = red!30, circle,radius=.1] (N4) at (4,-3) {$P_1$};
+
+\node[draw, fill = red!30, circle,radius=.1] (I1) at (2,0) {$P_2$};
+\node[draw, fill = red!30, circle,radius=.1] (I2) at (2,-1) {$P_2$};
+\node[draw, fill = green!30, circle,radius=.1] (I3) at (2,-2) {$P_2$};
+\node[draw, fill = green!30, circle,radius=.1] (I4) at (2,-3) {$P_2$};
+\draw[dashed] (S2) -- (I2) -- (N2) ;
+\end{tikzpicture}
+```
+
+## Reduced Transmission
+ - Prevent interactions that would otherwise occur.
+ - Takes in the people their current states.
+ 
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node at (-1,0) {$t=0$};
+\node at (-1,-1) {$t=1$};
+\node at (-1,-2) {$t=2$};
+\node at (-1,-3) {$t=3$};
+\node[draw, fill = blue!30, circle,radius=.1] (S1) at (0,0) {$P_1^*$};
+\node[draw, fill = blue!30, circle,radius=.1] (S2) at (0,-1) {$P_1^*$};
+\node[draw, fill = blue!30, circle,radius=.1] (S3) at (0,-2) {$P_1^*$};
+\node[draw, fill = blue!30, circle,radius=.1] (S4) at (0,-3) {$P_1^*$};
+
+\node[draw, fill = blue!30, circle,radius=.1] (N1) at (4,0) {$P_1$};
+\node[draw, fill = blue!30, circle,radius=.1] (N2) at (4,-1) {$P_1$};
+\node[draw, fill = red!30, circle,radius=.1] (N3) at (4,-2) {$P_1$};
+\node[draw, fill = red!30, circle,radius=.1] (N4) at (4,-3) {$P_1$};
+
+\node[draw, fill = red!30, circle,radius=.1] (I1) at (2,0) {$P_2$};
+\node[draw, fill = red!30, circle,radius=.1] (I2) at (2,-1) {$P_2$};
+\node[draw, fill = green!30, circle,radius=.1] (I3) at (2,-2) {$P_2$};
+\node[draw, fill = green!30, circle,radius=.1] (I4) at (2,-3) {$P_2$};
+\draw[dashed,blue] (S2) -- (I2);
+\draw[dashed] (I2) -- (N2) ;
+\end{tikzpicture}
+```
+
+## Limitations
+ - Fixed Population Only
+ - For a population of $4$ million, and $\beta=\frac{.4}{\text{population}}$, it saves 4 GB of files per trial.
+ - No good framework for a ``general'' intervention.
+ - Modeling Assumptions not ideal
+ 
