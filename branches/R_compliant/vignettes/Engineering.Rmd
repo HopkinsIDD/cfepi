@@ -40,3 +40,20 @@ The model can only currently handle fixed population
 
 ### Assumptions
 By our modeling assumptions, an intervention cannot cause people to transition states into an existing state that they did not start in.  Moreover, we assume that transitions between existing states other than infection are not affected by the intervention.  We may relax these assumptions later.
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node[draw, fill = red!30, circle,radius=.1] (I) at (0,0) {I};
+
+\node[draw, fill = green!30, circle] (R) at (2,0) {R};
+\draw[->] (I) -> node[above] {$\gamma$} (R);
+\end{tikzpicture}
+```
+```{r,engine="tikz",echo=FALSE,fig.ext='svg'}
+\begin{tikzpicture}
+\node[draw, fill = blue!30, circle,radius=.1] (S) at (0,0) {S};
+\node[draw, fill = red!30, circle,radius=.1] (I1) at (0,2) {I1};
+\node[draw, fill = green!30, circle] (I2) at (2,0) {I2};
+\draw[->] (S) -> node[above] {$\gamma$} (I2);
+\draw[dashed] (S) -- (I1) ; 
+\end{tikzpicture}
+```
