@@ -10,15 +10,12 @@ LINKS= -lm
 RLINKS= -L/usr/local/lib/R/lib -lR
 # RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
-RDBG = MAKEFLAGS="CFLAGS=-pg -g3"
-RVAL = R -d valgrind --debugger-args="$(VOPTS)"
-
-OBJECTS = {multiple_trials.c,counterfactual.c}
+RDBG = MAKEFLAGS="CFLAGS=-g3 -pg"
 
 .Phony=all
 all: library executables
 .Phony=library
-library: counterfactual.so multiple_trials.so test.so rinterface.so twofunctions.so
+library: counterfactual.so multiple_trials.so rinterface.so twofunctions.so
 .Phony=executables
 executables: multipleTrials
 .Phony=run
@@ -30,6 +27,9 @@ memcheck: executables library
 	valgrind $(VOPTS) ./multipleTrials
 	valgrind $(VOPTS) Rscript tmp.R 
 	valgrind $(VOPTS) Rscript test.R -d valgrind
+.Phony=test2
+test2: test2.so
+	Rscript tmp3.R
 .Phony=callcheck
 callcheck: test.so
 	Rscript tmp2.R
@@ -53,6 +53,10 @@ test.so:
 	@echo "test.so"
 	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
 	$(RDBG) $(RC) $(SRC)/test.c
+test2.so:
+	@echo "test2.so"
+	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
+	$(RDBG) $(RC) $(SRC)/test2.c $(SRC)/twofunctions.c
 
 rinterface.so:
 	@echo "rinterface.so"

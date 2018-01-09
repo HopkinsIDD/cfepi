@@ -5,7 +5,7 @@ trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)
 trans[3,2] <- .2
 inter[2,1] <- .4
-init <- c(3999990,10,0)
+init <- c(3990,10,0)
 # init <- c(390,10,0)
 npop <- sum(init)
 inter <- inter/npop

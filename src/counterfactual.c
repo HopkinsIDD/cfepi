@@ -30,10 +30,12 @@ void sample(person_t* *output, person_t n, person_t k){
   person_t i,j;
   for (i = 0; i < k; i++){
     // Pick a random index from 0 to i
-    j = runif(i,n+1);
-    // printf("j is %d\n",j);
-    if(j == i + 1){j = i;}
+    j = runif(i,n);
+    if(j >= n){j = i;}
     // Swap arr[i] with the element at random index
+    // printf("i is %d\n",i);
+    // printf("j is %d\n",j);
+    fflush(stdout);
     swap(&(*output)[i], &(*output)[j]);
   }
 }
@@ -157,6 +159,11 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
               fflush(stdout);
             }
             */
+            if(npop < ninteraction){
+              printf("This should not happen\n");
+              return;
+            }
+            
             sample(&targets,npop,ninteraction);
             for(interaction = 0; interaction < ninteraction; ++interaction){
 	      if(possibleStates[var2][targets[interaction] ]){
@@ -403,6 +410,7 @@ void constructTimeSeries(
 /// 	}
       }
     }
+    // printf("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
     if(
       (states[itime][iperson1] == ivar1) &&
       (states[itime][iperson1] == states[itime+1][iperson1]) &&

@@ -79,7 +79,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   return(R_NilValue);
 }
 
-SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptible, SEXP Rntime, SEXP Rntrial){
+SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptibles, SEXP Rntime, SEXP Rntrial){
   double* output;
   SEXP Routput;
   int* init;
@@ -109,6 +109,10 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   //Set the parameters (This should eventually be based on the R input)
   param_beta.time = 5;
   param_susceptible.time = 5;
+  no_intervention_unparametrized_reduceBeta = &no_interventionBeta;
+  no_intervention_unparametrized_eliminateSusceptibles = &no_interventionSusceptibles;
+  // intervention_unparametrized_reduceBeta = &interventionBeta;
+  // intervention_unparametrized_eliminateSusceptibles = &interventionsusceptibles;
   no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrized_reduceBeta,param_beta);
   // intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
   no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrized_eliminateSusceptibles,param_susceptible);
