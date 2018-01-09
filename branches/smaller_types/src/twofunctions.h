@@ -34,13 +34,13 @@ typedef struct {
 saved_susceptible_t partially_evaluate_susceptible(susceptible_t, param_susceptible_t);
 void invoke_susceptible_t(saved_susceptible_t,var_t**,step_t,step_t,person_t);
 
-void no_interventionSusceptible(var_t**,step_t,step_t,person_t,param_susceptible_t);
-void interventionSusceptible(var_t**,step_t,step_t,person_t,param_susceptible_t);
+void no_interventionSusceptibles(var_t**,step_t,step_t,person_t,param_susceptible_t);
+void interventionSusceptibles(var_t**,step_t,step_t,person_t,param_susceptible_t);
 /*
-void parametrized_interventionSusceptible(var_t**,step_t,step_t,person_t, param_beta_t);
+void parametrized_interventionSusceptibles(var_t**,step_t,step_t,person_t, param_beta_t);
 bool_t parametrized_intervenionBeta(step_t,person_t,person_t,var_t,var_t, param_beta_t);
 
-void no_interventionSusceptible(var_t**,step_t,step_t,person_t);
+void no_interventionSusceptibles(var_t**,step_t,step_t,person_t);
 bool_t no_interventionBeta(step_t,person_t,person_t,var_t,var_t);
 */
 
