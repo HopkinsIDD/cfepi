@@ -16,22 +16,22 @@ ntrial <- 1
 # dyn.load('src/counterfactual.dll')
 dyn.load('src/counterfactual.so')
 dyn.load('src/rinterface.so')
-.Call('setupCounterfactualAnalysis',
-  "first_counterfactual",
-  init,
-  inter,
-  trans,
-  ntime,
-  ntrial
-)
-.Call('runIntervention',
-  "first_counterfactual",
-  init,
-  function(){}, 
-  function(){},
-  ntime, 
-  ntrial
-)
+### .Call('setupCounterfactualAnalysis',
+###   "first_counterfactual",
+###   init,
+###   inter,
+###   trans,
+###   ntime,
+###   ntrial
+### )
+### .Call('runIntervention',
+###   "first_counterfactual",
+###   init,
+###   function(){}, 
+###   function(){},
+###   ntime, 
+###   ntrial
+### )
 # dyn.unload('src/counterfactual.dll')
 dyn.unload('src/counterfactual.so')
 dyn.unload('src/rinterface.so')
