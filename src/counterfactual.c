@@ -297,7 +297,7 @@ void constructTimeSeries(
     if(RUN_DEBUG==1){
       fprintf(ofp2,"Loop\n");
     }
-    printf("transition reading %p - %d\n",tfp,reading_tfp);
+    // printf("transition reading %p - %d\n",tfp,reading_tfp);
     fflush(stdout);
     if((reading_tfp) && (feof(tfp))){
       reading_file_1 = 0;
