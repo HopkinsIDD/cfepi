@@ -3,7 +3,8 @@ CC = gcc -g3
 RC = R CMD SHLIB
 SRC=src
 LOPTS= -c -fPIC
-VOPTS= --track-origins=yes --leak-check=full --show-leak-kinds=all
+VOPTS= --track-origins=yes --leak-check=full --show-leak-kinds=all --leak-resolution=low
+VLOG=--log-file
 # POPTS=-g -O2
 ROPTS=$(shell R CMD config --cppflags)
 LINKS= -lm
@@ -22,11 +23,12 @@ executables: multipleTrials
 run: executables
 	./multipleTrials
 .Phony=memcheck
-memcheck: executables library
+memcheck: clean executables library
 	@echo "memcheck:"
-	valgrind $(VOPTS) ./multipleTrials
-	# valgrind $(VOPTS) Rscript tmp.R 
-	# valgrind $(VOPTS) Rscript test.R -d valgrind
+	valgrind $(VOPTS) $(VLOG)=run.val ./multipleTrials
+	R --vanilla -d "valgrind $(VOPTS) $(VLOG)=tmp.val" < tmp.R 
+	R --vanilla -d "valgrind $(VOPTS) $(VLOG)=test.val" < test.R
+	R --vanilla -d "valgrind $(VOPTS) $(VLOG)=control.val" < test_control.R
 .Phony=test2
 test2: test2.so
 	Rscript tmp3.R
@@ -38,24 +40,18 @@ packagetest: rinterface.so counterfactual.so twofunctions.so
 	Rscript test.R
 counterfactual.so:
 	@echo "counterfactual.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
 	$(RDBG) $(RC) $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 multiple_trials.so:
 	@echo "multiple_trials.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/multiple_trials.c -o multiple_trials.so
-	# $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c -o multiple_trials.so
 	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 twofunctions.so:
 	@echo "twofunctions.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
 	$(RDBG) $(RC) $(SRC)/twofunctions.c
 test.so:
 	@echo "test.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
 	$(RDBG) $(RC) $(SRC)/test.c
 test2.so:
 	@echo "test2.so"
-	# $(CC) $(POPTS) $(LOPTS) $(ROPTS) $(SRC)/counterfactual.c -o counterfactual.so
 	$(RDBG) $(RC) $(SRC)/test2.c $(SRC)/twofunctions.c
 
 rinterface.so:
@@ -72,4 +68,4 @@ simultaneous:
 	
 .Phony=clean
 clean:
-	$(RM) *.so src/*.so src/*.o *.o multipleTrials output/* src/*.dll
+	$(RM) *.so src/*.so src/*.o *.o multipleTrials output/* src/*.dll vgcore*. *.val *.val
