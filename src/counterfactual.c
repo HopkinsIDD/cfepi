@@ -238,7 +238,7 @@ void constructTimeSeries(
   var_t var, tvar1,tvar2,ivar1,ivar2;
   person_t person,tperson,iperson1,iperson2,npop,counter;
   step_t time, ttime, itime, mtime,ctime;
-  bool_t reading,reading_file_1,reading_file_2;
+  bool_t reading,reading_file_1,reading_file_2,reading_tfp,reading_ifp;
   FILE *ofp;
   FILE *ofp2;
   char ofn2[1000];
@@ -282,11 +282,13 @@ void constructTimeSeries(
 
   ofp = fopen(outputfilename,"w");
   tfp = fopen(tfname,"rb");
+  reading_tfp = tfp == NULL ? 0 : 1;
   ifp = fopen(ifname,"rb");
+  reading_ifp = tfp == NULL ? 0 : 1;
 
-  reading=1;
-  reading_file_1 = 1;
-  reading_file_2 = 1;
+  reading= MAX(reading_tfp,reading_ifp);
+  reading_file_1 = reading_tfp;
+  reading_file_2 = reading_ifp;
   ctime = 0;
   itime = 0;
   ttime = 0;
@@ -295,13 +297,15 @@ void constructTimeSeries(
     if(RUN_DEBUG==1){
       fprintf(ofp2,"Loop\n");
     }
-    if(feof(tfp)){
+    printf("transition reading %p - %d\n",tfp,reading_tfp);
+    fflush(stdout);
+    if((reading_tfp) && (feof(tfp))){
       reading_file_1 = 0;
-      if(feof(ifp)){
+      if((reading_ifp) && (feof(ifp))){
 	reading = 0;
       }
     }
-    if(feof(ifp)){
+    if((reading_ifp) && (feof(ifp))){
       reading_file_2 = 0;
     }
     if(
@@ -365,8 +369,8 @@ void constructTimeSeries(
         }
       }
     }
-    reading_file_1 = ttime <= ctime ? 1 : 0 ;
-    reading_file_2 = itime <= ctime ? 1 : 0 ;
+    reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
+    reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     mtime = ((itime >= ttime) || feof(ifp)) ? ttime : itime;
     // printf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
@@ -387,8 +391,8 @@ void constructTimeSeries(
         invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
       }
     }
-    reading_file_1 = ttime <= ctime ? 1 : 0 ;
-    reading_file_2 = itime <= ctime ? 1 : 0 ;
+    reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
+    reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     assert(ttime < ntime);
     assert(tperson < npop);
     assert(tvar1 < nvar);
@@ -458,6 +462,10 @@ void constructTimeSeries(
   if(RUN_DEBUG==1){
     fclose(ofp2);
   }
-  fclose(tfp);
-  fclose(ifp);
+  if(reading_tfp){
+    fclose(tfp);
+  }
+  if(reading_ifp){
+    fclose(ifp);
+  }
 }

@@ -46,7 +46,7 @@ void no_interventionSusceptibles(var_t** states, step_t time, step_t ntime, pers
 }
 void interventionSusceptibles(var_t** states, step_t time, step_t ntime, person_t npop, param_susceptible_t pars){
   if(time > pars.time){
-    printf("Weird\n");
+    // printf("Weird\n");
   }
 }
 
