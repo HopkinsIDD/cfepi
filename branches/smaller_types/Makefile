@@ -3,7 +3,7 @@ CC = gcc -g3
 RC = R CMD SHLIB
 SRC=src
 LOPTS= -c -fPIC
-VOPTS= --track-origins=yes --leak-check=full
+VOPTS= --track-origins=yes --leak-check=full --show-leak-kinds=all
 # POPTS=-g -O2
 ROPTS=$(shell R CMD config --cppflags)
 LINKS= -lm
@@ -25,8 +25,8 @@ run: executables
 memcheck: executables library
 	@echo "memcheck:"
 	valgrind $(VOPTS) ./multipleTrials
-	valgrind $(VOPTS) Rscript tmp.R 
-	valgrind $(VOPTS) Rscript test.R -d valgrind
+	# valgrind $(VOPTS) Rscript tmp.R 
+	# valgrind $(VOPTS) Rscript test.R -d valgrind
 .Phony=test2
 test2: test2.so
 	Rscript tmp3.R

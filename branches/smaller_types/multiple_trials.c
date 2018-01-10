@@ -39,7 +39,7 @@ int main(){
   char tfn[1000];
   char ifn[1000];
   beta_t no_intervention_unparametrizedBeta, intervention_unparametrizedBeta;
-  susceptible_t no_intervention_unparametrizedSusceptible, intervention_unparametrizedSusceptible;
+  susceptible_t no_intervention_unparametrizedSusceptibles, intervention_unparametrizedSusceptibles;
   param_beta_t beta_pars;
   param_susceptible_t susceptible_pars;
   saved_beta_t no_intervention_reduceBeta, intervention_reduceBeta;
@@ -48,8 +48,8 @@ int main(){
   //get pointers to the original functions
   no_intervention_unparametrizedBeta = *no_interventionBeta;
   intervention_unparametrizedBeta = *interventionBeta;
-  no_intervention_unparametrizedSusceptible = *no_interventionSusceptible;
-  intervention_unparametrizedSusceptible = *interventionSusceptible;
+  no_intervention_unparametrizedSusceptibles = *no_interventionSusceptibles;
+  intervention_unparametrizedSusceptibles = *interventionSusceptibles;
   
   //Set the parameters, this will normally be done from within R.
   beta_pars.time = 5;
@@ -57,8 +57,8 @@ int main(){
   
   no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrizedBeta,beta_pars);
   intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrizedBeta,beta_pars);
-  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrizedSusceptible,susceptible_pars);
-  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrizedSusceptible,susceptible_pars);
+  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrizedSusceptibles,susceptible_pars);
+  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrizedSusceptibles,susceptible_pars);
   
   
   nvar = 3;
@@ -71,10 +71,10 @@ int main(){
   init[2] = 0;
   ntrial = 200;
   //Testing Values
-  // ntime = 100;
-  // init[0] = 3990;
-  // init[1] = 10;
-  // init[2] = 0;
+  ntime = 100;
+  init[0] = 3990;
+  init[1] = 10;
+  init[2] = 0;
   ntrial = 1;
 
   npop = 0;
@@ -125,10 +125,10 @@ int main(){
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
-    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     sprintf(ifn,"output/first_counterfactual.i.1.%d.csv",trial);
     sprintf(tfn,"output/first_counterfactual.t.1.%d.csv",trial);
-    // runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     // return(0);
   }
 
@@ -138,7 +138,7 @@ int main(){
     sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     fflush(stdout);
-    printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
+    // printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
     constructTimeSeries(
       init,
       nvar,
@@ -150,7 +150,6 @@ int main(){
       fn
     );
     sprintf(fn,"output/%s.%d.%d.csv","intervention",0,trial);
-    return(0);
     constructTimeSeries(
       init,
       nvar,

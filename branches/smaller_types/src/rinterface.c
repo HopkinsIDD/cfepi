@@ -85,18 +85,20 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   int* init;
   int nvar,nvar1,nvar2,ntime,trial,ntrial;
   char* filename;
+  char* reduceBeta_name;
+  char* eliminateSusceptibles_name;
   char ifn[1000];
   char tfn[1000];
   char fn[1000];
   int var,var2;
 
-  beta_t no_intervention_unparametrized_reduceBeta;
+  beta_t intervention_unparametrized_reduceBeta;
   param_beta_t param_beta;
-  saved_beta_t no_intervention_reduceBeta;
+  saved_beta_t intervention_reduceBeta;
 
-  susceptible_t no_intervention_unparametrized_eliminateSusceptibles;
+  susceptible_t intervention_unparametrized_eliminateSusceptibles;
   param_susceptible_t param_susceptible;
-  saved_susceptible_t no_intervention_eliminateSusceptibles;
+  saved_susceptible_t intervention_eliminateSusceptibles;
 
   GetRNGstate();
   
@@ -104,19 +106,31 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   R2cvecint(RinitialConditions,&init,&nvar);
   R2cint(Rntime,&ntime);
   R2cint(Rntrial,&ntrial);
+  //These may change later
+  R2cstring(RreduceBeta,&reduceBeta_name);
+  R2cstring(ReliminateSusceptibles,&eliminateSusceptibles_name);
+ 
   //Things are loaded now
+  //Choose the type of intervention:
+  if(strcmp(reduceBeta_name,"None")){
+    intervention_unparametrized_reduceBeta = &no_interventionBeta;
+    param_beta.time = 0;
+  } else {
+    printf("Could not recognize the beta specification %s\n",reduceBeta_name);
+    return(R_NilValue);
+  }
+  if(strcmp(eliminateSusceptibles_name,"None")){
+    intervention_unparametrized_eliminateSusceptibles = &no_interventionSusceptibles;
+    param_beta.time = 0;
+  } else {
+    printf("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
+    return(R_NilValue);
+  }
 
   //Set the parameters (This should eventually be based on the R input)
-  param_beta.time = 5;
-  param_susceptible.time = 5;
-  no_intervention_unparametrized_reduceBeta = &no_interventionBeta;
-  no_intervention_unparametrized_eliminateSusceptibles = &no_interventionSusceptibles;
-  // intervention_unparametrized_reduceBeta = &interventionBeta;
-  // intervention_unparametrized_eliminateSusceptibles = &interventionsusceptibles;
-  no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrized_reduceBeta,param_beta);
-  // intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
-  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrized_eliminateSusceptibles,param_susceptible);
-  // intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrized_eliminateSusceptibles,param_susceptible);
+  intervention_unparametrized_eliminateSusceptibles = &interventionSusceptibles;
+  intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
+  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrized_eliminateSusceptibles,param_susceptible);
   
 
   for(trial = 0; trial < ntrial; ++trial){
@@ -133,8 +147,8 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
       init,
       nvar,
       ntime,
-      no_intervention_reduceBeta,
-      no_intervention_eliminateSusceptibles,
+      intervention_reduceBeta,
+      intervention_eliminateSusceptibles,
       tfn,
       ifn,
       fn
