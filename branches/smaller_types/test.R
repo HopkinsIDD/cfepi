@@ -36,3 +36,4 @@ dyn.load('src/rinterface.so')
 dyn.unload('src/counterfactual.so')
 dyn.unload('src/rinterface.so')
 results <- read.csv('output/first_counterfactual.noint.0.csv',header = FALSE)[,-4]
+gc()
