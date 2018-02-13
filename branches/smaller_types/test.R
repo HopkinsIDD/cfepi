@@ -27,13 +27,25 @@ dyn.load('src/rinterface.so')
 .Call('runIntervention',
   "first_counterfactual",
   init,
-  function(){}, 
-  function(){},
+  "None",
+  "None",
+  list(),
+  list(),
+  ntime, 
+  ntrial
+)
+.Call('runIntervention',
+  "first_counterfactual",
+  init,
+  "Flat",
+  "None",
+  list(start_time = 30,rate= .05),
+  list(),
   ntime, 
   ntrial
 )
 # dyn.unload('src/counterfactual.dll')
 dyn.unload('src/counterfactual.so')
 dyn.unload('src/rinterface.so')
-results <- read.csv('output/first_counterfactual.noint.0.csv',header = FALSE)[,-4]
+# results <- read.csv('output/first_counterfactual.None.None.0.csv',header = FALSE)[,-4]
 gc()

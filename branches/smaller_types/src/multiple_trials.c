@@ -6,6 +6,8 @@
 #include "twofunctions.h"
 #include "counterfactual.h"
 
+#include "all_interventions.h"
+
 // R specific headers
 #include <R.h>
 //#include <Rinternals.h>
@@ -40,25 +42,27 @@ int main(){
   char ifn[1000];
   beta_t no_intervention_unparametrizedBeta, intervention_unparametrizedBeta;
   susceptible_t no_intervention_unparametrizedSusceptibles, intervention_unparametrizedSusceptibles;
-  param_beta_t beta_pars;
-  param_susceptible_t susceptible_pars;
+  param_beta_t control_beta_pars, intervention_beta_pars;
+  param_susceptible_t control_susceptible_pars, intervention_susceptible_pars;
   saved_beta_t no_intervention_reduceBeta, intervention_reduceBeta;
   saved_susceptible_t no_intervention_eliminateSusceptibles, intervention_eliminateSusceptibles;
 
   //get pointers to the original functions
-  no_intervention_unparametrizedBeta = *no_interventionBeta;
-  intervention_unparametrizedBeta = *interventionBeta;
-  no_intervention_unparametrizedSusceptibles = *no_interventionSusceptibles;
-  intervention_unparametrizedSusceptibles = *interventionSusceptibles;
+  no_intervention_unparametrizedBeta = *no_beta;
+  intervention_unparametrizedBeta = *flat_beta;
+  no_intervention_unparametrizedSusceptibles = *no_susceptible;
+  intervention_unparametrizedSusceptibles = *flat_susceptible;
   
   //Set the parameters, this will normally be done from within R.
-  beta_pars.time = 5;
-  susceptible_pars.time = 5;
+  control_beta_pars = param_no_beta();
+  intervention_beta_pars = param_flat_beta(30,.3);
+  control_susceptible_pars = param_no_susceptible();
+  intervention_susceptible_pars = param_flat_susceptible();
   
-  no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrizedBeta,beta_pars);
-  intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrizedBeta,beta_pars);
-  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrizedSusceptibles,susceptible_pars);
-  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrizedSusceptibles,susceptible_pars);
+  no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrizedBeta,control_beta_pars);
+  intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrizedBeta,intervention_beta_pars);
+  no_intervention_eliminateSusceptibles = partially_evaluate_susceptible(no_intervention_unparametrizedSusceptibles,control_susceptible_pars);
+  intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrizedSusceptibles,intervention_susceptible_pars);
   
   GetRNGstate();
   nvar = 3;
@@ -123,7 +127,7 @@ int main(){
       }
       printf("\n");
     }
-    printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
+    //printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
@@ -140,6 +144,7 @@ int main(){
     sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     fflush(stdout);
+    // printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
     constructTimeSeries(
       init,
       nvar,
