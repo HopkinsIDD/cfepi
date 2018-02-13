@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "single_intervention.h"
+#include <R_ext/Print.h>
 param_beta_t param_single_beta(){
   param_beta_t rc;
   strcpy(rc.type , "single");
@@ -9,12 +10,13 @@ param_beta_t param_single_beta(){
   return(rc);
 };
 
-void free_param_single_beta(param_beta_t rc){
+bool_t free_param_single_beta(param_beta_t rc){
   if(strcmp(rc.type,"single")!=0){
-    fprintf(stderr,"Attempting to free a param_beta_t with the wrong destructor\n");
-    exit(1);
+    REprintf("Attempting to free a param_beta_t with the wrong destructor\n");
+    return(1);
   }
   free(rc.data);
+  return(0);
 };
 
 // Finish writing these
@@ -31,12 +33,13 @@ param_susceptible_t param_single_susceptible(step_t time, float rate){
   return(rc);
 };
 
-void free_param_single_susceptible(param_susceptible_t rc){
+bool_t free_param_single_susceptible(param_susceptible_t rc){
   if(strcmp(rc.type,"single")!=0){
-    fprintf(stderr,"Attempting to free a param_susceptible_t with the wrong destructor\n");
-    exit(1);
+    REprintf("Attempting to free a param_susceptible_t with the wrong destructor\n");
+    return(1);
   }
   free(rc.data);
+  return(0);
 };
 
 // Finish writing these

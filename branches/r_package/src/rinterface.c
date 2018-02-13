@@ -1,6 +1,7 @@
 #include <R.h>
 #include <Rmath.h>
 #include <Rinternals.h>
+#include <R_ext/Print.h>
 #include <Rdefines.h>
 #include "rinterface.h"
 #include "counterfactual.h"
@@ -22,54 +23,54 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
-  fprintf(stderr,"First Call\n");
+  REprintf("First Call\n");
   ntime = R2cint(Rntime);
-  fprintf(stderr,"Second Call\n");
+  REprintf("Second Call\n");
   ntrial = R2cint(Rntrial);
   R2cmat(Rtransitions,&transitions,&nvar1,&nvar2);
   if(nvar1 != nvar){
-    fprintf(stderr,"Dimension mismatch.  The transition matrix should have one row for each variable.\n");
+    REprintf("Dimension mismatch.  The transition matrix should have one row for each variable.\n");
     return(R_NilValue);
   }
   if(nvar2 != nvar){
-    fprintf(stderr,"Dimension mismatch.  The transition matrix should have one col for each variable.\n");
+    REprintf("Dimension mismatch.  The transition matrix should have one col for each variable.\n");
     return(R_NilValue);
   }
   R2cmat(Rinteractions,&interactions,&nvar1,&nvar2);
   if(nvar1 != nvar){
-    fprintf(stderr,"Dimension mismatch.  The interaction matrix should have one row for each variable.\n");
+    REprintf("Dimension mismatch.  The interaction matrix should have one row for each variable.\n");
     return(R_NilValue);
   }
   if(nvar2 != nvar){
-    fprintf(stderr,"Dimension mismatch.  The interaction matrix should have one col for each variable.\n");
+    REprintf("Dimension mismatch.  The interaction matrix should have one col for each variable.\n");
     return(R_NilValue);
   }
 
   //Things are loaded now
 
   for(trial = 0; trial < ntrial; ++trial){
-    printf("Running Trial %d\n",trial);
+    Rprintf("Running Trial %d\n",trial);
     sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
     sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
-    printf("init:");
+    Rprintf("init:");
     for(var = 0; var < nvar; ++var){
-      printf(" %d",init[var]);
+      Rprintf(" %d",init[var]);
     }
-    printf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
-    for(var = 0; var < nvar; ++var){
-      for(var2 = 0; var2 < nvar; ++var2){
-        printf(" %f",transitions[IND(var,var2,nvar)]);
-      }
-      printf("\n");
-    }
-    printf("\ninteractions:\n");
+    Rprintf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
     for(var = 0; var < nvar; ++var){
       for(var2 = 0; var2 < nvar; ++var2){
-        printf(" %f",interactions[IND(var,var2,nvar)]);
+        Rprintf(" %f",transitions[IND(var,var2,nvar)]);
       }
-      printf("\n");
+      Rprintf("\n");
     }
-    printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
+    Rprintf("\ninteractions:\n");
+    for(var = 0; var < nvar; ++var){
+      for(var2 = 0; var2 < nvar; ++var2){
+        Rprintf(" %f",interactions[IND(var,var2,nvar)]);
+      }
+      Rprintf("\n");
+    }
+    Rprintf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     // sprintf(ifn,"output/%s.i.1.%d.csv",trial);
     // sprintf(tfn,"output/%s.t.1.%d.csv",trial);
@@ -107,9 +108,9 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
-  fprintf(stderr,"Third Call\n");
+  REprintf("Third Call\n");
   ntime = R2cint(Rntime);
-  fprintf(stderr,"Fourth Call\n");
+  REprintf("Fourth Call\n");
   ntrial = R2cint(Rntrial);
   //These may change later
   R2cstring(RreduceBeta,&reduceBeta_name);
@@ -122,33 +123,33 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     param_beta = param_no_beta();
   } else if(strcmp(reduceBeta_name,"Flat")==0){
     intervention_unparametrized_reduceBeta = &flat_beta;
-    fprintf(stderr,"Fifth Call\n");
-    printf("length of pars is %d\n",LENGTH(RbetaPars));
+    REprintf("Fifth Call\n");
+    Rprintf("length of pars is %d\n",LENGTH(RbetaPars));
     fflush(stdout);
-    printf("length of pars[[1]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
-    printf("pars[[1]] is %d\n",R2cint(VECTOR_ELT(RbetaPars,0)));
+    Rprintf("length of pars[[1]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
+    Rprintf("pars[[1]] is %d\n",R2cint(VECTOR_ELT(RbetaPars,0)));
     fflush(stdout);
-    printf("length of pars[[2]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
-    printf("pars[[2]] is %f\n",R2cdouble(VECTOR_ELT(RbetaPars,1)));
+    Rprintf("length of pars[[2]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
+    Rprintf("pars[[2]] is %f\n",R2cdouble(VECTOR_ELT(RbetaPars,1)));
     fflush(stdout);
     param_beta = param_flat_beta(
       R2cint(VECTOR_ELT(RbetaPars,0)),
       R2cdouble(VECTOR_ELT(RbetaPars,1))
     );
   } else {
-    printf("Could not recognize the beta specification %s\n",reduceBeta_name);
+    Rprintf("Could not recognize the beta specification %s\n",reduceBeta_name);
     return(R_NilValue);
   }
   if(strcmp(eliminateSusceptibles_name,"None")==0){
     intervention_unparametrized_eliminateSusceptibles = &no_susceptible;
     param_susceptible = param_no_susceptible();
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
-    fprintf(stderr, "This code is not yet written\n");
+    REprintf( "This code is not yet written\n");
     exit(1);
     intervention_unparametrized_eliminateSusceptibles = &flat_susceptible;
     param_susceptible = param_no_susceptible();
   } else {
-    printf("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
+    Rprintf("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
     return(R_NilValue);
   }
 
@@ -158,15 +159,15 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   
 
   for(trial = 0; trial < ntrial; ++trial){
-    printf("Running Trial %d\n",trial);
+    Rprintf("Running Trial %d\n",trial);
     sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
     sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
     sprintf(fn,"output/%s.%s.%s.%d.csv",filename,reduceBeta_name,eliminateSusceptibles_name,trial);
-    printf("init:");
+    Rprintf("init:");
     for(var = 0; var < nvar; ++var){
-      printf(" %d",init[var]);
+      Rprintf(" %d",init[var]);
     }
-    printf("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
+    Rprintf("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
     constructTimeSeries(
       init,
       nvar,
@@ -199,7 +200,7 @@ void R2cmat(SEXP Rmat, double* *cmat, int *n, int *m){
   PROTECT(Rdim = getAttrib(Rmat, R_DimSymbol));
   (*m) = INTEGER(Rdim)[0];
   (*n) = INTEGER(Rdim)[1];
-  printf("\t%dx%d\n",(*m),(*n));
+  Rprintf("\t%dx%d\n",(*m),(*n));
   (*cmat) = REAL(Rmat);
   UNPROTECT(1);
   return;
@@ -219,19 +220,19 @@ double R2cdouble(SEXP Rvec){
   if(LENGTH(Rvec) == 1){
     return((double) REAL(Rvec)[0]);
   }
-  fprintf(stderr,"R2cdouble only works on R vectors of length 1\n");
+  REprintf("R2cdouble only works on R vectors of length 1\n");
   return(0);
 }
 
 int R2cint(SEXP Rvec){
-  printf("Beginning\n");
+  Rprintf("Beginning\n");
   if(LENGTH(Rvec) == 1){
-    printf("Success\n");
+    Rprintf("Success\n");
     fflush(stdout);
     return((int) REAL(Rvec)[0]);
   }
-  fprintf(stderr,"R2cint only works on R vectors of length 1\n");
-  printf("Failed\n");
+  REprintf("R2cint only works on R vectors of length 1\n");
+  Rprintf("Failed\n");
   fflush(stdout);
   return(0);
 }

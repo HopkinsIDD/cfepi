@@ -6,6 +6,7 @@
 
 // R specific headers
 #include <R.h>
+#include <R_ext/Print.h>
 //#include <Rinternals.h>
 #include <Rmath.h>
 //#include <R_ext/Rdynload.h>
@@ -33,9 +34,6 @@ void sample(person_t* *output, person_t n, person_t k){
     j = runif(i,n);
     if(j >= n){j = i;}
     // Swap arr[i] with the element at random index
-    // printf("i is %d\n",i);
-    // printf("j is %d\n",j);
-    fflush(stdout);
     swap(&(*output)[i], &(*output)[j]);
   }
 }
@@ -45,7 +43,7 @@ void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t nt
     runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
   }
-  fprintf(stderr,"type %s is invalid\n",type);
+  REprintf("type %s is invalid\n",type);
   return;
 }
 
@@ -90,7 +88,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   }
   assert(counter == npop);
 
-  // printf("Looping Variables:\n\tnvar is %d\n\tntime is %d\n\tnpop is %d\n",nvar,ntime,npop);
+  // Rprintf("Looping Variables:\n\tnvar is %d\n\tntime is %d\n\tnpop is %d\n",nvar,ntime,npop);
   tfp = fopen(tfname,"wb");
   ifp = fopen(ifname,"wb");
   sprintf(ifn2,"%s.csv",ifname);
@@ -102,8 +100,8 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
     ofp2 = fopen(ofn2, "w");
   }
 
-  printf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
-  printf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  Rprintf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  Rprintf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
   targets = malloc(npop * sizeof(person_t));
   for(person1 = 0; person1 < npop; ++person1){
     targets[person1] = person1;
@@ -151,16 +149,16 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
 	  if(interactions[IND(var2,var1,nvar)] > 0){
 	    // Generate number of interactions;
 	    ninteraction = rbinom(npop,interactions[IND(var2,var1,nvar)]);
-            // printf("There should be %f interactions\n",ninteraction);
+            // Rprintf("There should be %f interactions\n",ninteraction);
 	    // Generate interactions
             /*
             if(ninteraction > 0){
-              printf("\tnpop: %d\n\tninteraction: %f\n",npop,ninteraction);
+              Rprintf("\tnpop: %d\n\tninteraction: %f\n",npop,ninteraction);
               fflush(stdout);
             }
             */
             if(npop < ninteraction){
-              printf("This should not happen\n");
+              Rprintf("This should not happen\n");
               return;
             }
             
@@ -253,7 +251,7 @@ void constructTimeSeries(
     npop = npop + init[var];
   }
   if(RUN_DEBUG == 1){
-    printf("npop is %d\n",npop);
+    Rprintf("npop is %d\n",npop);
   }
   sprintf(ofn2,"%s.csv",outputfilename);
   if(RUN_DEBUG==1){
@@ -261,7 +259,7 @@ void constructTimeSeries(
   }
   state_counts = malloc(nvar*sizeof(person_t));
   states = malloc((1+ntime)*sizeof(var_t*));
-  if(states == NULL){fprintf(stderr,"Malloc error for states\n");}
+  if(states == NULL){REprintf("Malloc error for states\n");}
   cur_states = calloc(npop,sizeof(var_t));
   for(time = 0; time < (ntime+1); ++ time){
     states[time] = calloc(npop,sizeof(var_t));
@@ -297,7 +295,7 @@ void constructTimeSeries(
     if(RUN_DEBUG==1){
       fprintf(ofp2,"Loop\n");
     }
-    // printf("transition reading %p - %d\n",tfp,reading_tfp);
+    // Rprintf("transition reading %p - %d\n",tfp,reading_tfp);
     fflush(stdout);
     if((reading_tfp) && (feof(tfp))){
       reading_file_1 = 0;
@@ -314,7 +312,7 @@ void constructTimeSeries(
       (reading_file_2 == 0) && 
       (ctime == mtime)
     ){
-      fprintf(stderr,"This should not happen\n");
+      REprintf("This should not happen\n");
       return;
     }
     if(RUN_DEBUG==1){
@@ -328,7 +326,7 @@ void constructTimeSeries(
       //Error checking
       if((err < 4)){
         if(!feof(tfp)){
-          fprintf(stderr,"Only caught %d params/4\n",err);
+          REprintf("Only caught %d params/4\n",err);
           return;
         } else {
           ttime=ntime-1;
@@ -351,10 +349,10 @@ void constructTimeSeries(
       err += fread(&ivar1,sizeof(var_t),1,ifp);
       err += fread(&ivar2,sizeof(var_t),1,ifp);
       //Error checking
-      // printf("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
+      // Rprintf("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
       if((err < 5)){
         if(!feof(ifp)){
-          fprintf(stderr,"Only caught %d params/5\n",err);
+          REprintf("Only caught %d params/5\n",err);
           return;
         } else {
           iperson1=0;
@@ -372,10 +370,10 @@ void constructTimeSeries(
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     mtime = ((itime >= ttime) || feof(ifp)) ? ttime : itime;
-    // printf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    // Rprintf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
       while(ctime < mtime){
-        printf("time %d\n",ctime);
+        Rprintf("time %d\n",ctime);
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
@@ -414,7 +412,7 @@ void constructTimeSeries(
 /// 	}
       }
     }
-    // printf("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
+    // Rprintf("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
     if(
       (states[itime][iperson1] == ivar1) &&
       (states[itime][iperson1] == states[itime+1][iperson1]) &&

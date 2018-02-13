@@ -10,6 +10,7 @@
 
 // R specific headers
 #include <R.h>
+#include <R_ext/Print.h>
 //#include <Rinternals.h>
 #include <Rmath.h>
 //#include <R_ext/Rdynload.h>
@@ -86,9 +87,9 @@ int main(){
   npop = 0;
   for(var = 0; var < nvar; ++var){
     npop += init[var];
-    printf("Category %d: %d\n",var,init[var]);
+    Rprintf("Category %d: %d\n",var,init[var]);
   }
-  printf("Total Population: %d\n",npop);
+  Rprintf("Total Population: %d\n",npop);
 
   vaccination_time = 30;
   vaccination_percent = .01;
@@ -98,7 +99,7 @@ int main(){
 
   distancing_percent = .01;
   distancing_time = 30;
-  printf("Expected R0 is %f\n",beta/gamma);
+  Rprintf("Expected R0 is %f\n",beta/gamma);
 
   transitions = calloc(nvar*nvar,sizeof(double));
   interactions = calloc(nvar*nvar,sizeof(double));
@@ -108,26 +109,26 @@ int main(){
   interactions[IND(0,1,nvar)] = beta/npop;
 
   for(trial = 0; trial < ntrial; ++trial){
-    printf("Running Trial %d\n",trial);
-    printf("init:");
+    Rprintf("Running Trial %d\n",trial);
+    Rprintf("init:");
     for(var = 0; var < nvar; ++var){
-      printf(" %d",init[var]);
+      Rprintf(" %d",init[var]);
     }
-    printf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
-    for(var = 0; var < nvar; ++var){
-      for(var2 = 0; var2 < nvar; ++var2){
-        printf(" %f",transitions[IND(var,var2,nvar)]);
-      }
-      printf("\n");
-    }
-    printf("\ninteractions:\n");
+    Rprintf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
     for(var = 0; var < nvar; ++var){
       for(var2 = 0; var2 < nvar; ++var2){
-        printf(" %f",interactions[IND(var,var2,nvar)]);
+        Rprintf(" %f",transitions[IND(var,var2,nvar)]);
       }
-      printf("\n");
+      Rprintf("\n");
     }
-    //printf("\ntfn: %s\nifn: %s\n",tfn,ifn);
+    Rprintf("\ninteractions:\n");
+    for(var = 0; var < nvar; ++var){
+      for(var2 = 0; var2 < nvar; ++var2){
+        Rprintf(" %f",interactions[IND(var,var2,nvar)]);
+      }
+      Rprintf("\n");
+    }
+    //Rprintf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.1.%d.csv",trial);
     sprintf(tfn,"output/transition.1.%d.csv",trial);
@@ -139,12 +140,12 @@ int main(){
   }
 
   for(trial = 0; trial < ntrial; ++trial){
-    printf("Evaluating Trial %d\n",trial);
+    Rprintf("Evaluating Trial %d\n",trial);
     sprintf(ifn,"output/first_counterfactual.i.0.%d.csv",trial);
     sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     fflush(stdout);
-    // printf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
+    // Rprintf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
     constructTimeSeries(
       init,
       nvar,

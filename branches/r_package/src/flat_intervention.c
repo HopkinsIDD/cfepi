@@ -5,6 +5,7 @@
 #include "flat_intervention.h"
 
 #include <R.h>
+#include <R_ext/Print.h>
 #include <Rmath.h>
 param_beta_t param_flat_beta(step_t start_time, float rate){
   param_beta_t rc;
@@ -15,12 +16,14 @@ param_beta_t param_flat_beta(step_t start_time, float rate){
   return(rc);
 };
 
-void free_param_flat_beta(param_beta_t rc){
+// 1 success 0 failure
+bool_t free_param_flat_beta(param_beta_t rc){
   if(strcmp(rc.type,"flat")!=0){
-    fprintf(stderr,"Attempting to free a param_beta_t with the wrong destructor\n");
-    exit(1);
+    REprintf("Attempting to free a param_beta_t with the wrong destructor\n");
+    return(1);
   }
   free(rc.data);
+  return(0);
 };
 
 // Finish writing these
@@ -41,12 +44,13 @@ param_susceptible_t param_flat_susceptible(){
   return(rc);
 };
 
-void free_param_flat_susceptible(param_susceptible_t rc){
+bool_t free_param_flat_susceptible(param_susceptible_t rc){
   if(strcmp(rc.type,"flat")!=0){
-    fprintf(stderr,"Attempting to free a param_susceptible_t with the wrong destructor\n");
-    exit(1);
+    REprintf("Attempting to free a param_susceptible_t with the wrong destructor\n");
+    return(1);
   }
   free(rc.data);
+  return(0);
 };
 
 // Finish writing these
