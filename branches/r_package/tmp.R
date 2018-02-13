@@ -1,5 +1,0 @@
-dyn.load('src/counterfactual.so')
-dyn.load('src/multiple_trials.so')
-.C('main')
-dyn.unload('src/multiple_trials.so')
-dyn.unload('src/counterfactual.so')
