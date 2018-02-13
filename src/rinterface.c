@@ -4,6 +4,7 @@
 #include <Rdefines.h>
 #include "rinterface.h"
 #include "counterfactual.h"
+#include "all_interventions.h"
 
 SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP Rinteractions, SEXP Rtransitions, SEXP Rntime, SEXP Rntrial){
   double* interactions;
@@ -21,8 +22,10 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
-  R2cint(Rntime,&ntime);
-  R2cint(Rntrial,&ntrial);
+  fprintf(stderr,"First Call\n");
+  ntime = R2cint(Rntime);
+  fprintf(stderr,"Second Call\n");
+  ntrial = R2cint(Rntrial);
   R2cmat(Rtransitions,&transitions,&nvar1,&nvar2);
   if(nvar1 != nvar){
     fprintf(stderr,"Dimension mismatch.  The transition matrix should have one row for each variable.\n");
@@ -79,7 +82,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   return(R_NilValue);
 }
 
-SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptibles, SEXP Rntime, SEXP Rntrial){
+SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptibles, SEXP RbetaPars, SEXP RsusceptiblePars, SEXP Rntime, SEXP Rntrial){
   double* output;
   SEXP Routput;
   int* init;
@@ -104,31 +107,52 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
-  R2cint(Rntime,&ntime);
-  R2cint(Rntrial,&ntrial);
+  fprintf(stderr,"Third Call\n");
+  ntime = R2cint(Rntime);
+  fprintf(stderr,"Fourth Call\n");
+  ntrial = R2cint(Rntrial);
   //These may change later
   R2cstring(RreduceBeta,&reduceBeta_name);
   R2cstring(ReliminateSusceptibles,&eliminateSusceptibles_name);
  
   //Things are loaded now
   //Choose the type of intervention:
-  if(strcmp(reduceBeta_name,"None")){
-    intervention_unparametrized_reduceBeta = &no_interventionBeta;
-    param_beta.time = 0;
+  if(strcmp(reduceBeta_name,"None")==0){
+    intervention_unparametrized_reduceBeta = &no_beta;
+    param_beta = param_no_beta();
+  } else if(strcmp(reduceBeta_name,"Flat")==0){
+    intervention_unparametrized_reduceBeta = &flat_beta;
+    fprintf(stderr,"Fifth Call\n");
+    printf("length of pars is %d\n",LENGTH(RbetaPars));
+    fflush(stdout);
+    printf("length of pars[[1]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
+    printf("pars[[1]] is %d\n",R2cint(VECTOR_ELT(RbetaPars,0)));
+    fflush(stdout);
+    printf("length of pars[[2]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
+    printf("pars[[2]] is %f\n",R2cdouble(VECTOR_ELT(RbetaPars,1)));
+    fflush(stdout);
+    param_beta = param_flat_beta(
+      R2cint(VECTOR_ELT(RbetaPars,0)),
+      R2cdouble(VECTOR_ELT(RbetaPars,1))
+    );
   } else {
     printf("Could not recognize the beta specification %s\n",reduceBeta_name);
     return(R_NilValue);
   }
-  if(strcmp(eliminateSusceptibles_name,"None")){
-    intervention_unparametrized_eliminateSusceptibles = &no_interventionSusceptibles;
-    param_beta.time = 0;
+  if(strcmp(eliminateSusceptibles_name,"None")==0){
+    intervention_unparametrized_eliminateSusceptibles = &no_susceptible;
+    param_susceptible = param_no_susceptible();
+  } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
+    fprintf(stderr, "This code is not yet written\n");
+    exit(1);
+    intervention_unparametrized_eliminateSusceptibles = &flat_susceptible;
+    param_susceptible = param_no_susceptible();
   } else {
     printf("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
     return(R_NilValue);
   }
 
   //Set the parameters (This should eventually be based on the R input)
-  intervention_unparametrized_eliminateSusceptibles = &interventionSusceptibles;
   intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
   intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrized_eliminateSusceptibles,param_susceptible);
   
@@ -137,7 +161,7 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     printf("Running Trial %d\n",trial);
     sprintf(ifn,"output/%s.i.0.%d.csv",filename,trial);
     sprintf(tfn,"output/%s.t.0.%d.csv",filename,trial);
-    sprintf(fn,"output/%s.noint.%d.csv",filename,trial);
+    sprintf(fn,"output/%s.%s.%s.%d.csv",filename,reduceBeta_name,eliminateSusceptibles_name,trial);
     printf("init:");
     for(var = 0; var < nvar; ++var){
       printf(" %d",init[var]);
@@ -191,22 +215,25 @@ void R2cvecint(SEXP Rvec, int* *cvec, int *n){
   (*cvec) = INTEGER(AS_INTEGER(Rvec));
   return;
 }
-void R2cdouble(SEXP Rvec, double *val){
+double R2cdouble(SEXP Rvec){
   if(LENGTH(Rvec) == 1){
-    (*val) = REAL(Rvec)[0];
-    return;
+    return((double) REAL(Rvec)[0]);
   }
   fprintf(stderr,"R2cdouble only works on R vectors of length 1\n");
-  return;
+  return(0);
 }
 
-void R2cint(SEXP Rvec, int *val){
+int R2cint(SEXP Rvec){
+  printf("Beginning\n");
   if(LENGTH(Rvec) == 1){
-    (*val) = (int) REAL(Rvec)[0];
-    return;
+    printf("Success\n");
+    fflush(stdout);
+    return((int) REAL(Rvec)[0]);
   }
-  fprintf(stderr,"R2cdouble only works on R vectors of length 1\n");
-  return;
+  fprintf(stderr,"R2cint only works on R vectors of length 1\n");
+  printf("Failed\n");
+  fflush(stdout);
+  return(0);
 }
 
 void R2cstring(SEXP Rstring, char* *cstring){

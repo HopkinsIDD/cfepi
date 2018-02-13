@@ -11,7 +11,10 @@ LINKS= -lm
 RLINKS= -L/usr/local/lib/R/lib -lR
 # RLINKS= -L"C:\Program Files\R\R-3.4.2\lib" -lR
 LOADER = gcc
-RDBG = MAKEFLAGS="CFLAGS=-g3 -pg"
+RDBG = MAKEFLAGS="CFLAGS=-g3"# -pg"
+## Template for finding files
+INTERVENTIONS := $(shell find $(SRC) -name '*_intervention.c')
+
 
 .Phony=all
 all: library executables
@@ -43,10 +46,11 @@ counterfactual.so:
 	$(RDBG) $(RC) $(SRC)/counterfactual.c $(SRC)/twofunctions.c
 multiple_trials.so:
 	@echo "multiple_trials.so"
-	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c $(INTERVENTIONS)
 twofunctions.so:
 	@echo "twofunctions.so"
 	$(RDBG) $(RC) $(SRC)/twofunctions.c
+
 test.so:
 	@echo "test.so"
 	$(RDBG) $(RC) $(SRC)/test.c
@@ -56,16 +60,16 @@ test2.so:
 
 rinterface.so:
 	@echo "rinterface.so"
-	$(RDBG) $(RC) $(SRC)/rinterface.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
+	$(RDBG) $(RC) $(SRC)/rinterface.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c $(INTERVENTIONS)
 
 multipleTrials:
 	@echo "multipleTrials:"
-	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c -o multipleTrials $(LINKS) $(RLINKS)
+	$(CC) $(POPTS) $(ROPTS) multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c $(INTERVENTIONS) -o multipleTrials $(LINKS) $(RLINKS)
 .Phony=simultaneous
 simultaneous:
 	@echo "simultaneous:"
-	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c
+	$(RDBG) $(RC) $(SRC)/multiple_trials.c $(SRC)/counterfactual.c $(SRC)/twofunctions.c $(INTERVENTIONS)
 	
 .Phony=clean
 clean:
-	$(RM) *.so src/*.so src/*.o *.o multipleTrials output/* src/*.dll vgcore*. *.val *.val
+	$(RM) *.so src/*.so src/*.o *.o multipleTrials output/* src/*.dll src/*.rds vgcore*. *.val *.val
