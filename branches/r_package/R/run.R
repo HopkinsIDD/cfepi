@@ -38,7 +38,8 @@
 #'   state and one column for the simulation number.  It has one row
 #'   for each time step, and the values are the number of people in
 #'   that state at that time.
-run_scenario <- function(filename,init,beta_type,susceptible_type,ntime,ntrial = 1000){
+#' @useDynLib counterfactual runIntervention
+run_scenario <- function(filename,init,beta_type,susceptible_type,beta_pars,susceptible_pars,ntime,ntrial = 1000){
   .Call('runIntervention',
     filename,
     init,

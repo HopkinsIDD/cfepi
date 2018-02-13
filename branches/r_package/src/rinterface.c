@@ -125,13 +125,10 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     intervention_unparametrized_reduceBeta = &flat_beta;
     REprintf("Fifth Call\n");
     Rprintf("length of pars is %d\n",LENGTH(RbetaPars));
-    fflush(stdout);
     Rprintf("length of pars[[1]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
     Rprintf("pars[[1]] is %d\n",R2cint(VECTOR_ELT(RbetaPars,0)));
-    fflush(stdout);
     Rprintf("length of pars[[2]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
     Rprintf("pars[[2]] is %f\n",R2cdouble(VECTOR_ELT(RbetaPars,1)));
-    fflush(stdout);
     param_beta = param_flat_beta(
       R2cint(VECTOR_ELT(RbetaPars,0)),
       R2cdouble(VECTOR_ELT(RbetaPars,1))
@@ -145,7 +142,7 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     param_susceptible = param_no_susceptible();
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
     REprintf( "This code is not yet written\n");
-    exit(1);
+    return(R_NilValue);
     intervention_unparametrized_eliminateSusceptibles = &flat_susceptible;
     param_susceptible = param_no_susceptible();
   } else {
@@ -228,12 +225,10 @@ int R2cint(SEXP Rvec){
   Rprintf("Beginning\n");
   if(LENGTH(Rvec) == 1){
     Rprintf("Success\n");
-    fflush(stdout);
     return((int) REAL(Rvec)[0]);
   }
   REprintf("R2cint only works on R vectors of length 1\n");
   Rprintf("Failed\n");
-  fflush(stdout);
   return(0);
 }
 

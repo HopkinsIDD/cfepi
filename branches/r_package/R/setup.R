@@ -27,6 +27,7 @@
 #'   making it agent based, and so multiple trials are recommended.
 #' @return This function generates \code{2*ntrial} files where
 #'   determined by \code{filename}
+#' @useDynLib counterfactual setupCounterfactualAnalysis
 setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
   .Call('setupCounterfactualAnalysis',
     filename,

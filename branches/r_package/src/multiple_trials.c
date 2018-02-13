@@ -144,7 +144,6 @@ int main(){
     sprintf(ifn,"output/first_counterfactual.i.0.%d.csv",trial);
     sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
-    fflush(stdout);
     // Rprintf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
     constructTimeSeries(
       init,

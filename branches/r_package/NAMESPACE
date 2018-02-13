@@ -2,3 +2,5 @@
 
 export(run_scenario)
 export(setup_counterfactual)
+useDynLib(counterfactual,runIntervention)
+useDynLib(counterfactual,setupCounterfactualAnalysis)

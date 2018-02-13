@@ -154,7 +154,6 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
             /*
             if(ninteraction > 0){
               Rprintf("\tnpop: %d\n\tninteraction: %f\n",npop,ninteraction);
-              fflush(stdout);
             }
             */
             if(npop < ninteraction){
@@ -296,7 +295,6 @@ void constructTimeSeries(
       fprintf(ofp2,"Loop\n");
     }
     // Rprintf("transition reading %p - %d\n",tfp,reading_tfp);
-    fflush(stdout);
     if((reading_tfp) && (feof(tfp))){
       reading_file_1 = 0;
       if((reading_ifp) && (feof(ifp))){

@@ -54,7 +54,7 @@ sub write_c_file {
   
   ## Start printing to file
   ## Include statements
-  print C "#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n";
+  print C "#include <stdlib.h>\n#include <stdio.h>\n#include <string.h>\n#include <R_ext/print.h>\n";
   print C "#include \"${name}_intervention.h\"\n";
   ## constructor for the beta params
   print C "param_beta_t param_${name}_beta(";
@@ -79,10 +79,10 @@ sub write_c_file {
   print C "  return(rc);\n};\n\n";
   ## end constructor for the beta params
   ## destructor for the beta params
-  print C "void free_param_${name}_beta(param_beta_t rc){\n";
+  print C "bool_t free_param_${name}_beta(param_beta_t rc){\n";
   $counter = 0;
   ## Check the type to make sure we aren't freeing the wrong thing
-  print C "  if(strcmp(rc.type,\"$name\")!=0){\n    fprintf(stderr,\"Attempting to free a param_beta_t with the wrong destructor\\n\");\n    exit(1);\n  }\n";
+  print C "  if(strcmp(rc.type,\"$name\")!=0){\n    fprintf(stderr,\"Attempting to free a param_beta_t with the wrong destructor\\n\");\n    return(1);\n  }\n";
   for my $this_type (@c_types_beta){
     ## Make sure to free arrays
     ++$counter;
@@ -90,7 +90,7 @@ sub write_c_file {
       print C "  free((*rc.data).$names_beta[$counter]);\n";
     }
   }
-  print C "  free(rc.data);\n";
+  print C "  free(rc.data);\n  return(0);\n";
   print C "};\n\n";
   ## end destructor of the beta params
   print C "// Finish writing these\nbool_t ${name}_beta(step_t time, person_t person1, person_t person2, var_t var1, var_t var2,param_beta_t pars){\n  return(1);\n}\n\n";
@@ -117,10 +117,10 @@ sub write_c_file {
   print C "  return(rc);\n};\n\n";
   ## end constructor for the susceptible params
   ## destructor for the susceptible params
-  print C "void free_param_${name}_susceptible(param_susceptible_t rc){\n";
+  print C "bool_t free_param_${name}_susceptible(param_susceptible_t rc){\n";
   $counter = 0;
   ## Check the type to make sure we aren't freeing the wrong thing
-  print C "  if(strcmp(rc.type,\"$name\")!=0){\n    fprintf(stderr,\"Attempting to free a param_susceptible_t with the wrong destructor\\n\");\n    exit(1);\n  }\n";
+  print C "  if(strcmp(rc.type,\"$name\")!=0){\n    fprintf(stderr,\"Attempting to free a param_susceptible_t with the wrong destructor\\n\");\n    return(1);\n  }\n";
   for my $this_type (@c_types_susceptible){
     ## Make sure to free arrays
     if($this_type =~ /\*/){
@@ -128,7 +128,7 @@ sub write_c_file {
     }
     ++$counter;
   }
-  print C "  free(rc.data);\n";
+  print C "  free(rc.data);\n  return(0);\n";
   print C "};\n\n";
   ## end destructor of the susceptible params
   print C "// Finish writing these\nvoid ${name}_susceptible(var_t** states, step_t time, step_t ntime, person_t npop, param_susceptible_t pars){\n  return;\n}\n\n";
@@ -173,7 +173,7 @@ sub write_h_file {
   print H ");\n";
   ## end constructor for the beta params
   ## destructor for the beta params
-  print H "void free_param_${name}_beta(param_beta_t);\n";
+  print H "bool_t free_param_${name}_beta(param_beta_t);\n";
   ## end destructor of the susceptible params
   ## constructor for the susceptible params
   print H "typedef struct {\n";
@@ -194,7 +194,7 @@ sub write_h_file {
   print H ");\n";
   ## end constructor for the params
   ## destructor for the params
-  print H "void free_param_${name}_susceptible(param_susceptible_t);\n";
+  print H "bool_t free_param_${name}_susceptible(param_susceptible_t);\n";
   ## end destructor of the susceptible params
   ## beta_t
   print H "bool_t ${name}_beta(step_t time, person_t person1, person_t person2, var_t var1, var_t var2,param_beta_t pars);\n";
