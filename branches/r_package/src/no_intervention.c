@@ -12,7 +12,7 @@ param_beta_t param_no_beta(){
 
 bool_t free_param_no_beta(param_beta_t rc){
   if(strcmp(rc.type,"no")!=0){
-    REprintf("Attempting to free a param_beta_t with the wrong destructor\n");
+    Rf_error("Attempting to free a param_beta_t with the wrong destructor\n");
     return(1);
   }
   free(rc.data);
@@ -33,7 +33,7 @@ param_susceptible_t param_no_susceptible(){
 
 bool_t free_param_no_susceptible(param_susceptible_t rc){
   if(strcmp(rc.type,"no")!=0){
-    REprintf("Attempting to free a param_susceptible_t with the wrong destructor\n");
+    Rf_error("Attempting to free a param_susceptible_t with the wrong destructor\n");
     return(1);
   }
   free(rc.data);

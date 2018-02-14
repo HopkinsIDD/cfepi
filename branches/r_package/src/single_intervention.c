@@ -12,7 +12,7 @@ param_beta_t param_single_beta(){
 
 bool_t free_param_single_beta(param_beta_t rc){
   if(strcmp(rc.type,"single")!=0){
-    REprintf("Attempting to free a param_beta_t with the wrong destructor\n");
+    Rf_error("Attempting to free a param_beta_t with the wrong destructor\n");
     return(1);
   }
   free(rc.data);
@@ -35,7 +35,7 @@ param_susceptible_t param_single_susceptible(step_t time, float rate){
 
 bool_t free_param_single_susceptible(param_susceptible_t rc){
   if(strcmp(rc.type,"single")!=0){
-    REprintf("Attempting to free a param_susceptible_t with the wrong destructor\n");
+    Rf_error("Attempting to free a param_susceptible_t with the wrong destructor\n");
     return(1);
   }
   free(rc.data);

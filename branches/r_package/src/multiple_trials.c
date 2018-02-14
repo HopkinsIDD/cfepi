@@ -130,19 +130,19 @@ int main(){
     }
     //Rprintf("\ntfn: %s\nifn: %s\n",tfn,ifn);
     vaccination_occurred = 0;
-    sprintf(ifn,"output/interaction.1.%d.csv",trial);
-    sprintf(tfn,"output/transition.1.%d.csv",trial);
+    sprintf(ifn,"output/interaction.1.%d.dat",trial);
+    sprintf(tfn,"output/transition.1.%d.dat",trial);
     runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
-    sprintf(ifn,"output/first_counterfactual.i.1.%d.csv",trial);
-    sprintf(tfn,"output/first_counterfactual.t.1.%d.csv",trial);
+    sprintf(ifn,"output/first_counterfactual.i.1.%d.dat",trial);
+    sprintf(tfn,"output/first_counterfactual.t.1.%d.dat",trial);
     runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
     // return(0);
   }
 
   for(trial = 0; trial < ntrial; ++trial){
     Rprintf("Evaluating Trial %d\n",trial);
-    sprintf(ifn,"output/first_counterfactual.i.0.%d.csv",trial);
-    sprintf(tfn,"output/first_counterfactual.t.0.%d.csv",trial);
+    sprintf(ifn,"output/first_counterfactual.i.0.%d.dat",trial);
+    sprintf(tfn,"output/first_counterfactual.t.0.%d.dat",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",0,trial);
     // Rprintf("tfn: %s\nifn: %s\nfn: %s\n",tfn,ifn,fn);
     constructTimeSeries(
@@ -167,8 +167,8 @@ int main(){
       ifn,
       fn
     );
-    sprintf(ifn,"output/first_counterfactual.i.1.%d.csv",trial);
-    sprintf(tfn,"output/first_counterfactual.t.1.%d.csv",trial);
+    sprintf(ifn,"output/first_counterfactual.i.1.%d.dat",trial);
+    sprintf(tfn,"output/first_counterfactual.t.1.%d.dat",trial);
     sprintf(fn,"output/%s.%d.%d.csv","no_intervention",1,trial);
     constructTimeSeries(
       init,

@@ -12,9 +12,6 @@
 //#include <R_ext/Rdynload.h>
 //#include <Rdefines.h>
 
-#define CONSTRUCT_DEBUG 0
-#define RUN_DEBUG 0
-
 // see header file for type definitions.  All custom types are integers of a particular size.
 // A utility function to swap to people
 void swap (person_t *a, person_t *b){
@@ -43,7 +40,7 @@ void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t nt
     runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
     return;
   }
-  REprintf("type %s is invalid\n",type);
+  Rf_error("type %s is invalid\n",type);
   return;
 }
 
@@ -88,20 +85,37 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   }
   assert(counter == npop);
 
-  // Rprintf("Looping Variables:\n\tnvar is %d\n\tntime is %d\n\tnpop is %d\n",nvar,ntime,npop);
+  //Check to see if these exist
+  if(CONSTRUCT_DEBUG==1){
+    Rprintf("Saving to files: %s and %s\n",tfname,ifname);
+  }
   tfp = fopen(tfname,"wb");
   ifp = fopen(ifname,"wb");
-  sprintf(ifn2,"%s.csv",ifname);
-  sprintf(tfn2,"%s.csv",tfname);
-  sprintf(ofn2,"%s.all.csv",ifname);
+  if(tfp == NULL){
+    Rf_error("Could not open file %s\n",tfname);
+    return;
+  }
+  if(ifp == NULL){
+    Rf_error("Could not open file %s\n",ifname);
+    return;
+  }
+  
+  sprintf(ifn2,"%s.dat",ifname);
+  sprintf(tfn2,"%s.dat",tfname);
+  sprintf(ofn2,"%s.all.dat",ifname);
   if(CONSTRUCT_DEBUG==1){
     tfp2 = fopen(tfn2,"w");
     ifp2 = fopen(ifn2,"w");
     ofp2 = fopen(ofn2, "w");
+    if(ofp2 == NULL){
+      Rf_error("Could not open file %s.",ofn2);
+    }
   }
 
-  Rprintf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
-  Rprintf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  if(CONSTRUCT_DEBUG==1){
+    Rprintf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+    Rprintf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+  }
   targets = malloc(npop * sizeof(person_t));
   for(person1 = 0; person1 < npop; ++person1){
     targets[person1] = person1;
@@ -131,9 +145,6 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
 	for(var2 = 0; var2 <nvar; ++ var2){
 	  if(transitions[IND(var1,var2,nvar)] > 0){
 	    if(runif(0.0,1.0) < transitions[IND(var1,var2,nvar)]){
-	      // fprintf(tfp,"%d,%d,%d,%d,%d\n",var1,var2,time,person1,actualTransitions[IND4(var1,var2,time,person1,nvar,ntime,npop)]);
-	      // fprintf(tfp,"%d:%d:%d->%d\n",time,person1,var1,var2);
-              // fprintf(tfp,"t:");
 	      if(CONSTRUCT_DEBUG==1){
                 fprintf(tfp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
                 fprintf(ofp2,"%d:%d:%d->%d\n",time,person1,var1,var2);
@@ -157,7 +168,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
             }
             */
             if(npop < ninteraction){
-              Rprintf("This should not happen\n");
+              Rf_error("This should not happen\n");
               return;
             }
             
@@ -168,13 +179,6 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
                   fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
                   fprintf(ofp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
                 }
-	        /*
-	        fwrite(&time,sizeof(time),1,ifp);
-	        fwrite(&(targets[interaction] ),sizeof(targets[interaction]),1,ifp);
-	        fwrite(&person1,sizeof(person1),1,ifp);
-	        fwrite(&var2,sizeof(var2),1,ifp);
-	        fwrite(&var1,sizeof(var1),1,ifp);
-	        */
 	        fwrite(&time,sizeof(step_t),1,ifp);
 	        fwrite(&(targets[interaction] ),sizeof(person_t),1,ifp);
 	        fwrite(&person1,sizeof(person_t),1,ifp);
@@ -252,13 +256,13 @@ void constructTimeSeries(
   if(RUN_DEBUG == 1){
     Rprintf("npop is %d\n",npop);
   }
-  sprintf(ofn2,"%s.csv",outputfilename);
+  sprintf(ofn2,"%s.dat",outputfilename);
   if(RUN_DEBUG==1){
     ofp2 = fopen(ofn2,"w");
   }
   state_counts = malloc(nvar*sizeof(person_t));
   states = malloc((1+ntime)*sizeof(var_t*));
-  if(states == NULL){REprintf("Malloc error for states\n");}
+  if(states == NULL){Rf_error("Malloc error for states\n");}
   cur_states = calloc(npop,sizeof(var_t));
   for(time = 0; time < (ntime+1); ++ time){
     states[time] = calloc(npop,sizeof(var_t));
@@ -278,6 +282,9 @@ void constructTimeSeries(
   }
 
   ofp = fopen(outputfilename,"w");
+  if(ofp == NULL){
+    Rf_error("Could not open file %s.",outputfilename);
+  }
   tfp = fopen(tfname,"rb");
   reading_tfp = tfp == NULL ? 0 : 1;
   ifp = fopen(ifname,"rb");
@@ -310,7 +317,7 @@ void constructTimeSeries(
       (reading_file_2 == 0) && 
       (ctime == mtime)
     ){
-      REprintf("This should not happen\n");
+      Rf_error("This should not happen\n");
       return;
     }
     if(RUN_DEBUG==1){
@@ -324,7 +331,7 @@ void constructTimeSeries(
       //Error checking
       if((err < 4)){
         if(!feof(tfp)){
-          REprintf("Only caught %d params/4\n",err);
+          Rf_error("Only caught %d params/4\n",err);
           return;
         } else {
           ttime=ntime-1;
@@ -350,7 +357,7 @@ void constructTimeSeries(
       // Rprintf("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
       if((err < 5)){
         if(!feof(ifp)){
-          REprintf("Only caught %d params/5\n",err);
+          Rf_error("Only caught %d params/5\n",err);
           return;
         } else {
           iperson1=0;
@@ -371,7 +378,9 @@ void constructTimeSeries(
     // Rprintf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
       while(ctime < mtime){
-        Rprintf("time %d\n",ctime);
+        if(RUN_DEBUG == 1){
+          Rprintf("time %d\n",ctime);
+        }
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
