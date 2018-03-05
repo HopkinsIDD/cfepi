@@ -19,6 +19,13 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   char tfn[1000];
   int var,var2;
 
+  PROTECT(Rfilename);
+  PROTECT(RinitialConditions);
+  PROTECT(Rinteractions);
+  PROTECT(Rtransitions);
+  PROTECT(Rntime);
+  PROTECT(Rntrial);
+
   GetRNGstate();
   
   R2cstring(Rfilename,&filename);
@@ -46,31 +53,31 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
 
   //Things are loaded now
   if(CONSTRUCT_DEBUG == 1){
-    Rprintf("Load successful\n");
-    Rprintf("init:");
+    Rf_warning("Load successful\n");
+    Rf_warning("init:");
     for(var = 0; var < nvar; ++var){
-      Rprintf(" %d",init[var]);
+      Rf_warning(" %d",init[var]);
     }
-    Rprintf("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
-    for(var = 0; var < nvar; ++var){
-      for(var2 = 0; var2 < nvar; ++var2){
-        Rprintf(" %f",transitions[IND(var,var2,nvar)]);
-      }
-      Rprintf("\n");
-    }
-    Rprintf("\ninteractions:\n");
+    Rf_warning("\nnvar: %d\nntime %d\ntransitions:\n",nvar,ntime);
     for(var = 0; var < nvar; ++var){
       for(var2 = 0; var2 < nvar; ++var2){
-        Rprintf(" %f",interactions[IND(var,var2,nvar)]);
+        Rf_warning(" %f",transitions[IND(var,var2,nvar)]);
       }
-      Rprintf("\n");
+      Rf_warning("\n");
     }
-    Rprintf("\ntfn: %s\nifn: %s\n",tfn,ifn);
+    Rf_warning("\ninteractions:\n");
+    for(var = 0; var < nvar; ++var){
+      for(var2 = 0; var2 < nvar; ++var2){
+        Rf_warning(" %f",interactions[IND(var,var2,nvar)]);
+      }
+      Rf_warning("\n");
+    }
+    Rf_warning("\ntfn: %s\nifn: %s\n",tfn,ifn);
   }
 
   for(trial = 0; trial < ntrial; ++trial){
     if(CONSTRUCT_DEBUG == 1){
-      Rprintf("Running Trial %d\n",trial);
+      Rf_warning("Running Trial %d\n",trial);
     }
     sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
     sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
@@ -80,6 +87,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   //Cleanup starts here
 
   PutRNGstate();
+  UNPROTECT(6);
   return(R_NilValue);
 }
 
@@ -96,6 +104,15 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   char fn[1000];
   int var,var2;
 
+  PROTECT(Rfilename);
+  PROTECT(RinitialConditions);
+  PROTECT(RreduceBeta);
+  PROTECT(ReliminateSusceptibles);
+  PROTECT(RbetaPars);
+  PROTECT(RsusceptiblePars);
+  PROTECT(Rntime);
+  PROTECT(Rntrial);
+
   beta_t intervention_unparametrized_reduceBeta;
   param_beta_t param_beta;
   saved_beta_t intervention_reduceBeta;
@@ -105,14 +122,20 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   saved_susceptible_t intervention_eliminateSusceptibles;
 
   GetRNGstate();
+  if(RUN_DEBUG==1){
+    Rf_warning("runIntervention starting");
+  }
   
   R2cstring(Rfilename,&filename);
   if(RUN_DEBUG==1){
-    Rprintf("Output stub is %s\n",filename);
+    Rf_warning("Output stub is %s\n",filename);
   }
   R2cvecint(RinitialConditions,&init,&nvar);
   ntime = R2cint(Rntime);
   ntrial = R2cint(Rntrial);
+  if(RUN_DEBUG == 1){
+    Rf_warning("Simulating %d simulations over %d times.",ntime,ntrial);
+  }
   //These may change later
   R2cstring(RreduceBeta,&reduceBeta_name);
   R2cstring(ReliminateSusceptibles,&eliminateSusceptibles_name);
@@ -124,18 +147,11 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     param_beta = param_no_beta();
   } else if(strcmp(reduceBeta_name,"Flat")==0){
     intervention_unparametrized_reduceBeta = &flat_beta;
-    /*
-    Rf_error("Fifth Call\n");
-    Rprintf("length of pars is %d\n",LENGTH(RbetaPars));
-    Rprintf("length of pars[[1]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
-    Rprintf("pars[[1]] is %d\n",R2cint(VECTOR_ELT(RbetaPars,0)));
-    Rprintf("length of pars[[2]] is %d\n",LENGTH(VECTOR_ELT(RbetaPars,0)));
-    Rprintf("pars[[2]] is %f\n",R2cdouble(VECTOR_ELT(RbetaPars,1)));
-    */
     param_beta = param_flat_beta(
       R2cint(VECTOR_ELT(RbetaPars,0)),
       R2cdouble(VECTOR_ELT(RbetaPars,1))
     );
+    // Rf_warning("start_time is %d, rate is %f",(*( (data_beta_flat_t*) param_beta.data)).start_time,(*( (data_beta_flat_t*) param_beta.data)).rate);
   } else {
     Rf_error("Could not recognize the beta specification %s\n",reduceBeta_name);
     return(R_NilValue);
@@ -157,20 +173,27 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrized_reduceBeta,param_beta);
   intervention_eliminateSusceptibles = partially_evaluate_susceptible(intervention_unparametrized_eliminateSusceptibles,param_susceptible);
   
-  sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
-  sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
-  sprintf(fn,"%s.%s.%s.%d.csv",filename,reduceBeta_name,eliminateSusceptibles_name,trial);
-
   if(RUN_DEBUG == 1){
-    Rprintf("init:");
+    Rf_warning("init:");
     for(var = 0; var < nvar; ++var){
-      Rprintf(" %d",init[var]);
+      Rf_warning(" %d",init[var]);
     }
-    Rprintf("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
+    Rf_warning("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
   }
   for(trial = 0; trial < ntrial; ++trial){
+    sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
+    sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
+    sprintf(fn,"%s.%s.%s.%d.csv",filename,reduceBeta_name,eliminateSusceptibles_name,trial);
     if(RUN_DEBUG == 1){
-      Rprintf("Running Trial %d\n",trial);
+      Rf_warning("init:");
+      for(var = 0; var < nvar; ++var){
+        Rf_warning(" %d",init[var]);
+      }
+      Rf_warning("\nnvar: %d\nntime %d\ntfn: %s\nifn: %s\nfn: %s\n",nvar,ntime,tfn,ifn,fn);
+    }
+
+    if(RUN_DEBUG == 1){
+      Rf_warning("Running Trial %d\n",trial);
     }
     constructTimeSeries(
       init,
@@ -187,6 +210,7 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   //Cleanup starts here
 
   PutRNGstate();
+  UNPROTECT(8);
   return(R_NilValue);
 }
 
@@ -204,21 +228,36 @@ void R2cmat(SEXP Rmat, double* *cmat, int *n, int *m){
   PROTECT(Rdim = getAttrib(Rmat, R_DimSymbol));
   (*n) = INTEGER(Rdim)[0];
   (*m) = INTEGER(Rdim)[1];
-  // Rprintf("\t%dx%d\n",(*m),(*n));
-  (*cmat) = REAL(Rmat);
+  (*cmat) = malloc((*m)*(*n) * sizeof(**cmat));
+  // Rf_warning("\t%dx%d\n",(*m),(*n));
+  for(int i = 0; i < ((*n)*(*m)); ++i){
+    (*cmat)[i] = REAL(Rmat)[i];
+  }
+  // (*cmat) = REAL(Rmat);
   UNPROTECT(1);
   return;
 }
 
 void R2cvecdouble(SEXP Rvec, double* *cvec, int *n){
   (*n) = LENGTH(Rvec);
-  (*cvec) = REAL(Rvec);
+  (*cvec) = malloc((*n) * sizeof(**cvec));
+  for(int i = 0; i < (*n); ++i){
+    (*cvec)[i] = REAL(Rvec)[i];
+  }
+  // (*cvec) = REAL(Rvec);
   return;
 }
 
 void R2cvecint(SEXP Rvec, int* *cvec, int *n){
   (*n) = LENGTH(Rvec);
-  (*cvec) = INTEGER(AS_INTEGER(Rvec));
+  (*cvec) = malloc((*n) * sizeof(**cvec));
+  if((*cvec)==NULL){
+    Rf_error("Could not allocate vector");
+  }
+  for(int i = 0; i < (*n); ++i){
+    (*cvec)[i] = INTEGER(AS_INTEGER(Rvec))[i];
+  }
+  // (*cvec) = INTEGER(AS_INTEGER(Rvec));
   return;
 }
 
@@ -231,13 +270,13 @@ double R2cdouble(SEXP Rvec){
 }
 
 int R2cint(SEXP Rvec){
-  // Rprintf("Beginning\n");
+  // Rf_warning("Beginning\n");
   if(LENGTH(Rvec) == 1){
-    // Rprintf("Success\n");
+    // Rf_warning("Success\n");
     return((int) REAL(Rvec)[0]);
   }
   Rf_error("R2cint only works on R vectors of length 1\n");
-  // Rprintf("Failed\n");
+  // Rf_warning("Failed\n");
   return(0);
 }
 

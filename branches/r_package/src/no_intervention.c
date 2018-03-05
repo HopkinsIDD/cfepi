@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "no_intervention.h"
+#include <R.h>
 #include <R_ext/Print.h>
+#include <Rmath.h>
 param_beta_t param_no_beta(){
   param_beta_t rc;
   strcpy(rc.type , "no");

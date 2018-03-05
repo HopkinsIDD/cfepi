@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "single_intervention.h"
+
+#include <R.h>
 #include <R_ext/Print.h>
+#include <Rmath.h>
 param_beta_t param_single_beta(){
   param_beta_t rc;
   strcpy(rc.type , "single");
@@ -10,6 +13,7 @@ param_beta_t param_single_beta(){
   return(rc);
 };
 
+// 1 success 0 failure
 bool_t free_param_single_beta(param_beta_t rc){
   if(strcmp(rc.type,"single")!=0){
     Rf_error("Attempting to free a param_beta_t with the wrong destructor\n");

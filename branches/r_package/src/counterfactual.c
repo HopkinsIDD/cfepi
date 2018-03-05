@@ -61,6 +61,9 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   for(var1 = 0; var1< nvar; ++var1){
     npop = npop + init[var1];
   }
+  if(CONSTRUCT_DEBUG){
+    Rf_warning("npop is %d\n",npop);
+  }
   bool_t** possibleStates;
   bool_t** nextPossibleStates;
   person_t* targets;
@@ -87,7 +90,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
 
   //Check to see if these exist
   if(CONSTRUCT_DEBUG==1){
-    Rprintf("Saving to files: %s and %s\n",tfname,ifname);
+    Rf_warning("Saving to files: %s and %s\n",tfname,ifname);
   }
   tfp = fopen(tfname,"wb");
   ifp = fopen(ifname,"wb");
@@ -113,8 +116,8 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   }
 
   if(CONSTRUCT_DEBUG==1){
-    Rprintf("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
-    Rprintf("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+    Rf_warning("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
+    Rf_warning("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
   }
   targets = malloc(npop * sizeof(person_t));
   for(person1 = 0; person1 < npop; ++person1){
@@ -160,11 +163,11 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
 	  if(interactions[IND(var2,var1,nvar)] > 0){
 	    // Generate number of interactions;
 	    ninteraction = rbinom(npop,interactions[IND(var2,var1,nvar)]);
-            // Rprintf("There should be %f interactions\n",ninteraction);
+            // Rf_warning("There should be %f interactions\n",ninteraction);
 	    // Generate interactions
             /*
             if(ninteraction > 0){
-              Rprintf("\tnpop: %d\n\tninteraction: %f\n",npop,ninteraction);
+              Rf_warning("\tnpop: %d\n\tninteraction: %f\n",npop,ninteraction);
             }
             */
             if(npop < ninteraction){
@@ -254,12 +257,9 @@ void constructTimeSeries(
     npop = npop + init[var];
   }
   if(RUN_DEBUG == 1){
-    Rprintf("npop is %d\n",npop);
+    Rf_warning("npop is %d\n",npop);
   }
   sprintf(ofn2,"%s.dat",outputfilename);
-  if(RUN_DEBUG==1){
-    ofp2 = fopen(ofn2,"w");
-  }
   state_counts = malloc(nvar*sizeof(person_t));
   states = malloc((1+ntime)*sizeof(var_t*));
   if(states == NULL){Rf_error("Malloc error for states\n");}
@@ -270,9 +270,6 @@ void constructTimeSeries(
   counter = 0;
   for(var = 0; var < nvar; ++ var){
     for(person = counter; person < counter+init[var];++person){
-      if(RUN_DEBUG==1){
-        fprintf(ofp2,"person %d: %d\n",person,var);
-      }
       for(time = 0; time < (1+ntime); ++time){
 	states[time][person] = var;
 	cur_states[person] = var;
@@ -299,9 +296,9 @@ void constructTimeSeries(
   mtime = 0;
   while(reading == 1){
     if(RUN_DEBUG==1){
-      fprintf(ofp2,"Loop\n");
+      Rf_warning("Loop\n");
     }
-    // Rprintf("transition reading %p - %d\n",tfp,reading_tfp);
+    // Rf_warning("transition reading %p - %d\n",tfp,reading_tfp);
     if((reading_tfp) && (feof(tfp))){
       reading_file_1 = 0;
       if((reading_ifp) && (feof(ifp))){
@@ -321,7 +318,7 @@ void constructTimeSeries(
       return;
     }
     if(RUN_DEBUG==1){
-      fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+      Rf_warning("1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     }
     if(reading_file_1){
       err = fread(&ttime,sizeof(step_t),1,tfp);
@@ -341,8 +338,7 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          fprintf(ofp2,"%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
-          fflush(ofp2);
+          Rf_warning("%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
         }
       }
     }
@@ -354,7 +350,7 @@ void constructTimeSeries(
       err += fread(&ivar1,sizeof(var_t),1,ifp);
       err += fread(&ivar2,sizeof(var_t),1,ifp);
       //Error checking
-      // Rprintf("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
+      // Rf_warning("%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
       if((err < 5)){
         if(!feof(ifp)){
           Rf_error("Only caught %d params/5\n",err);
@@ -368,28 +364,28 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          fprintf(ofp2,"%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
+          Rf_warning("%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
         }
       }
     }
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     mtime = ((itime >= ttime) || feof(ifp)) ? ttime : itime;
-    // Rprintf("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    // Rf_warning("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
       while(ctime < mtime){
         if(RUN_DEBUG == 1){
-          Rprintf("time %d\n",ctime);
+          Rf_warning("time %d\n",ctime);
         }
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
           if(RUN_DEBUG==1){
-            fprintf(ofp2,"%d,",cur_states[person]);
+            Rf_warning("%d,",cur_states[person]);
           }
         }
         if(RUN_DEBUG==1){
-          fprintf(ofp2,"\n");
+          Rf_warning("\n");
         }
         // Printf("\t\t\t%d\n",ctime);
         // Beginning of time ctime
@@ -419,7 +415,7 @@ void constructTimeSeries(
 /// 	}
       }
     }
-    // Rprintf("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
+    // Rf_warning("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
     if(
       (states[itime][iperson1] == ivar1) &&
       (states[itime][iperson1] == states[itime+1][iperson1]) &&
@@ -464,9 +460,6 @@ void constructTimeSeries(
   free(cur_states);
   free(state_counts);
   fclose(ofp);
-  if(RUN_DEBUG==1){
-    fclose(ofp2);
-  }
   if(reading_tfp){
     fclose(tfp);
   }
