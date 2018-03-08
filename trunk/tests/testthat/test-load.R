@@ -6,13 +6,13 @@
 ################################################################################
 ####Setup Test Functions
 ################################################################################
+context('Setup')
 
-context('setup')
 
 rm(list =ls())
 
 ##test of initialization method.
-test_that('setup_counterfactual works',{
+setup_counterfactual_working = test_that('setup_counterfactual works',{
   trans <- matrix(0,3,3)
   inter <- matrix(0,3,3)
   trans[3,2] <- .2
@@ -32,10 +32,7 @@ test_that('setup_counterfactual works',{
     ntrial
   ),NA)
   expect_equal({length(list.files('output'))},4)
-  expect_error(clean_setup_files(
-    'output/test_counterfactual',
-    FALSE
-  ),NA)
+  file.remove(paste('output',list.files('output'),sep='/'))
   expect_equal({length(list.files('output'))},0)
 })
 
@@ -58,10 +55,7 @@ test_that('setup_counterfactual works in boundary cases',{
     ntrial
   ),NA)
   expect_equal({length(list.files('output'))},2)
-  expect_error(clean_setup_files(
-    'output/test_counterfactual',
-    FALSE
-  ),NA)
+  file.remove(paste('output',list.files('output'),sep='/'))
   expect_equal({length(list.files('output'))},0)
 
   trans <- matrix(0,3,3)
@@ -82,10 +76,7 @@ test_that('setup_counterfactual works in boundary cases',{
     ntrial
   ),NA)
   expect_equal({length(list.files('output'))},2)
-  expect_error(clean_setup_files(
-    'output/test_counterfactual',
-    FALSE
-  ),NA)
+  file.remove(paste('output',list.files('output'),sep='/'))
   expect_equal({length(list.files('output'))},0)
 
   trans <- matrix(0,3,3)
@@ -107,10 +98,7 @@ test_that('setup_counterfactual works in boundary cases',{
     ntrial
   ),NA)
   expect_equal({length(list.files('output'))},2)
-  expect_error(clean_setup_files(
-    'output/test_counterfactual',
-    FALSE
-  ),NA)
+  file.remove(paste('output',list.files('output'),sep='/'))
   expect_equal({length(list.files('output'))},0)
 })
 
@@ -182,3 +170,30 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one col for each variable.\n")
 })
 
+expect_warning({
+    file.remove(paste('output',list.files('output'),sep='/'))
+    expect_equal({length(list.files('output'))},0)
+})
+
+context('run: general')
+test_that('run_scenario works',{
+  if(!setup_counterfactual_working){
+    skip("run_scenario relies on setup counterfactual.")
+  }
+  expect_error(setup_counterfactual(
+    'output/test_counterfactual',
+    init,
+    inter,
+    trans,
+    ntime,
+    ntrial
+  ),NA)
+  expect_equal({length(list.files('output'))},2*ntrial)
+  expect_error({
+      run_scenario("output/test_counterfactual",init,"None","None",list(),list(),ntime,ntrial)
+    },NA
+  )
+  expect_equal({length(list.files('output'))},3*ntrial)
+  file.remove(paste('output',list.files('output'),sep='/'))
+  expect_equal({length(list.files('output'))},0)
+})
