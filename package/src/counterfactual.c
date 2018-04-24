@@ -35,6 +35,18 @@ void sample(person_t* *output, person_t n, person_t k){
   }
 }
 
+/*
+ * runCounterfacutalAnalysis
+ *   Description
+ *     Set up a counterfactual simulation.  This produces two files containing the set of possible spontaneous state transitions (transitions), and state transitions caused by interactions (interactions)
+ *     See constructTimeSeries for how to use these files.
+ *   Parameters
+ *     string type Which type of counterfactual to run.  Current options are "Fast".  In the future, this option is reserved for different modeling assumptions.
+ *     person_t vector init starting population in each state.
+ *     time_t ntime The number of time steps to run the model over.
+ *     transitions Matrix describing the probability of transitioning spontaneously between compartments
+ *   
+ */
 void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname, char* ifname){
   if(strcmp(type,"Fast")==0){
     runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
@@ -44,6 +56,16 @@ void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t nt
   return;
 }
 
+/*
+ * runFastCounterfactualAnalysis
+ *   Description
+ *     See runCounterfactualAnalysis for full description
+ *     This makes the following assumptions - 
+ *       No intervention increases the probability of an interaction occurring
+ *       No intervention transitions people to states other than removed from the model.
+ *       No intervention 
+ *       
+ */
 void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname,char* ifname){
   var_t var1,var2;
   person_t person1, npop,interaction,counter;
