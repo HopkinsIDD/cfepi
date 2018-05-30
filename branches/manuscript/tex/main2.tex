@@ -34,20 +34,20 @@ For this example, we use a simple SIR model (see figure \ref{fig:sir}), in which
 
 In order to eliminate process error, we convert to an individual based model.  While a compartmental model tells us how many people shift from compartment $i$ to compartment $j$, an individual model tells us which people are moving.  We make use of this property to separate the interventions from the underlying process.
 
-To convert this model, rather than $S$, $I$, and $R$ representing the number of individuals in each compartment, we now assign each person $p_i$ (for $i$ from $1$ to $N$) to one of the compartments, keeping track of their individual state.
+To convert this model, rather than $S$, $I$, and $R$ representing the number of individuals in each compartment, we now assign each person $p_n$ (for $n$ from $1$ to $N$) to one of the compartments, keeping track of their individual state.
 
 We transform the model so that it models the transition of individuals instead of the number of transitions between compartments.  We do this by taking the coefficients ($\beta$ and $\gamma$) of the state based model and converting them to transition [probabilities] %FIX ME
 .
 
 In order to transform the model, we first make a distinction between the way that $I$ moves to $R$, and the way that $S$ moves to $I$.  $I$ moves to $R$ at a rate that only depends on $I$, while $S$ moves to $I$ at a rate that depends on both $S$ and $I$.  Intuitively, this is because infections happen between two people, but a person recovers on their own.  The probability of a person transitioning from $I$ to $R$ is $\beta$, and the probability that a person infects another specific person is $\frac{\beta}{N}$.  These probabilities are conditional on the people involved being in the right compartments.
 \begin{align*}
-P_T(p_i \rightarrow R \vert p_i = I) &= \gamma
-P_I(p_i \rightarrow R;  \vert p_i = I) &= \gamma
+   P_T(p_n \rightarrow R \vert p_n = I) &= \gamma
+\\ P_I(p_n \xrightarrow{p_m} I  \vert p_n = S, p_m = I) &= \frac{\beta}{N}
 \end{align*}
 % Come back to technical parts about conditional probabilities
 
 From this model, we can simulate all possible compartment shifts. %DEFINE THIS SOMEWHERE BEFORE HERE
-Using these shifts, we can determine what actually happens given initial conditions (and interventions).
+Using these shifts, we can determine what actually happens given initial conditions (and interventions). %% This is super vague
 
 To compute our counterfactual, we [subtract] the [run] with the intervention from the one without the intervention (using identical simulated compartment shifts).  This removes the error that would have come from simulating the compartment shifts twice.
 
@@ -59,7 +59,13 @@ We now generalize these methods to a class of compartmental model.  We consider 
 \end{align*}
 where $x_i(t)$ is the number of people in compartment $i$ at time $t$, and the above equations model the transition between compartments; where $\alpha_{i,j}$ is the rate at which people in compartment $j$ move to compartment $i$, and $\alpha_{i,j,k}$ is the rate at which an interaction between someone in compartment $j$ and someone in compartment $k$ will cause the person in compartment $j$ to move into compartment $i$.
 
-As in the influenza example, we can turn our compartmental model into an individual based model.
+As in the influenza example, we can turn our compartmental model into an individual based model.  We do this by taking the coefficients $\alpha_{i,j}$ and $\alpha_{i,j,k}$ and turning them into transition probabilities.
+\begin{align*}
+   P_T(p_n \rightarrow x_j \vert p_n = x_i ) &= \alpha_{i,j}
+\\ P_I(p_n \xrightarrow{p_m} x_j  \vert p_n = x_i, p_m = x_k) &= \alpha_{i,j,k}
+\end{align*}
+
+
 
 \section{Results}
 \section{Discussion}
