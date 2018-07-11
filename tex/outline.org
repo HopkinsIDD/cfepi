@@ -1,36 +1,95 @@
-* Issues of thai-dengue-district-challenge                   :counterfactual:
-  :PROPERTIES:
-  :assignee: jkaminsky
-  :END:
-* TODO Introduction
-* TODO Methods
+* issues with outline
+** TODO Determine appropriate distribution for $\beta SI$
+** TODO Put something meaningful in something somethign population size
+** TODO Ensure all citations are filled in
+** TODO Say something about why we want to use agent based models other than 'because it works'
+** OPEN Combine with outline from meeting with justin (on laptop)
+   Leaving Methods out for now.  Want to commit current before making changes.
+** TODO Look up names in causal inference literature for simulating what would happen if we had intervened in this epidemic vs what would happen if we intervened in a similar epidemic.
+* Introduction
+** Introduce Problem
+** Examples from Literature
+* Methods
 ** Motivation
 *** Compartmental Models
     Compartmental models are a standard in disease modeling \cite{}.
     There are a number of results where researchers perform counterfactual analysis on compartmental models \cite{}.
     There would be more results, except that the power of the standard way to do these analyses is low \cite{}.
+    
 ** Example (Influenza)
 *** SIR Model
     We use a standard short compartmental model for influenza \cite{}.
     There are compartments for susceptible, infected, and recovered.
     People move between these compartments at a rate determined by $\beta$, the force of infection, and $\gamma$ the recovery rate.
     This model is only valid for a short time scale, so we do not include births or deaths.
+***** Figure: SIR Model diagram
+    
 *** Agent Perspective
 **** Why we need stochasting models
-**** How to convert standard models into stochastic ones.
-*** Conditional Probabilities
-*** Simulate all possible events
-*** Pruning simulated events
+     Our goal is to eliminate process error to improve power, but so far the models described are deterministic (and therefore have no process error).
+     One could say that given a deterministic model, and a deterministic intervention, the effect of the intervention falls out cleanly.
+     However, deterministic models are not widely used in the field \cite{}.
+     Additionally, deterministic models cannot address a main question of interest, "How well is this intervention working?"
+     
+**** Viewing SIR model as a stochastic model
+     Our SIR model makes implicit assumptions.
+     $\beta SI$ represents interactions between susceptible and infected individuals.
+     $\gamma I$ represents the probability of recovery.
+     Our deterministic differential equation is actually the expectation of a stochastic process.
+     Something something population size
+     $\beta SI$ is ...
+     $\gamma I$ is the expectation of a binomial distribution.
+
+**** Agent Based Versions
+     Instead of modeling the number of susceptibles, infected, and recovered, we want to switch and model the state of each person in our population.
+     We do this, because it works.
+     Instead of a vector of the number of people in each compartment, we use a vector of the state of each person.
+     Each susceptible person has a $\frac{\beta}{N}$ probability of becoming infected by each infected person at each time step.
+     Each infected person has a $\gamma$ probability of recovering at each time step.
+     
+*** Simulating and Pruning
+**** Conditional Probabilities
+     We know the probability that a person recovers given that they are infected is $\gamma$.
+     We know the probability that a person infects another person given that the first is susceptible and the second is infected is $\frac{\beta}{N}$.
+     We can simulate from these distributions without knowing if the conditionals are satisfied.
+     This is helpful, since we won't know a priori what the intervention affects and doesn't.
+     To simulate, we draw uniformly randomly from $[0,1]$, and compare that to the probability.
+     If the random draw is less than the probability, it happens.
+     Otherwise, it does not happen.
+     
+**** Simulate all possible events
+     We could account for every possible intervention by simulating every relevent conditional probability.
+     Given a population size $N$, and number of time steps $T$, there are a finite number of things to simulate.
+     For each time step, we need to simulate $N$ recovery probabilities, and $N^2$ infection probabilities.
+     In total, we would need to simulate $N(N+1)T$ numbers.
+     For a population of $4$ million, and daily time steps for a year, that would take almost $6$ million gigabytes of storage. %(4000000 * 4000001 * 365) * bytes = 5840001.46 gigabytes
+     More complicated models with more compartments would take even more space.
+
+**** Pruning simulated events
+     For many interventions, not all simulations are necessary.
+     By making some assumptions about the interventions, we can reduce the amount we need to store.
+     We assume that the intervention can only increase the probability of infection.
+     
 *** Intervention
 ** General Framework
 *** General Compartmental Model
 *** Agent Based Conversion
 *** Simulating and Pruning
-**** TODO Assumptions
+**** Assumptions
 *** Interventions
-**** TODO None
-**** TODO Vaccination
-**** TODO Treatment
-**** TODO Social Distancing
-* TODO Results
-* TODO Discussion
+**** None
+**** Vaccination
+**** Treatment
+**** Social Distancing
+* Results
+** Illustritave Simulations
+*** SIR Model
+*** SIS Model (maybe)
+** Computational Concerns (Time/Space Complexity)
+*** Current Implementation
+*** Tradeoffs
+** Mathematical Reduction in error (derived)
+* Discussion
+** Philosohpical Discussion of Question Answered
+*** We often ask the question of what would happen if we had intervened in a previous epidemic.
+*** We often answer the question of what would happen if we intervene in a epidemic similar to the previous one.
