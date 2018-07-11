@@ -1,0 +1,36 @@
+* Issues of thai-dengue-district-challenge                   :counterfactual:
+  :PROPERTIES:
+  :assignee: jkaminsky
+  :END:
+* TODO Introduction
+* TODO Methods
+** Motivation
+*** Compartmental Models
+    Compartmental models are a standard in disease modeling \cite{}.
+    There are a number of results where researchers perform counterfactual analysis on compartmental models \cite{}.
+    There would be more results, except that the power of the standard way to do these analyses is low \cite{}.
+** Example (Influenza)
+*** SIR Model
+    We use a standard short compartmental model for influenza \cite{}.
+    There are compartments for susceptible, infected, and recovered.
+    People move between these compartments at a rate determined by $\beta$, the force of infection, and $\gamma$ the recovery rate.
+    This model is only valid for a short time scale, so we do not include births or deaths.
+*** Agent Perspective
+**** Why we need stochasting models
+**** How to convert standard models into stochastic ones.
+*** Conditional Probabilities
+*** Simulate all possible events
+*** Pruning simulated events
+*** Intervention
+** General Framework
+*** General Compartmental Model
+*** Agent Based Conversion
+*** Simulating and Pruning
+**** TODO Assumptions
+*** Interventions
+**** TODO None
+**** TODO Vaccination
+**** TODO Treatment
+**** TODO Social Distancing
+* TODO Results
+* TODO Discussion
