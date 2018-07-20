@@ -1,40 +1,41 @@
-* issues with outline
+* Issues with outline
 ** TODO Determine appropriate distribution for $\beta SI$
-** TODO Put something meaningful in something somethign population size
+** TODO Put something meaningful in something something population size
 ** TODO Ensure all citations are filled in
 ** TODO Say something about why we want to use agent based models other than 'because it works'
-** TODO Take out stochastic vs deterministic parts
+** TODO Take out stochastic vs deterministic part
 ** TODO Add motivation
 ** OPEN Combine with outline from meeting with justin (on laptop)
    Leaving Methods out for now.  Want to commit current before making changes.
 ** TODO Look up names in causal inference literature for simulating what would happen if we had intervened in this epidemic vs what would happen if we intervened in a similar epidemic.
 ** TODO Read chapter 6.6 of Mathematics of Epidemics on Networks pg 251
+** TODO Add citations for various facts in introduction
+** TODO Make sure all things in the introduction are true
 * Introduction
 ** Introduce Problem
-*** Interventions
+*** Infectious Diseases are bad.  We want to control them.  Planning control is hard.
     Infectious diseases are a major global public health problem.
-    When and how to intervene against an emerging infection is one of the fundamental questions in epidemiology, around which much work is centered. \cite{}
-    There are a variety of methods used to determine when and how to intervene, including \cite{}.
-    Generally when people address this question with models, they use a variety of simulation based methods.
-    However, many of these approaches have low statistical power, and are not geared towards answering certain important questions (i.e. How often will this intervention cause more cases?).
-*** Effects of Interventions - Counterfactual question
-    In order to determine the effect of an intervention, we often want to compare what will happen if we perform the intervention with what will happen if we don't perform the intervention.
+    However, controlling their spread is challenging because planning and carrying out effective interventions is difficult \cite{}.
+    As a result, determining how and when to intervene is one of the major concerns of epidemiology.
+    One frequently used method is to employ dynamical models to assess the behaviors of disease, including the impact of interventions, by simulation-based approaches.
+    These approaches generally take a naive approach in simulating transmission dynamics, and are therefore limited in their ability to analyze the impact of interventions by their low power.
+*** Counterfactuals are a method that improve upon existing methods to understand interventions.  This is what a counterfacutal is.
+    In order to accurately plan and evaluate the effect of an intervention on an epidemic, we want to compare the outcomes of if we perform the intervention with the outcomes of if we do not perform the intervention.
+    However, it is not possible to both intervene and not-intervene upon a single population during a single epidemic. 
     These types of questions are known as counterfactuals.
-    One problem with answering these types of questions, is that in reality you either do or don't perform the intervention, and the can't observe the other option.
-    Even in simulations, existing methods have this property.
-    They simulate disease occurrances strictly with or without the intervention and compare the two.
-*** Problems with existing results
-    Other approaches simulate separate epidemics with and without interventions, differences between these simulated epidemics include stochastic variation of the model.
-    This approach has poor statistical power, since any stochasticity of the model contributes to error bounds on estimates.
-    Additionally, the models variation can cause otherwise impossible effects to occur, like treatment increasing the number of cases observed with reasonable probability.
-***** Examples from literature
-*** Our method
-    We want to simulate a single simulation with and without the intervention at the same time.
-    This approach will eliminate the effects of the model error, while retaining any stochastic effects of the intervention.
-    In order to allow a single simulation to have and not have the intervention, we have to simulate all the events that occur in either one.
-    There may be events that don't occur in the non-intervention case that do occur in the intervention case, and vice versa.
-    Then, for that simulation, we can measure the effect of the intervention.
-    If we then simulate many times, we can see the distribution of our measurements.
+    Although in reality we are unable to both intervene and not-intervene concurrently, this is not a desirable feature for resolving counterfactual questions.
+    Existing methods retain this feature, running separate simulations for interventions and non-interventions. 
+    We refer to these types of counterfactuals as split simulation conterfactuals. 
+*** Explain the deficiencies of existing methods
+    One of the problems with split simulation counterfactuals is that outcomes of the intervention may be obfuscated by comparison across simulations. 
+    This can result in seemingly impossible outcomes occurring, such as comparing a low epidemic with intervention to a high epidemic without intervention making an effective intervention appear to cause cases.
+    Likewise, one could imagine an ineffective intervention that appears to work.
+    As a result of these problems, the statistical power of split simulation counterfactuals is low.
+*** Outline how ywe're fixing the problems in our method and set the stage for the methods (all background and information you need to understand the methods)
+    Here we outline a method that addresses these problems by performing the counterfactual in a single simulation: with and without the intervention.
+    To do this we have to simulate all of the events that occur with the intervention and without the intervention, as there may be events that occur in the intervention case that do not occur in the non-intervention case, and vice versa.
+    Then, the effects of the intervention can be measured within a single simulation.
+    Running multiple simulations provides a measure to evaluate the impacts of a proposed intervention with higher statistical power. 
 * Methods
 ** Motivation
 *** Compartmental Models
