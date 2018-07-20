@@ -3,12 +3,38 @@
 ** TODO Put something meaningful in something somethign population size
 ** TODO Ensure all citations are filled in
 ** TODO Say something about why we want to use agent based models other than 'because it works'
+** TODO Take out stochastic vs deterministic parts
+** TODO Add motivation
 ** OPEN Combine with outline from meeting with justin (on laptop)
    Leaving Methods out for now.  Want to commit current before making changes.
 ** TODO Look up names in causal inference literature for simulating what would happen if we had intervened in this epidemic vs what would happen if we intervened in a similar epidemic.
+** TODO Read chapter 6.6 of Mathematics of Epidemics on Networks pg 251
 * Introduction
 ** Introduce Problem
-** Examples from Literature
+*** Interventions
+    Infectious diseases are a major global public health problem.
+    When and how to intervene against an emerging infection is one of the fundamental questions in epidemiology, around which much work is centered. \cite{}
+    There are a variety of methods used to determine when and how to intervene, including \cite{}.
+    Generally when people address this question with models, they use a variety of simulation based methods.
+    However, many of these approaches have low statistical power, and are not geared towards answering certain important questions (i.e. How often will this intervention cause more cases?).
+*** Effects of Interventions - Counterfactual question
+    In order to determine the effect of an intervention, we often want to compare what will happen if we perform the intervention with what will happen if we don't perform the intervention.
+    These types of questions are known as counterfactuals.
+    One problem with answering these types of questions, is that in reality you either do or don't perform the intervention, and the can't observe the other option.
+    Even in simulations, existing methods have this property.
+    They simulate disease occurrances strictly with or without the intervention and compare the two.
+*** Problems with existing results
+    Other approaches simulate separate epidemics with and without interventions, differences between these simulated epidemics include stochastic variation of the model.
+    This approach has poor statistical power, since any stochasticity of the model contributes to error bounds on estimates.
+    Additionally, the models variation can cause otherwise impossible effects to occur, like treatment increasing the number of cases observed with reasonable probability.
+***** Examples from literature
+*** Our method
+    We want to simulate a single simulation with and without the intervention at the same time.
+    This approach will eliminate the effects of the model error, while retaining any stochastic effects of the intervention.
+    In order to allow a single simulation to have and not have the intervention, we have to simulate all the events that occur in either one.
+    There may be events that don't occur in the non-intervention case that do occur in the intervention case, and vice versa.
+    Then, for that simulation, we can measure the effect of the intervention.
+    If we then simulate many times, we can see the distribution of our measurements.
 * Methods
 ** Motivation
 *** Compartmental Models
