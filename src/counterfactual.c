@@ -35,16 +35,38 @@ void sample(person_t* *output, person_t n, person_t k){
   }
 }
 
-void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname, char* ifname){
+/*
+ * runCounterfacutalAnalysis
+ *   Description
+ *     Set up a counterfactual simulation.  This produces two files containing the set of possible spontaneous state transitions (transitions), and state transitions caused by interactions (interactions)
+ *     See constructTimeSeries for how to use these files.
+ *   Parameters
+ *     string type Which type of counterfactual to run.  Current options are "Fast".  In the future, this option is reserved for different modeling assumptions.
+ *     person_t vector init starting population in each state.
+ *     time_t ntime The number of time steps to run the model over.
+ *     transitions Matrix describing the probability of transitioning spontaneously between compartments
+ *   
+ */
+void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname, char* ifname, adjacency_list_t network){
   if(strcmp(type,"Fast")==0){
-    runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
+    runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname,network);
     return;
   }
   Rf_error("type %s is invalid\n",type);
   return;
 }
 
-void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname,char* ifname){
+/*
+ * runFastCounterfactualAnalysis
+ *   Description
+ *     See runCounterfactualAnalysis for full description
+ *     This makes the following assumptions - 
+ *       No intervention increases the probability of an interaction occurring
+ *       No intervention transitions people to states other than removed from the model.
+ *       No intervention 
+ *       
+ */
+void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname,char* ifname,adjacency_list_t network){
   var_t var1,var2;
   person_t person1, npop,interaction,counter;
   step_t time;
@@ -175,6 +197,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
               return;
             }
             
+	    // This will need to use the graph
             sample(&targets,npop,ninteraction);
             for(interaction = 0; interaction < ninteraction; ++interaction){
 	      if(possibleStates[var2][targets[interaction] ]){

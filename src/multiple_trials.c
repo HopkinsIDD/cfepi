@@ -132,10 +132,10 @@ int main(){
     vaccination_occurred = 0;
     sprintf(ifn,"output/interaction.1.%d.dat",trial);
     sprintf(tfn,"output/transition.1.%d.dat",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,complete_graph(npop));
     sprintf(ifn,"output/first_counterfactual.i.1.%d.dat",trial);
     sprintf(tfn,"output/first_counterfactual.t.1.%d.dat",trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,complete_graph(npop));
     // return(0);
   }
 

@@ -13,7 +13,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   double* output;
   SEXP Routput;
   int* init;
-  int nvar,nvar1,nvar2,ntime,trial,ntrial;
+  int i,nvar,nvar1,nvar2,ntime,trial,ntrial,npop;
   char* filename;
   char ifn[1000];
   char tfn[1000];
@@ -30,6 +30,10 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   
   R2cstring(Rfilename,&filename);
   R2cvecint(RinitialConditions,&init,&nvar);
+  npop = 0;
+  for(i = 0 ; i < nvar; ++ i){
+    npop = npop + init[i];
+  }
   ntime = R2cint(Rntime);
   ntrial = R2cint(Rntrial);
   R2cmat(Rtransitions,&transitions,&nvar1,&nvar2);
@@ -81,7 +85,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
     }
     sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
     sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn);
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,complete_graph(npop));
   }
   
   //Cleanup starts here
