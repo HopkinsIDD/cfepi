@@ -14,6 +14,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   SEXP Routput;
   int* init;
   int i,nvar,nvar1,nvar2,ntime,trial,ntrial,npop;
+  adjacency_list_t network;
   char* filename;
   char ifn[1000];
   char tfn[1000];
@@ -34,6 +35,7 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   for(i = 0 ; i < nvar; ++ i){
     npop = npop + init[i];
   }
+  complete_graph(&network,npop);
   ntime = R2cint(Rntime);
   ntrial = R2cint(Rntrial);
   R2cmat(Rtransitions,&transitions,&nvar1,&nvar2);
@@ -85,11 +87,12 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
     }
     sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
     sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
-    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,complete_graph(npop));
+    runCounterfactualAnalysis("Fast",init,nvar,ntime,transitions,interactions,tfn,ifn,network);
   }
   
   //Cleanup starts here
 
+  free_adjacency_list(&network);
   PutRNGstate();
   UNPROTECT(6);
   return(R_NilValue);
