@@ -88,7 +88,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   }
   bool_t** possibleStates;
   bool_t** nextPossibleStates;
-  person_t* targets;
+  // person_t* targets;
   //Note: To help with memory useage, we may want to modify these to be more efficient
   // actualTransitions = malloc(nvar*nvar*ntime*npop*sizeof(int));
   // actualInteractions = malloc(nvar*nvar*ntime*npop*npop*sizeof(int));
@@ -141,10 +141,10 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
     Rf_warning("Writing each transition event will take %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
     Rf_warning("Writing each transition event will take %d + %d + %d + %d + %d = %d\n",sizeof(step_t),sizeof(person_t),sizeof(person_t),sizeof(var_t),sizeof(var_t),sizeof(step_t)+sizeof(person_t)+sizeof(person_t)+sizeof(var_t)+sizeof(var_t));
   }
-  targets = malloc(npop * sizeof(person_t));
-  for(person1 = 0; person1 < npop; ++person1){
-    targets[person1] = person1;
-  }
+  // targets = malloc(npop * sizeof(person_t));
+  // for(person1 = 0; person1 < npop; ++person1){
+    // targets[person1] = person1;
+  //}
 
   for(time = 0; time < ntime; ++time){
     counter = 0;
@@ -184,7 +184,8 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
           }
 	  if(interactions[IND(var2,var1,nvar)] > 0){
 	    // Generate number of interactions;
-	    ninteraction = rbinom(npop,interactions[IND(var2,var1,nvar)]);
+	    // ninteraction = rbinom(npop,interactions[IND(var2,var1,nvar)]);
+	    ninteraction = rbinom(network.degree[person1],interactions[IND(var2,var1,nvar)]);
             // Rf_warning("There should be %f interactions\n",ninteraction);
 	    // Generate interactions
             /*
@@ -198,20 +199,22 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
             }
             
 	    // This will need to use the graph
-            sample(&targets,npop,ninteraction);
+            // sample(&targets,npop,ninteraction);
+            // printf("%d---%d\n",network.adjacency_list[person1][0],network.degree[person1]);
+            sample(&(network.adjacency_list[person1]),network.degree[person1],ninteraction);
             for(interaction = 0; interaction < ninteraction; ++interaction){
-	      if(possibleStates[var2][targets[interaction] ]){
+	      if(possibleStates[var2][network.adjacency_list[person1][interaction] ]){
                 if(CONSTRUCT_DEBUG==1){
-                  fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
-                  fprintf(ofp2,"\t%d:%d-%d:%d->%d\n",time,targets[interaction],person1,var2,var1);
+                  fprintf(ifp2,"\t%d:%d-%d:%d->%d\n",time,network.adjacency_list[person1][interaction],person1,var2,var1);
+                  fprintf(ofp2,"\t%d:%d-%d:%d->%d\n",time,network.adjacency_list[person1][interaction],person1,var2,var1);
                 }
 	        fwrite(&time,sizeof(step_t),1,ifp);
-	        fwrite(&(targets[interaction] ),sizeof(person_t),1,ifp);
+	        fwrite(&(network.adjacency_list[person1][interaction] ),sizeof(person_t),1,ifp);
 	        fwrite(&person1,sizeof(person_t),1,ifp);
 	        fwrite(&var2,sizeof(var_t),1,ifp);
 	        fwrite(&var1,sizeof(var_t),1,ifp);
-		nextPossibleStates[var1][ targets[interaction] ] = 2;
-		nextPossibleStates[var2][ targets[interaction] ] = nextPossibleStates[var1][targets[interaction]] == 2 ? 2 : 0;
+		nextPossibleStates[var1][ network.adjacency_list[person1][interaction] ] = 2;
+		nextPossibleStates[var2][ network.adjacency_list[person1][interaction] ] = nextPossibleStates[var1][network.adjacency_list[person1][interaction]] == 2 ? 2 : 0;
 	      }
 	    }
           }
@@ -248,7 +251,7 @@ void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, doub
   }
   free(possibleStates);
   free(nextPossibleStates);
-  free(targets);
+  // free(targets);
 }
 
 void constructTimeSeries(

@@ -7,12 +7,13 @@
 
 typedef struct {
   char** nodes;
-  char* *** adjacency_list; //list of lists of char* pointers
-  int N; // number of nodes
-  int* degree; // number of nodes
+  // char* *** adjacency_list; //list of lists of char* pointers
+  person_t** adjacency_list; //list of list of indices to nodes;
+  person_t N; // number of nodes
+  person_t* degree; // number of nodes
 } adjacency_list_t;
 
-adjacency_list_t adjacencey_list(char**, char****, int, int*);
-adjacency_list_t edge_list(char***, int);
-adjacency_list_t complete_graph(int);
+void adjacencey_list(adjacency_list_t*, char**, person_t**, person_t, person_t*);
+void edge_list(adjacency_list_t*, char***, person_t);
+void complete_graph(adjacency_list_t*, person_t);
 void free_adjacency_list(adjacency_list_t*);
