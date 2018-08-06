@@ -1,47 +1,85 @@
+#+OPTIONS: H:4
 * Issues with outline
-** TODO Determine appropriate distribution for $\beta SI$
-** TODO Put something meaningful in something something population size
+** DONE Determine appropriate distribution for $\beta SI$
+   We are removing this section
+   CLOSED: [2018-07-26 Thu 12:59]
+** DONE Put something meaningful in something something population size
+   CLOSED: [2018-07-26 Thu 12:59]
 ** TODO Ensure all citations are filled in
 ** TODO Say something about why we want to use agent based models other than 'because it works'
 ** TODO Take out stochastic vs deterministic part
 ** TODO Add motivation
-** OPEN Combine with outline from meeting with justin (on laptop)
+** DONE Combine with outline from meeting with justin (on laptop)
+   CLOSED: [2018-07-26 Thu 13:00]
    Leaving Methods out for now.  Want to commit current before making changes.
 ** TODO Look up names in causal inference literature for simulating what would happen if we had intervened in this epidemic vs what would happen if we intervened in a similar epidemic.
 ** TODO Read chapter 6.6 of Mathematics of Epidemics on Networks pg 251
 ** TODO Add citations for various facts in introduction
+** TODO Figure out where to cite percolation
 ** TODO Make sure all things in the introduction are true
 * Introduction
 ** Introduce Problem
 *** Infectious Diseases are bad.  We want to control them.  Planning control is hard.
     Infectious diseases are a major global public health problem.
-    However, controlling their spread is challenging because planning and carrying out effective interventions is difficult \cite{}.
-    As a result, determining how and when to intervene is one of the major concerns of epidemiology.
-    One frequently used method is to employ dynamical models to assess the behaviors of disease, including the impact of interventions, by simulation-based approaches.
+    Controlling their spread is challenging because planning and carrying out effective interventions is difficult \cite{}.
+    Determining how and when to intervene is one of the major concerns of epidemiology.
+    Sometimes we believe we know both how the disease spreads, and the mechanism by which the intervention affects that spread.
+    In these cases, epidemiologists frequently employ dynamical models to assess the impact of interventions on the behaviour of the disease through simulation based approaches.
     These approaches generally take a naive approach in simulating transmission dynamics, and are therefore limited in their ability to analyze the impact of interventions by their low power.
-*** Counterfactuals are a method that improve upon existing methods to understand interventions.  This is what a counterfacutal is.
+*** We want to know the effects of interventions, and this is a causal inference problem.
     In order to accurately plan and evaluate the effect of an intervention on an epidemic, we want to compare the outcomes of if we perform the intervention with the outcomes of if we do not perform the intervention.
     However, it is not possible to both intervene and not-intervene upon a single population during a single epidemic. 
-    These types of questions are known as counterfactuals.
+    This is known as the fundamental problem of causal inference.
+    The effects of interventions at a population level are a difficult causal inference problem.
+    The epidemiology of the disease confounds inference about the effects of interventions.
+    On the other hand, the effects of the same interventions at an individual level are often well studied.
+    Often, researchers attempt to leverage knowledge of the individual effect of the intervention, along with an understanding of the disease's epidemiology to estimate the effect of that intervention.
+*** People use modeling to make the causal inference problem tractable.
+    One way researchers attempt to circumvent the effects of epidemiological confounders is by modeling the epidemiology of the disease.
+    They construct a model for the way the disease spreads in the population.
+    Because the individual effects of the intervention are well known, the researcher can incorporate them into the model to obtain a model for the disease spread under the intervention.
+    They then simulate many simulations with the intervention and without the intervention and extract values of interest.
+    They then compare those values to determine the effect of the intervention.
+*** Multiple World Inference    
     Although in reality we are unable to both intervene and not-intervene concurrently, this is not a desirable feature for resolving counterfactual questions.
-    Existing methods retain this feature, running separate simulations for interventions and non-interventions. 
-    We refer to these types of counterfactuals as split simulation conterfactuals. 
-*** Explain the deficiencies of existing methods
-    One of the problems with split simulation counterfactuals is that outcomes of the intervention may be obfuscated by comparison across simulations. 
+    Most existing methods retain this feature, running separate simulations for interventions and non-interventions. 
+    We refer to these types of methods as multiple world inference.
+    We propose a way of running the intervention and non-intervention in the same simulation.
+    We refer to our method as single world inference.
+*** Shortcomings of multiple world inference
+    One of the problems with multiple world inference is that outcomes of the intervention may be obfuscated by comparison across simulations. 
+    Epidimiological models are stochastic, and therefore the way disease spreads varies across simulations.
     This can result in seemingly impossible outcomes occurring, such as comparing a low epidemic with intervention to a high epidemic without intervention making an effective intervention appear to cause cases.
     Likewise, one could imagine an ineffective intervention that appears to work.
-    As a result of these problems, the statistical power of split simulation counterfactuals is low.
+    As a result of these problems, the statistical power of multiple world inference is low.
 *** Outline how ywe're fixing the problems in our method and set the stage for the methods (all background and information you need to understand the methods)
     Here we outline a method that addresses these problems by performing the counterfactual in a single simulation: with and without the intervention.
     To do this we have to simulate all of the events that occur with the intervention and without the intervention, as there may be events that occur in the intervention case that do not occur in the non-intervention case, and vice versa.
     Then, the effects of the intervention can be measured within a single simulation.
     Running multiple simulations provides a measure to evaluate the impacts of a proposed intervention with higher statistical power. 
+** Existing Work
+*** People currently use Multiple World causal inference for this.
+    Elizabeth Halloran's work on flu uses multiple world causal inference.
+*** Some people already use limited versions of this method.
+    While they do not make mention of this in their paper, Kenah and Miller have a single world inference method they use for determining the impact of vaccinating different individuals in a network \cite{}.
 * Methods
-** Motivation
+** Motivation (Other similar methods)
 *** Compartmental Models
     Compartmental models are a standard in disease modeling \cite{}.
-    There are a number of results where researchers perform counterfactual analysis on compartmental models \cite{}.
-    There would be more results, except that the power of the standard way to do these analyses is low \cite{}.
+    In compartmental models, people belong to a compartment, and the model governs the transitions between different compartments.
+    There are many variations on compartmental models, but current research focuses on methods where the transition is stochastic, in order to...
+    There are also individual compartmental models.
+    These are used in several contexts, but are important to us since we have descriptions of the intervention at the individual level.
+    We should also note that agent based models and network models exist, and our methods could apply to them, but are beyond the scope of this paper.
+    
+*** Percolation
+    Our method is an adaptation of a method called percolation used in network theory
+    In fully immunizing disease, disease only has a limited window to transmit from a particular individual to another.
+    That window lasts from when the first one gets the disease to when they recover from the disease.
+    From this perspective, we only need to test whether or not each pair of individuals would infect the other if they get infected.
+    Using this idea, we can turn the problem of figuring out who gets infected in an epidemic into a network problem.
+    We start with the network (or complete graph), and for each edge test if the disease would transmit along that edge.
+    Our method will use this idea of treating the epidemic as pruning a graph, and using the connected components of that graph to determine the outcome of the epidemic.
     
 ** Example (Influenza)
 *** SIR Model
@@ -50,8 +88,7 @@
     People move between these compartments at a rate determined by $\beta$, the force of infection, and $\gamma$ the recovery rate.
     This model is only valid for a short time scale, so we do not include births or deaths.
 ***** Figure: SIR Model diagram
-    
-*** Agent Perspective
+*** Individual Models
 **** Why we need stochasting models
      Our goal is to eliminate process error to improve power, but so far the models described are deterministic (and therefore have no process error).
      One could say that given a deterministic model, and a deterministic intervention, the effect of the intervention falls out cleanly.
@@ -75,6 +112,16 @@
      Each infected person has a $\gamma$ probability of recovering at each time step.
      
 *** Simulating and Pruning
+**** Setting up the Complete Graph
+     We are going to build a graph to represent the possible progression of disease through the population and time.
+     We start by making a node for each person at each time.
+     Each node will store the state of that person at that time.
+     Since each person can transmit disease to each other person, we connect each person at each time to each other person at the next time.
+     Since each person can also keep the disease over time (by not recovering), we connect each person to themselves at the next time.
+     Each of these edges will 
+     This graph is intractably large (for $4000000$ people, $3$ states, and $365$ time points, it would take almost $18$ pedabytes to store it).
+     However, after we prune the graph, it will be small enough to use.
+     
 **** Conditional Probabilities
      We know the probability that a person recovers given that they are infected is $\gamma$.
      We know the probability that a person infects another person given that the first is susceptible and the second is infected is $\frac{\beta}{N}$.
