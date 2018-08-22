@@ -35,6 +35,11 @@ setup_counterfactual(
   ntrial
 )
 
+## cross intervention parameters
+prop = .33 * .25 # 25% coverage 33% effective
+tstar = 1 #start on day 1
+
+
 ## none
 beta_pars <- list()
 susceptible_pars <- list()
@@ -49,26 +54,30 @@ run_scenario(
   ntrial
 )
 
-## Treatment
-prop = 0
-tstar = 0
+## antivirals
+sick_reduction = 1.5 #When it works reduces days infected by 1.5
+rate = (1 - 1/sick_reduction) * prop
 beta_pars <- list()
-susceptible_pars <- list(rate = prop, intervention_time = tstar, from=2,to=3)
+move_to = 3
+move_from = 1
+susceptible_pars <- list(intervention_time = tstar, rate = rate, to=move_to, from=move_from)
 run_scenario(
   'output/figures',
   init,
   "None",
-  "Single",
+  "Constant",
   beta_pars,
   susceptible_pars,
   ntime,
   ntrial
 )
 ## Vaccination
-prop = .3
-tstar = 30
-susceptible_pars <- list(rate = prop, intervention_time = tstar, from=1,to=3)
-susceptible_pars <- list()
+effective_rate = .80 #Works 80% of the time
+rate = (effective_rate) * prop
+move_to = 3
+move_from = 1
+tstar = 1
+susceptible_pars <- list(intervention_time = tstar, rate = prop, to=move_to,from=move_from)
 run_scenario(
   'output/figures',
   init,
@@ -80,9 +89,9 @@ run_scenario(
   ntrial
 )
 ## Social Distancing
-sigma = .95
-tstar = 30
-beta_pars <- list(start_time = 30,rate= 1-sigma)
+sigma = .75 # Use mask values
+tstar = 0
+beta_pars <- list(start_time = tstar, rate= 1-sigma)
 susceptible_pars <- list()
 run_scenario(
   'output/figures',
@@ -97,3 +106,6 @@ run_scenario(
 
 output = read_scenario('output/figures')
 
+library(ggplot2)
+plt = ggplot(output) + geom_point(aes(x=t,y=V1,color=paste(beta_name,susceptible_name)))
+print(plt)

@@ -40,4 +40,8 @@ void invoke_susceptible_t(saved_susceptible_t,var_t**,step_t,step_t,person_t);
 //Declare actual functions and corresponding param constructors and destructors for beta_t and susceptible_t functions each in their own separate file.
 //TODO Write a perl script (or macro) to make this easier 
 
+//Fake R functions
+void sample(person_t**, person_t,person_t);
+void swap(person_t*,person_t*);
+
 #endif //INTERVENTION_H_
