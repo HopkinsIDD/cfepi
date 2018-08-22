@@ -104,6 +104,12 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   char fn[1000];
   int var,var2;
 
+  // Parameters for (some) interventions:
+  int* param_vector1;
+  int param_vector_size1;
+  var_t* param_vector2;
+  var_t param_vector_size2;
+
   PROTECT(Rfilename);
   PROTECT(RinitialConditions);
   PROTECT(RreduceBeta);
@@ -156,20 +162,34 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     Rf_error("Could not recognize the beta specification %s\n",reduceBeta_name);
     return(R_NilValue);
   }
+  Rf_warning("HERE");
+  Rf_warning("%s",eliminateSusceptibles_name);
   if(strcmp(eliminateSusceptibles_name,"None")==0){
     intervention_unparametrized_eliminateSusceptibles = &no_susceptible;
     param_susceptible = param_no_susceptible();
+  } else if (strcmp(eliminateSusceptibles_name,"Constant")==0){
+    intervention_unparametrized_eliminateSusceptibles = &constant_susceptible;
+    // R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    // param_vector_size2 = param_vector_size2 *1;
+    // param_vector2 = malloc(param_vector_size2 * sizeof(*param_vector2));
+    param_susceptible = param_constant_susceptible(
+      R2cint(VECTOR_ELT(RsusceptiblePars,0)),
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,2)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,3)),
+      1
+    );
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
-    Rf_error( "This code is not yet written\n");
-    return(R_NilValue);
     intervention_unparametrized_eliminateSusceptibles = &single_susceptible;
-    R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    // R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    // param_vector_size2 = param_vector_size2 *1;
+    // param_vector2 = malloc(param_vector_size2 * sizeof(*param_vector2));
     param_susceptible = param_single_susceptible(
       R2cint(VECTOR_ELT(RsusceptiblePars,0)),
       R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
       R2cint(VECTOR_ELT(RsusceptiblePars,2)),
-      param_vector1,
-      param_vector_size1
+      R2cint(VECTOR_ELT(RsusceptiblePars,3)),
+      1
     );
   } else {
     Rf_error("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);

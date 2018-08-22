@@ -52,13 +52,13 @@ int main(){
   no_intervention_unparametrizedBeta = *no_beta;
   intervention_unparametrizedBeta = *flat_beta;
   no_intervention_unparametrizedSusceptibles = *no_susceptible;
-  intervention_unparametrizedSusceptibles = *flat_susceptible;
+  intervention_unparametrizedSusceptibles = *no_susceptible;
   
   //Set the parameters, this will normally be done from within R.
   control_beta_pars = param_no_beta();
   intervention_beta_pars = param_flat_beta(30,.3);
   control_susceptible_pars = param_no_susceptible();
-  intervention_susceptible_pars = param_flat_susceptible();
+  intervention_susceptible_pars = param_no_susceptible();
   
   no_intervention_reduceBeta = partially_evaluate_beta(no_intervention_unparametrizedBeta,control_beta_pars);
   intervention_reduceBeta = partially_evaluate_beta(intervention_unparametrizedBeta,intervention_beta_pars);

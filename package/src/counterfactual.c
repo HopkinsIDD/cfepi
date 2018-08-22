@@ -12,29 +12,6 @@
 //#include <R_ext/Rdynload.h>
 //#include <Rdefines.h>
 
-// see header file for type definitions.  All custom types are integers of a particular size.
-// A utility function to swap to people
-void swap (person_t *a, person_t *b){
-  person_t temp = *a;
-  *a = *b;
-  *b = temp;
-}
-/*
- * person_t* (*output) an integer vector to return with the sampes in it
- * person_t          n The original number to sample from
- * person_t          k The number of samples to draw
-*/
-void sample(person_t* *output, person_t n, person_t k){
-  person_t i,j;
-  for (i = 0; i < k; i++){
-    // Pick a random index from 0 to i
-    j = runif(i,n);
-    if(j >= n){j = i;}
-    // Swap arr[i] with the element at random index
-    swap(&(*output)[i], &(*output)[j]);
-  }
-}
-
 /*
  * runCounterfacutalAnalysis
  *   Description
