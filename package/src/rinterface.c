@@ -162,8 +162,15 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
     Rf_error( "This code is not yet written\n");
     return(R_NilValue);
-    intervention_unparametrized_eliminateSusceptibles = &flat_susceptible;
-    param_susceptible = param_no_susceptible();
+    intervention_unparametrized_eliminateSusceptibles = &single_susceptible;
+    R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    param_susceptible = param_single_susceptible(
+      R2cint(VECTOR_ELT(RsusceptiblePars,0)),
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,2)),
+      param_vector1,
+      param_vector_size1
+    );
   } else {
     Rf_error("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
     return(R_NilValue);
