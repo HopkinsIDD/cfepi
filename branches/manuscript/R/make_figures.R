@@ -9,10 +9,15 @@ library(counterfactual)
 # npop = 4000000
 # ntime = 365
 # ntrial = 1000
-beta = .2
-gamma = .1
-npop = 4000
+R0 = 1.75 #
+mu = 2.25 #days
+gamma = 1/mu
+beta = R0 * gamma
+warning("Using testing values for npop")
+npop = 4000 #For testing only
+warning("Using testing values for ntime")
 ntime = 30
+warning("Using testing values for ntrial")
 ntrial = 10
 
 trans <- matrix(0,3,3)
@@ -22,7 +27,7 @@ inter[2,1] <- beta
 init <- c(npop - 10,10,0)
 inter <- inter/npop
 setup_counterfactual(
-  'figures/output/figures',
+  'output/figures',
   init,
   inter,
   trans,
@@ -31,10 +36,10 @@ setup_counterfactual(
 )
 
 ## none
-beta_pars <- list(start_time = 30,rate= .05)
+beta_pars <- list()
 susceptible_pars <- list()
 run_scenario(
-  'figures/output/figures',
+  'output/figures',
   init,
   "None",
   "None",
@@ -45,12 +50,12 @@ run_scenario(
 )
 
 ## Treatment
-prop = .1
-tstar = 30
+prop = 0
+tstar = 0
 beta_pars <- list()
 susceptible_pars <- list(rate = prop, intervention_time = tstar, from=2,to=3)
 run_scenario(
-  'figures/output/figures',
+  'output/figures',
   init,
   "None",
   "Single",
@@ -65,7 +70,7 @@ tstar = 30
 susceptible_pars <- list(rate = prop, intervention_time = tstar, from=1,to=3)
 susceptible_pars <- list()
 run_scenario(
-  'figures/output/figures',
+  'output/figures',
   init,
   "None",
   "Single",
@@ -77,10 +82,10 @@ run_scenario(
 ## Social Distancing
 sigma = .95
 tstar = 30
-beta_pars <- list(start_time = 30,rate= 1-sigma),
+beta_pars <- list(start_time = 30,rate= 1-sigma)
 susceptible_pars <- list()
 run_scenario(
-  'figures/output/figures',
+  'output/figures',
   init,
   "Flat",
   "None",
@@ -89,3 +94,6 @@ run_scenario(
   ntime,
   ntrial
 )
+
+output = read_scenario('output/figures')
+
