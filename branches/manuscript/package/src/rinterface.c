@@ -162,8 +162,6 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     Rf_error("Could not recognize the beta specification %s\n",reduceBeta_name);
     return(R_NilValue);
   }
-  Rf_warning("HERE");
-  Rf_warning("%s",eliminateSusceptibles_name);
   if(strcmp(eliminateSusceptibles_name,"None")==0){
     intervention_unparametrized_eliminateSusceptibles = &no_susceptible;
     param_susceptible = param_no_susceptible();
