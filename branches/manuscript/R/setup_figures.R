@@ -59,7 +59,7 @@ sick_reduction = 1.5 #When it works reduces days infected by 1.5
 rate = (1 - 1/sick_reduction) * prop
 beta_pars <- list()
 move_to = 3
-move_from = 1
+move_from = 2
 susceptible_pars <- list(intervention_time = tstar, rate = rate, to=move_to, from=move_from)
 run_scenario(
   'output/figures',
@@ -74,7 +74,7 @@ run_scenario(
 ## Vaccination
 effective_rate = .80 #Works 80% of the time
 rate = (effective_rate) * prop
-move_to = 3
+move_to = 4
 move_from = 1
 tstar = 1
 susceptible_pars <- list(intervention_time = tstar, rate = prop, to=move_to,from=move_from)
