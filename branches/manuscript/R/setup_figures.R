@@ -26,15 +26,14 @@ inter[2,1] <- beta
 init <- c(npop - 10,10,0)
 inter <- inter/npop
 # This code is commented out as it takes a long time to run, and need only run a single time
-warning("Assuming counterfactual is already set up, and not running setup_counterfactual")
-# setup_counterfactual(
-#   'output/figures',
-#   init,
-#   inter,
-#   trans,
-#   ntime,
-#   ntrial
-# )
+setup_counterfactual(
+  'output/figures',
+  init,
+  inter,
+  trans,
+  ntime,
+  ntrial
+)
 
 ## cross intervention parameters
 prop = .33 * .25 # 25% coverage 33% effective
@@ -104,9 +103,3 @@ run_scenario(
   ntime,
   ntrial
 )
-
-output = read_scenario('output/figures')
-
-library(ggplot2)
-plt = ggplot(output) + geom_point(aes(x=t,y=V1,color=paste(beta_name,susceptible_name)))
-print(plt)
