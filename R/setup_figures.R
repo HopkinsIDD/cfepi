@@ -17,7 +17,7 @@ warning("Using testing values for population")
 npop = 400000 #For testing only
 ntime = 365
 warning("Using testing values for number of trials")
-ntrial = 10 #1000 for final figures
+ntrial = 100 #1000 for final figures
 
 trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)
@@ -27,7 +27,15 @@ init <- c(npop - 10,10,0)
 inter <- inter/npop
 # This code is commented out as it takes a long time to run, and need only run a single time
 setup_counterfactual(
-  'output/figures',
+  'output/figures0',
+  init,
+  inter,
+  trans,
+  ntime,
+  ntrial
+)
+setup_counterfactual(
+  'output/figures1',
   init,
   inter,
   trans,
@@ -36,7 +44,7 @@ setup_counterfactual(
 )
 
 ## cross intervention parameters
-prop = .33 * .25 # 25% coverage 33% effective
+prop = .25 # 33% coverage
 tstar = 1 #start on day 1
 
 
@@ -44,7 +52,17 @@ tstar = 1 #start on day 1
 beta_pars <- list()
 susceptible_pars <- list()
 run_scenario(
-  'output/figures',
+  'output/figures0',
+  init,
+  "None",
+  "None",
+  beta_pars,
+  susceptible_pars,
+  ntime,
+  ntrial
+)
+run_scenario(
+  'output/figures1',
   init,
   "None",
   "None",
@@ -56,13 +74,14 @@ run_scenario(
 
 ## antivirals
 sick_reduction = 1.5 #When it works reduces days infected by 1.5
-rate = (1 - 1/sick_reduction) * prop
+effective_rate = .8
+rate = (1 - 1/sick_reduction) * prop * effective_rate
 beta_pars <- list()
-move_to = 3
-move_from = 2
+move_to = 2
+move_from = 1
 susceptible_pars <- list(intervention_time = tstar, rate = rate, to=move_to, from=move_from)
 run_scenario(
-  'output/figures',
+  'output/figures0',
   init,
   "None",
   "Constant",
@@ -72,14 +91,14 @@ run_scenario(
   ntrial
 )
 ## Vaccination
-effective_rate = .80 #Works 80% of the time
+effective_rate = .33 #Works 80% of the time
 rate = (effective_rate) * prop
-move_to = 4
-move_from = 1
+move_to = 3
+move_from = 0
 tstar = 1
 susceptible_pars <- list(intervention_time = tstar, rate = prop, to=move_to,from=move_from)
 run_scenario(
-  'output/figures',
+  'output/figures0',
   init,
   "None",
   "Single",
@@ -94,7 +113,7 @@ tstar = 0
 beta_pars <- list(start_time = tstar, rate= 1-sigma)
 susceptible_pars <- list()
 run_scenario(
-  'output/figures',
+  'output/figures0',
   init,
   "Flat",
   "None",
