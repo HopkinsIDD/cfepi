@@ -379,6 +379,12 @@ void constructTimeSeries(
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
+        }
+        // Printf("\t\t\t%d\n",ctime);
+        // Beginning of time ctime
+        invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
+        for(person=0;person<npop;++person){
+          cur_states[person] = states[ctime][person];
           if(RUN_DEBUG==1){
             Rf_warning("%d,",cur_states[person]);
           }
@@ -386,9 +392,6 @@ void constructTimeSeries(
         if(RUN_DEBUG==1){
           Rf_warning("\n");
         }
-        // Printf("\t\t\t%d\n",ctime);
-        // Beginning of time ctime
-        invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
       }
     }
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
@@ -432,6 +435,9 @@ void constructTimeSeries(
       states[ctime][person] = cur_states[person];
     }
     invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
+    for(person=0;person<npop;++person){
+      cur_states[person] = states[ctime][person];
+    }
   }
 ///   for(person = 0; person < npop; ++person){
 ///     for(time = 0; time < (1+ntime); ++time){
