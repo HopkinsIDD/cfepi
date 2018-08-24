@@ -1,6 +1,6 @@
 source("R/intervention_params.R")
 ## Social Distancing
-sigma = .99 # Use mask values
+sigma = .97 # Use mask values
 beta_pars <- list(start_time = tstar, rate= 1-sigma)
 susceptible_pars <- list()
 run_scenario(
