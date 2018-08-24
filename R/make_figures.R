@@ -1,20 +1,51 @@
 # try({remove.packages('counterfactual')},silent=T)
 # install.packages('package',type='source',repos=NULL)
 library(counterfactual)
+library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(grid)
 
 output = read_scenario('output/figures0')
 multiworld_output = read_scenario('output/figures1')
 
-plt = ggplot(output) + geom_point(aes(x=t,y=V1,color=paste(beta_name,susceptible_name)))
-print(plt)
+scenario_changer = c(
+  'Flat_None' = 'Social Distancing',
+  'None_None' = 'Null',
+  'None_Single' = 'Vaccination',
+  'None_Constant' = 'Antivirals'
+)
 
 ## Figure 1 - Illustration of the Problem
 ### Simulated Epidemic Curves with and without intervention
     # color intervention
-plt = ggplot(output) + geom_point(aes(x=t,y=V2,color=paste(beta_name,susceptible_name)))
+plt = output %>%
+  unite(scenario,beta_name,susceptible_name) %>%
+  mutate(V4 = 400000 - V1 - V2 - V3) %>%
+  gather(Variable,Value,V1,V2,V3,V4) %>% 
+  rename(People = Value,Time = t) %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  group_by(scenario,Time,Variable) %>%
+  summarize(People_L = quantile(People,.025), People_H = quantile(People,.975), People = mean(People)) %>% 
+  filter(Variable == V2) %>%
+  mutate(Variable = "Number Infected") %>%
+  ggplot() +
+  geom_line(aes(
+    x=Time,
+    y=People,
+    color=Variable,
+    group=Variable
+  )) +
+  geom_ribbon(aes(
+    x=Time,
+    ymin=People_L,
+    ymax=People_H,
+    fill=Variable,
+    group=Variable
+  ),alpha=.7) +
+  xlab("Time (Days)") +
+  facet_wrap(~scenario)
 pdf('figures/epicurve.pdf')
 print(plt)
 dev.off()
@@ -32,6 +63,15 @@ x %>%
   filter(t == max(t))  %>%
   unite(scenario,beta_name,susceptible_name) %>%
   select(scenario,trial,final_size=V3) %>%
+  return()
+}
+
+time_series = function(x){
+x %>%
+  unite(scenario,beta_name,susceptible_name) %>%
+  mutate(V4 = 400000-V1-V2-V3) %>% 
+  gather(variable,value,V1,V2,V3,V4) %>%
+  select(scenario,trial,final_size=value,t,variable) %>%
   return()
 }
 
@@ -81,6 +121,51 @@ all_world_inference <- function(fun,name){
   return(all_inference)
 }
 
+
+plot_cross_world <- function(fun,name){
+  all_inference = all_world_inference(fun,name)
+  if(
+  ((max(all_inference[[name]]) - quantile(all_inference[[name]],.95)) > quantile(all_inference[[name]],.95)) ||
+    ((quantile(all_inference[[name]],.05) - min(all_inference[[name]])) < min(all_inference[[name]],.95))
+  ){
+    rcin <- all_inference %>%
+      mutate(scenario = scenario_changer[scenario]) %>%
+      ggplot() +
+      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
+      scale_colour_brewer(type='qual',palette='Paired') +
+      theme(legend.position="none", aspect.ratio=0.9) +
+      xlab("Scenario") +
+      ylim(quantile(all_inference[[name]],c(.05,.95))) +
+      ylab(gsub('_',' ',name)) +
+      background_grid(major = "y", minor = "none")
+    rcout <- all_inference %>%
+      mutate(scenario = scenario_changer[scenario]) %>%
+      ggplot() +
+      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
+      scale_colour_brewer(type='qual',palette='Paired') +
+      theme(legend.position="none", aspect.ratio=0.9) +
+      xlab("Scenario") +
+      ylab(gsub('_',' ',name)) +
+      background_grid(major = "y", minor = "none")
+
+    print(rcout)
+    inset = viewport(height=.5,width=1)
+    print(rcin,vp=inset)
+    rc <- recordPlot()
+  } else {
+    rc <- all_inference %>%
+      mutate(scenario = scenario_changer[scenario]) %>%
+      ggplot() +
+      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
+      scale_colour_brewer(type='qual',palette='Paired') +
+      theme(legend.position="none", aspect.ratio=0.9) +
+      xlab("Scenario") +
+      ylab(gsub('_',' ',name)) +
+      background_grid(major = "y", minor = "none")
+  }
+}
+  
+
 confidence_intervals = function(fun,name){
   tmp = all_world_inference(fun,name)
   tmp %>%
@@ -91,15 +176,7 @@ confidence_intervals = function(fun,name){
   
 }
 
-plot_inference = function(fun,name){
-  x = all_world_inference(fun,name)
-  x$type = gsub('_',' ',x$type)
-  x$scenario = scenario_changer[x$scenario]
-  plt = ggplot(x) +
-    geom_boxplot(aes(x=scenario,color=type,y = x[[name]])) +
-    scale_color_brewer(type='qual',palette='Paired')
-  return(plt)
-}
+plot_inference = plot_cross_world
 
 #### Peak Estimation
 pdf('figures/intervention-effects-final-size.pdf')
