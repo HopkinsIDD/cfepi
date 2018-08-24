@@ -19,14 +19,87 @@ pdf('figures/epicurve.pdf')
 print(plt)
 dev.off()
 
+scenario_changer = c(
+  'Flat_None' = "Social Distancing",
+  'None_None' = "Null",
+  'None_Single' = "Vaccination",
+  'None_Constant' = "Antivirals"
+)
+
 #### Final Size
-plt2 <- output %>%
+final_size = function(x){
+x %>%
   filter(t == max(t))  %>%
-  calculate_residual() %>%
-  gather('scenario','value',None_None,None_Single,None_Constant,Flat_None) %>% 
-  spread(variable,value) %>%
-  ggplot() +
-  geom_boxplot(aes(x = scenario,y=V3))
+  unite(scenario,beta_name,susceptible_name) %>%
+  select(scenario,trial,final_size=V3) %>%
+  return()
+}
+
+peak_time = function(x){
+x %>%
+  unite(scenario,beta_name,susceptible_name) %>%
+  group_by(scenario,trial) %>%
+  do({
+    tmp = .
+    tmp$max_V2 = max(.$V2)
+    tmp
+  }) %>%
+  ungroup() %>%
+  filter(V2 == max_V2)  %>%
+  select(scenario,trial,peak_time = t) %>%
+  group_by(scenario,trial) %>%
+  summarize(peak_time = median(peak_time)) %>%
+  return()
+}
+
+all_world_inference <- function(fun,name){
+  rr = FALSE
+  if(name == 'Relative_Risk'){
+    rr = TRUE
+  }
+  lhs = fun(output)
+  names(lhs)[3] = name
+  lhs = spread_(lhs,"scenario",name)
+  rhs = fun(multiworld_output)
+  names(rhs)[3] = name
+  
+  rhs = rhs[c('trial',name)]
+  all_inference = inner_join(lhs,rhs,by=c('trial')) %>%
+    rename_(.dots = setNames(name,'multi_world')) %>%
+    mutate(single_world = None_None) %>%
+    gather(type,null,single_world,multi_world)
+  var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
+  if(rr){
+    all_inference = all_inference %>%
+      mutate_(.dots = setNames(paste(var_names,' / null'),var_names)) %>%
+      gather_('scenario',name,var_names)
+  } else {
+    all_inference = all_inference %>%
+      mutate_(.dots = setNames(paste(var_names,' - null'),var_names)) %>%
+      gather_('scenario',name,var_names)
+  }
+  return(all_world_inference)
+}
+
+confidence_intervals = function(fun,name){
+  tmp = all_world_inference(fun,name)
+  tmp %>%
+    group_by(type,scenario) %>%
+    summarize_(.dots = setNames(c(paste0('quantile(',name,',.025)'), paste0('quantile(',name,',.975)'), paste0('mean(',name,')')),paste(name,c('l','h','m'),sep='_'))) %>%
+    mutate_(.dots = setNames(paste0(name,'_h - ', name,'_l'),'width')) %>%
+    return()
+  
+}
+
+plot_inference = function(fun,name){
+  x = all_world_inference(fun,name)
+  x$type = gsub('_',' ',x$type)
+  x$scenario = scenario_changer[x$scenario]
+  plt = ggplot(x) +
+    geom_boxplot(aes(x=scenario,color=type,y = x[[name]])) +
+    scale_color_brewer(type='qual',palette='Paired')
+  return(plt)
+}
 
 #### Peak Estimation
 reshaped_output <- output %>%
