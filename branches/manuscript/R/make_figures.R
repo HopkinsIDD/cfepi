@@ -28,7 +28,7 @@ plt = output %>%
   mutate(scenario = scenario_changer[scenario]) %>%
   group_by(scenario,Time,Variable) %>%
   summarize(People_L = quantile(People,.025), People_H = quantile(People,.975), People = mean(People)) %>% 
-  filter(Variable == V2) %>%
+  filter(Variable == "V2") %>%
   mutate(Variable = "Number Infected") %>%
   ggplot() +
   geom_line(aes(
@@ -149,8 +149,8 @@ plot_cross_world <- function(fun,name){
       background_grid(major = "y", minor = "none")
 
     print(rcout)
-    inset = viewport(height=.5,width=1)
-    print(rcin,vp=inset)
+    # inset = viewport(height=.5,width=1)
+    # print(rcin,vp=inset)
     rc <- recordPlot()
   } else {
     rc <- all_inference %>%
