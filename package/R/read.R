@@ -3,7 +3,7 @@
 #' @title read_scenario
 #' @description Reads the results of a scenario into R.
 #' @param filename The file stub used in setup_counterfactual and run_scenario
-read_scenario <- function(filename){
+read_scenario <- function(filename,ntrial=NULL){
   stub = basename(filename)
   path = dirname(filename)
   all_files = list.files(path)
@@ -13,6 +13,9 @@ read_scenario <- function(filename){
   colnames(split_files) = c('stub','beta_name','susceptible_name','trial','extension')
   split_files = split_files[split_files[,'stub'] == stub,]
   split_files = split_files[split_files[,'extension'] == 'csv',]
+  if(!is.null(ntrial)){
+    split_files = split_files[as.numeric(split_files[,'trial']) < ntrial,]
+  }
   all_files = rownames(split_files)
   
   #' @importFrom dplyr bind_rows
