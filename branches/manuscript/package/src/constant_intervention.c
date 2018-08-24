@@ -53,10 +53,10 @@ void constant_susceptible(var_t** states, step_t time, step_t ntime, person_t np
       //Vaccinate targets[person1]
       for(var1 = 0; var1 < pardata.nfrom; ++ var1){
 	// if(states[time][person1] == pardata.move_from[var1]){
-	if(states[time][person1] == pardata.move_from){
-	  for(time1 = time; time1 < (ntime+1); ++time1){
-	    states[time1][person1] = pardata.move_to;
-	  }
+	if(states[time][targets[person1]] == pardata.move_from){
+          for(time1 = time; time1 < (ntime+1); ++time1){
+	    states[time1][targets[person1]] = pardata.move_to;
+          }
 	}
       }
     }

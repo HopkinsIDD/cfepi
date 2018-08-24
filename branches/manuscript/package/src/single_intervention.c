@@ -43,6 +43,7 @@ void single_susceptible(var_t** states, step_t time, step_t ntime, person_t npop
   if(time == (* ( (data_susceptible_single_t *) pars.data) ).time){
     // Vaccinate according to rbinom
     pardata = *( (data_susceptible_single_t *) pars.data);
+    // For debugging
     nmoved = rbinom(npop,pardata.rate);
     targets = malloc(npop * sizeof(person_t));
     for(person1 = 0; person1 < npop; ++person1){
@@ -52,11 +53,10 @@ void single_susceptible(var_t** states, step_t time, step_t ntime, person_t npop
     for(person1 = 0; person1 < nmoved; ++person1){
       //Vaccinate targets[person1]
       for(var1 = 0; var1 < pardata.nfrom; ++ var1){
-	// if(states[time][person1] == pardata.move_from[var1]){
-	if(states[time][person1] == pardata.move_from){
-	  for(time1 = time; time1 < (ntime+1); ++time1){
-	    states[time1][person1] = pardata.move_to;
-	  }
+	if(states[time][targets[person1]] == pardata.move_from){
+          for(time1 = time; time1 < (ntime+1); ++time1){
+	    states[time1][targets[person1]] = pardata.move_to;
+          }
 	}
       }
     }
