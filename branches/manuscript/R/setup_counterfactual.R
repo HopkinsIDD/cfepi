@@ -7,9 +7,9 @@ R0 = 1.75 #
 mu = 2.25 #days
 gamma = 1/mu
 beta = R0 * gamma
-npop = 400000
-ntime = 365
-ntrial = 500
+npop = 4000
+ntime = 100
+ntrial = 1000
 
 trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)

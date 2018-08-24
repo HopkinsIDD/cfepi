@@ -13,10 +13,10 @@ R0 = 1.75 #
 mu = 2.25 #days
 gamma = 1/mu
 beta = R0 * gamma
-npop = 400000 #For testing only
-ntime = 365
+npop = 4000 #For testing only
+ntime = 100
 warning("Using testing values for number of trials")
-ntrial = 100 #1000 for final figures
+ntrial = 1000 #1000 for final figures
 
 output_name1 = 'output/figures0'
 output_name2 = 'output/figures1'
