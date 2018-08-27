@@ -111,7 +111,7 @@ all_world_inference <- function(fun,name){
   var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
   if(rr){
     all_inference = all_inference %>%
-      mutate_(.dots = setNames(paste('log('var_names,' / null)'),var_names)) %>%
+      mutate_(.dots = setNames(paste('log(',var_names,' / null)'),var_names)) %>%
       gather_('scenario',name,var_names)
   } else {
     all_inference = all_inference %>%
