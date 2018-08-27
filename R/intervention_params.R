@@ -30,7 +30,7 @@ inter <- inter/npop
 # This code is commented out as it takes a long time to run, and need only run a single time
 
 ## cross intervention parameters
-prop = .25 # 25% adoption rate for intervention
+prop = .15 # 25% adoption rate for intervention
 tstar = 1 #start on day 1
 
 ## Default intervention parameters

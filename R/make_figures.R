@@ -94,7 +94,7 @@ x %>%
 
 all_world_inference <- function(fun,name){
   rr = FALSE
-  if(name == 'Relative_Risk'){
+  if(name == 'Log_Relative_Risk'){
     rr = TRUE
   }
   lhs = fun(output)
@@ -111,7 +111,7 @@ all_world_inference <- function(fun,name){
   var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
   if(rr){
     all_inference = all_inference %>%
-      mutate_(.dots = setNames(paste(var_names,' / null'),var_names)) %>%
+      mutate_(.dots = setNames(paste('log('var_names,' / null)'),var_names)) %>%
       gather_('scenario',name,var_names)
   } else {
     all_inference = all_inference %>%
@@ -186,7 +186,7 @@ pdf('figures/intervention-effects-peak-time.pdf')
 print(plot_inference(peak_time,'Peak_Time'))
 dev.off()
 pdf('figures/intervention-effects-relative-risk.pdf')
-print(plot_inference(final_size,'Relative_Risk'))
+print(plot_inference(final_size,'Log_Relative_Risk'))
 while(dev.off() != 1){}
 
 ## Figure 2 - Cartoon/Diagram illustrating method.
