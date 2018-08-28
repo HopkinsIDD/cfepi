@@ -256,9 +256,10 @@ void constructTimeSeries(
     npop = npop + init[var];
   }
   if(RUN_DEBUG == 1){
-    Rf_warning("npop is %d\n",npop);
+    sprintf(ofn2,"%s.dat",outputfilename);
+    ofp2 = fopen(ofn2,"w");
+    fprintf(ofp2,"npop is %d\n",npop);
   }
-  sprintf(ofn2,"%s.dat",outputfilename);
   state_counts = malloc(nvar*sizeof(person_t));
   states = malloc((1+ntime)*sizeof(var_t*));
   if(states == NULL){Rf_error("Malloc error for states\n");}
@@ -299,10 +300,10 @@ void constructTimeSeries(
   itime = 0;
   ttime = 0;
   mtime = 0;
-  Rf_warning("HERE\n");
   while(reading == 1){
+    //Check to see if files are ended
     if(RUN_DEBUG==1){
-      Rf_warning("Loop\n");
+      fprintf(ofp2,"Loop\n");
     }
     // Rf_warning("transition reading %p - %d\n",tfp,reading_tfp);
     if((reading_tfp) && (feof(tfp))){
@@ -324,8 +325,10 @@ void constructTimeSeries(
       return;
     }
     if(RUN_DEBUG==1){
-      Rf_warning("1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+      fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     }
+    // Read transitions and edges from files that we are currently reading
+
     if(reading_file_1){
       err = fread(&ttime,sizeof(step_t),1,tfp);
       err += fread(&tperson,sizeof(person_t),1,tfp);
@@ -344,7 +347,7 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          Rf_warning("%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
+          fprintf(ofp2,"%d:%d:%d->%d\n",ttime,tperson,tvar1,tvar2);
         }
       }
     }
@@ -370,18 +373,22 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          Rf_warning("%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
+          fprintf(ofp2,"%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
         }
       }
     }
+
+    // Check to see if we should read the next line of each file
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     mtime = ((itime >= ttime) || feof(ifp)) ? ttime : itime;
-    // Rf_warning("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    if(RUN_DEBUG==1){
+      fprintf(ofp2,"2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    }
+    // Advance time if there is nothing left to read
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
-      while(ctime < mtime){
         if(RUN_DEBUG == 1){
-          Rf_warning("time %d\n",ctime);
+          fprintf(ofp2,"time %d\n",ctime);
         }
 	++ctime;
         for(person=0;person<npop;++person){
@@ -393,16 +400,18 @@ void constructTimeSeries(
         for(person=0;person<npop;++person){
           cur_states[person] = states[ctime][person];
           if(RUN_DEBUG==1){
-            Rf_warning("%d,",cur_states[person]);
+            fprintf(ofp2,"%d,",cur_states[person]);
           }
         }
         if(RUN_DEBUG==1){
-          Rf_warning("\n");
-        }
+          fprintf(ofp2,"\n");
       }
     }
+
+    // check to see if we should keep reading now that time has advanced
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
+    // Check that we aren't in a bad place
     assert(ttime < ntime);
     assert(tperson < npop);
     assert(tvar1 < nvar);
@@ -412,6 +421,8 @@ void constructTimeSeries(
     assert(iperson2 < npop);
     assert(ivar1 < nvar);
     assert(ivar2 < nvar);
+    assert(ttime >= ctime);
+    assert(itime >= ctime);
 
     //Figure out how to take into account precedence for these...
     //Order of operations may matter if transitions and/or interactions can move the same person to multiple categories...
@@ -427,7 +438,7 @@ void constructTimeSeries(
     // Rf_warning("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
     if(
       (states[itime][iperson1] == ivar1) &&
-      (states[itime][iperson1] == states[itime+1][iperson1]) &&
+      // (states[itime][iperson1] == states[itime+1][iperson1]) &&
       (states[itime][iperson2] == ivar2) &&
       (invoke_beta_t(reduceBeta,itime,iperson1,iperson2,ivar1,ivar2) != 0) &&
       reading_file_2
@@ -471,6 +482,9 @@ void constructTimeSeries(
   free(states);
   free(cur_states);
   free(state_counts);
+  if(RUN_DEBUG == 1){
+    fclose(ofp2);
+  }
   fclose(ofp);
   if(reading_tfp){
     fclose(tfp);
