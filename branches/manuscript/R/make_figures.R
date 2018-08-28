@@ -204,18 +204,25 @@ dev.off()
 ### Table 1 - Computational Resource Thresholds + Time
 
 plt5 = final_size(output) %>%
-  group_by(scenario) %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
   ggplot() +
-  geom_boxplot(aes(x=scenario,y=final_size))
+  geom_boxplot(aes(x=scenario,y=final_size))+
+  ylab("Final Size") + 
+  xlab("Intervention") + 
+  ylim(c(2100,3100))
 pdf('figures/intervention-effects-raw-boxplots.pdf')
 print(plt5)
 dev.off()
 
 plt6 = all_world_inference(final_size,'Final_Size') %>%
   filter(type == 'single_world') %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(`Cases Averted` = -Final_Size+1) %>%  #Ask if this is ok.... seems suspicious
   ggplot +
-  geom_boxplot(aes(x=scenario,y=Final_Size)) +
-  facet_wrap(type~.)
+  geom_boxplot(aes(x=scenario,y=`Cases Averted`)) +
+  xlab("Intervention") + 
+  ylab("Cases Averted") + 
+  ylim(c(0,1000))
 
 pdf('figures/intervention-effects-combined-boxplots.pdf')
 print(plt6)

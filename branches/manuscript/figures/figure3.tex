@@ -1,0 +1,31 @@
+% A simple Tree
+% Author: Stefan Kottwitz
+% https://www.packtpub.com/hardware-and-creative/latex-cookbook
+\documentclass[crop,tikz]{standalone}% 'crop' is the default for v1.0, before it was 'preview'
+
+%Packages
+\usepackage{xcolor}
+\usepackage{bm}
+\usepackage{amsmath}
+
+%Colors
+\definecolor{recovery}{RGB}{27,158,119}
+\definecolor{infection}{RGB}{217,95,2}
+\definecolor{intervention}{RGB}{117,112,179}
+
+
+
+\begin{document}
+\begin{tikzpicture}[sibling distance=10em,
+  every node/.style = {shape=circle,
+    draw, align=center}]]
+  \node[fill=infection] {}
+    child { node[fill=infection] {} }
+    child { node[fill=infection] {}
+      child { node[fill=infection] {}
+        child { node[fill=infection] {} }
+        child { node[fill=infection] {} }
+        child { node[fill=infection] {} } }
+      child { node[fill=infection] {} } };
+\end{tikzpicture}
+\end{document}
