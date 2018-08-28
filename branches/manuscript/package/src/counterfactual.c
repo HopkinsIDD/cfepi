@@ -282,8 +282,14 @@ void constructTimeSeries(
     Rf_error("Could not open file %s.",outputfilename);
   }
   tfp = fopen(tfname,"rb");
+  if(tfp == NULL){
+    Rf_error("Could not open file %s.",tfname);
+  }
   reading_tfp = tfp == NULL ? 0 : 1;
   ifp = fopen(ifname,"rb");
+  if(ifp == NULL){
+    Rf_error("Could not open file %s.",ifname);
+  }
   reading_ifp = tfp == NULL ? 0 : 1;
 
   reading= MAX(reading_tfp,reading_ifp);
@@ -293,6 +299,7 @@ void constructTimeSeries(
   itime = 0;
   ttime = 0;
   mtime = 0;
+  Rf_warning("HERE\n");
   while(reading == 1){
     if(RUN_DEBUG==1){
       Rf_warning("Loop\n");
