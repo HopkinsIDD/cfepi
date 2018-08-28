@@ -1,3 +1,5 @@
+try({remove.packages('counterfactual')},silent=T)
+install.packages('package',type='source',repos=NULL)
 # try({remove.packages('counterfactual')},silent=T)
 # install.packages('package',type='source',repos=NULL)
 library(counterfactual)
@@ -187,7 +189,7 @@ print(plot_inference(peak_time,'Peak_Time'))
 dev.off()
 pdf('figures/intervention-effects-relative-risk.pdf')
 print(plot_inference(final_size,'Log_Relative_Risk'))
-while(dev.off() != 1){}
+dev.off()
 
 ## Figure 2 - Cartoon/Diagram illustrating method.
 ### SIR diagram
@@ -200,3 +202,21 @@ while(dev.off() != 1){}
     # y relative risk
     # color true counterfactual vs our methods
 ### Table 1 - Computational Resource Thresholds + Time
+
+plt5 = final_size(output) %>%
+  group_by(scenario) %>%
+  ggplot() +
+  geom_boxplot(aes(x=scenario,y=final_size))
+pdf('figures/intervention-effects-raw-boxplots.pdf')
+print(plt5)
+dev.off()
+
+plt6 = all_world_inference(final_size,'Final_Size') %>%
+  filter(type == 'single_world') %>%
+  ggplot +
+  geom_boxplot(aes(x=scenario,y=Final_Size)) +
+  facet_wrap(type~.)
+
+pdf('figures/intervention-effects-combined-boxplots.pdf')
+print(plt6)
+while(dev.off() != 1){}
