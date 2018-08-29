@@ -24,12 +24,13 @@ scenario_changer = c(
     # color intervention
 plt = output %>%
   unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = 400000 - V1 - V2 - V3) %>%
+  mutate(V4 = 4000 - V1 - V2 - V3) %>%
   gather(Variable,Value,V1,V2,V3,V4) %>% 
   rename(People = Value,Time = t) %>%
   mutate(scenario = scenario_changer[scenario]) %>%
   group_by(scenario,Time,Variable) %>%
   summarize(People_L = quantile(People,.025), People_H = quantile(People,.975), People = mean(People)) %>% 
+  ungroup() %>%
   filter(Variable == "V2") %>%
   mutate(Variable = "Number Infected") %>%
   ggplot() +
@@ -48,9 +49,6 @@ plt = output %>%
   ),alpha=.7) +
   xlab("Time (Days)") +
   facet_wrap(~scenario)
-pdf('figures/epicurve.pdf')
-print(plt)
-dev.off()
 
 scenario_changer = c(
   'Flat_None' = "Social Distancing",
@@ -71,7 +69,7 @@ x %>%
 time_series = function(x){
 x %>%
   unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = 400000-V1-V2-V3) %>% 
+  mutate(V4 = 4000-V1-V2-V3) %>% 
   gather(variable,value,V1,V2,V3,V4) %>%
   select(scenario,trial,final_size=value,t,variable) %>%
   return()
@@ -91,6 +89,7 @@ x %>%
   select(scenario,trial,peak_time = t) %>%
   group_by(scenario,trial) %>%
   summarize(peak_time = median(peak_time)) %>%
+  ungroup() %>%
   return()
 }
 
@@ -104,13 +103,15 @@ all_world_inference <- function(fun,name){
   lhs = spread_(lhs,"scenario",name)
   rhs = fun(multiworld_output)
   names(rhs)[3] = name
+  rhs = dplyr::select(rhs,-scenario)
   
-  rhs = rhs[c('trial',name)]
-  all_inference = inner_join(lhs,rhs,by=c('trial')) %>%
+  join_names = intersect(names(lhs),names(rhs))
+  all_inference = inner_join(lhs,rhs,by=join_names) %>%
     rename_(.dots = setNames(name,'multi_world')) %>%
     mutate(single_world = None_None) %>%
     gather(type,null,single_world,multi_world)
-  var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
+  # var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
+  var_names = names(all_inference)[grepl('_',names(all_inference))]
   if(rr){
     all_inference = all_inference %>%
       mutate_(.dots = setNames(paste('log(',var_names,' / null)'),var_names)) %>%
@@ -174,6 +175,7 @@ confidence_intervals = function(fun,name){
     group_by(type,scenario) %>%
     summarize_(.dots = setNames(c(paste0('quantile(',name,',.025)'), paste0('quantile(',name,',.975)'), paste0('mean(',name,')')),paste(name,c('l','h','m'),sep='_'))) %>%
     mutate_(.dots = setNames(paste0(name,'_h - ', name,'_l'),'width')) %>%
+    ungroup() %>%
     return()
   
 }
@@ -181,15 +183,30 @@ confidence_intervals = function(fun,name){
 plot_inference = plot_cross_world
 
 #### Peak Estimation
-pdf('figures/intervention-effects-final-size.pdf')
-print(plot_inference(final_size,'Final_Size'))
-dev.off()
-pdf('figures/intervention-effects-peak-time.pdf')
-print(plot_inference(peak_time,'Peak_Time'))
-dev.off()
-pdf('figures/intervention-effects-relative-risk.pdf')
-print(plot_inference(final_size,'Log_Relative_Risk'))
-dev.off()
+time_series_inference =all_world_inference(time_series,'Change_in_Cases')
+time_series_summary = time_series_inference %>%
+  group_by(t,variable,scenario,type) %>%
+  summarize(`Change in Cases` = mean(Change_in_Cases),lq = quantile(Change_in_Cases,.025),uq = quantile(Change_in_Cases,.975))
+
+plt_rec = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(scenario~type) +
+  theme(legend.position="none")
+
+plt_rec_t = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(type~scenario) +
+  theme(legend.position="none")
 
 ## Figure 2 - Cartoon/Diagram illustrating method.
 ### SIR diagram
@@ -202,28 +219,21 @@ dev.off()
     # y relative risk
     # color true counterfactual vs our methods
 ### Table 1 - Computational Resource Thresholds + Time
-
-plt5 = final_size(output) %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
-  ggplot() +
-  geom_boxplot(aes(x=scenario,y=final_size))+
-  ylab("Final Size") + 
-  xlab("Intervention") + 
-  ylim(c(2100,3100))
-pdf('figures/intervention-effects-raw-boxplots.pdf')
-print(plt5)
+pdf('figures/epicurve.pdf')
+print(plt)
 dev.off()
-
-plt6 = all_world_inference(final_size,'Final_Size') %>%
-  filter(type == 'single_world') %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
-  mutate(`Cases Averted` = -Final_Size+1) %>%  #Ask if this is ok.... seems suspicious
-  ggplot +
-  geom_boxplot(aes(x=scenario,y=`Cases Averted`)) +
-  xlab("Intervention") + 
-  ylab("Cases Averted") + 
-  ylim(c(0,1000))
-
-pdf('figures/intervention-effects-combined-boxplots.pdf')
-print(plt6)
+pdf('figures/intervention-effects-final-size.pdf')
+print(plot_inference(final_size,'Final_Size'))
+dev.off()
+pdf('figures/intervention-effects-peak-time.pdf')
+print(plot_inference(peak_time,'Peak_Time'))
+dev.off()
+pdf('figures/intervention-effects-relative-risk.pdf')
+print(plot_inference(final_size,'Log_Relative_Risk'))
+dev.off()
+pdf('figures/intervention-effects-time-series-recovered-switched.pdf')
+print(plt_rec_t)
+dev.off()
+pdf('figures/intervention-effects-time-series-recovered.pdf')
+print(plt_rec_t)
 while(dev.off() != 1){}
