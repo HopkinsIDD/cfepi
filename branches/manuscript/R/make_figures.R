@@ -11,7 +11,7 @@ if(!require(counterfactual)){
   source("package/R/read.R")
 }
 # library(counterfactual)
-# library(cowplot)
+library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -283,6 +283,24 @@ plt_rec_t = time_series_summary %>%
   facet_grid(type~scenario) +
   theme(legend.position="none")
 
+plt_box_intervene = final_size(output) %>%
+  group_by(trial) %>%
+  do({tmp = . ; tmp$final_size = .$final_size - .[.$scenario=='None_None',]$final_size; tmp}) %>%
+  filter(scenario != 'None_None') %>%
+  mutate(`Cases Averted` = -final_size,Intervention=scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_boxplot(aes(x=Intervention, y=`Cases Averted`)) +
+  ylim(c(-100,1000)) +
+  geom_abline(slope=0)
+
+plt_box_no_intervene = final_size(output) %>%
+  group_by(trial) %>%
+  mutate(`Final Size` = final_size,Intervention=scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_boxplot(aes(x=Intervention, y=`Final Size`)) +
+  ylim(c(2000,3200))
+  
+
 ## Figure 2 - Cartoon/Diagram illustrating method.
 ### SIR diagram
 #### Done in Latex
@@ -315,6 +333,12 @@ dev.off()
 pdf('figures/intervention-effects-time-series-susceptible-switched.pdf')
 print(plt_sus_t)
 dev.off()
-pdf('figures/intervention-effects-time-series-susceptible')
+pdf('figures/intervention-effects-time-series-susceptible.pdf')
 print(plt_sus)
+dev.off()
+pdf('figures/intervention-effects-raw-boxplots.pdf')
+print(plt_box_no_intervene)
+dev.off()
+pdf('figures/intervention-effects-combined-boxplots.pdf')
+print(plt_box_intervene)
 while(dev.off() != 1){}
