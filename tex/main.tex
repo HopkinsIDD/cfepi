@@ -158,15 +158,15 @@ $\gamma$ & recovery rate & $0.44$ & Forsber-White et al\\
 
 
 
-\begin{figure}\label{fig:network-example}
-\includegraphics[width=\textwidth]{../figures/figure1} %Probably turn the coloration into a legend.
-\caption{A visual representation of the complete graph.  \textbf{a)} Shows an example of all infection and recovery events that can occur in a population of $3$ people over time.  \textbf{b)} shows the The upper panels show the way we represent \textbf{a)} infectious contacts colored red and \textbf{b)} recoveries colored green.  Both of these include references to the intervention, colored blue and the initial conditions, colored in purple.  \textbf{c)} shows a complete graph on two people for two time points.  Even for only two people and two time steps, this graph is visually quite complicated, and we have found that it is easier to simplify the graph as in \textbf{d)} using colored edges to denote the patterns of nodes.}
-\end{figure}
-
-\begin{figure}
-\includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
-\caption{Diagram demonstrating pruning. \textbf{a)}--\textbf{i)} show an example of pruning.  The first column represents updating possible initial values.  The second column represents removing impossible events without testing them.  The third column represents testing the remaining edges to determine which actually occur.  In the final row, \textbf{j)} represents the results of the epidemic with the intervention, while \textbf{k)} reprents the results of the same epidemic without the intervention.  This example also shows how an epidemic which only prevents cases can actually cause new cases to occur.}
-\end{figure}
+% \begin{figure}\label{fig:network-example}
+% \includegraphics[width=\textwidth]{../figures/figure1} %Probably turn the coloration into a legend.
+% \caption{A visual representation of the complete graph.  \textbf{a)} Shows an example of all infection and recovery events that can occur in a population of $3$ people over time.  \textbf{b)} shows the The upper panels show the way we represent \textbf{a)} infectious contacts colored red and \textbf{b)} recoveries colored green.  Both of these include references to the intervention, colored blue and the initial conditions, colored in purple.  \textbf{c)} shows a complete graph on two people for two time points.  Even for only two people and two time steps, this graph is visually quite complicated, and we have found that it is easier to simplify the graph as in \textbf{d)} using colored edges to denote the patterns of nodes.}
+% \end{figure}
+% 
+% \begin{figure}
+% \includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
+% \caption{Diagram demonstrating pruning. \textbf{a)}--\textbf{i)} show an example of pruning.  The first column represents updating possible initial values.  The second column represents removing impossible events without testing them.  The third column represents testing the remaining edges to determine which actually occur.  In the final row, \textbf{j)} represents the results of the epidemic with the intervention, while \textbf{k)} reprents the results of the same epidemic without the intervention.  This example also shows how an epidemic which only prevents cases can actually cause new cases to occur.}
+% \end{figure}
 
 We present four example interventions: hand-washing, vaccination, antivirals, and null (control) interventions.
 We choose these examples to highlight the different ways interventions can interact with single-world inference.
@@ -288,37 +288,26 @@ This shows us that the number of infectious compartments, the population, number
 In this paper, we present a single-world inference method that isolates the counterfactual comparison to reduce uncertainty in inference about interventions.
 We demonstrate that our method ignores cross-epidemic variation, and in doing so avoids counterintuitive results.
 However, our model does have some limitations.
-While single-world inference answers a more precise question than multiple-world inference, that does not mean that the traditional question is invalid.
-Additionally, our model does not cover every possible intervention and can be computationally intensive.
-We hope to allow more targeted assumptions about interventions to further reduce the computational complexity.
-We also hope to extend these methods to allow the fitting of single-world models to real data.
+Single-world inference answers a more precise question than multiple-world inference, but the general question is sometimes the right question to ask.
+While our method is somewhat general, there are models and interventions beyond its scope.
+Despite these shortcomings, we feel that for a wide variety of problems, and hope to extend this work to actual epidemic data.
 
-Inherently, our method sets out to address a different question than most simulation-based methods.
-Traditional methods simulate two completely independent epidemics in the same population, from the same parameters, with one epidemic intervened upon while the other is not. %This sentence is clunky
-These address important policy questions: if you were to see another epidemic in the same population, what would the impact of an intervention look like on that epidemic.
-While the questions that traditional simulation-based method can address are vitally important, our method sets out to address a more precise question.
-Given two precisely identical epidemics what is the effect of the intervention. This method precisely isolates the expected intervention impact which allows for a better comparison of interventions or a better understanding of the true differences between control programs. 
+Our method out-performs multiple-world inference by answering a different question.
+They ask, "If you were to see another epidemic in the same population, what would the impact of an intervention look like in that epidemic?"
+For some problems, particularly those focused on a future epidemic, this question may be important in its own right.
+For others, particularly those focused on an intervention and when to use it, our question may be more appropriate.
 
-While our method significantly improves the precision for comparing the impact of an intervention, it has some limitations, mainly that this method is still computationally intensive.
-Each simulation on a population of $400000$ people for SIR takes approximately $1.73$ GB of disk space.
-Running the initial graph pruning takes $54$ seconds per simulation.
-Running each simulation is shorter, taking only between $16$ to $20$ seconds per simulation.
-The more compartments, people, time, and simulations we add, the larger the complete network grows.
-Without pruning, it would be even worse: the influenza graph would take $58.4$ TB per simulation using our current storage methods.
-There is a balance to strike between the simulated population, number of simulations, and number of compartments.
-We can swing this balance in our favor by pruning.
+Our method is also more computationally intensive than multiple-world inference.
+For a population of $400000$ people over $365$ time steps, each simulation takes $1.73$ GB of space.
+Pruning takes $54$ seconds per simulation, and applying the intervention takes $16$ to $20$ seconds.
+This is a marked improvement over the $58.3$ TB our method would take without pruning, but it means that some problems are out of reach.
+We are limited to models with a relatively small number of compartments, mid-size populations, and one year.
+If we decrease one of these, we can increase the others, but there are still some problems outside the reach of our method.
 
-Pruning affects more than just the amout of storage.
-The amount of time the interventions take to run decreases as the we prune more.
-Unfortunately, our current method still leaves a large portion of the graph included.
-For a single intervention, there is an optimal pruning strategy: prune everything that doesn't occur either the intervention or non-intervention case.
-We do not consider that strategy here, because it does not affect the inference.
-Additionally, that strategy removes the possibility of adding new interventions later on.
-
-%FIX ME: Need to mention interventions and assumptions about them before this point.
-In addition to computational problems, this method does not actually cover all reasonable interventions.
-For example, interventions that cause people to move from one susceptible category to another, such as evacuation, violate our first assumption about interventions, which states that interventions do not move people to a category they will later need to leave.
-There are also less reasonable interventions, such as infecting people to deplete susceptibles, which are beyond the scope of this paper as they violate the second assumption, which states that the intervention should not cause infectious contacts or prevent recoveries.
+Additionally, some reasonable interventions are out of reach as they do not follow the assumptions we make about interventions as part of pruning.
+For a particular intervention, we can make stronger assumptions, even going so far as to run the intervention as we prune, keeping only the actual state as possible.
+We think there may be a better middle ground, one that allows more interventions, and also improves performance.
+It would be nice to be able to make probabilistic assumptions about the interventions, which would guarantee success with high probability.
 
 Another set of limitations is that discrete time compartmental models are not cutting edge modeling techniques.
 Our method is discrete time, but Gillespie algorithms would allow it to be extended into continuous time.
@@ -327,17 +316,8 @@ Our method also uses a fixed difference equation, a stronger limitation than we 
 We can construct interventions to overcome this limitation to some extent, but it could be improved.
 Moreover, to account for all of them would result in  combinatorial explosion and quickly become computationally intractable. % FIX ME: is this sentence actually true?
 
-Going forward, we hope to refine our pruning algorithm.
-We plan to look at different sets of assumptions, and to what extent pruning too much affects inference.
-We also want to apply these methods to epidemic data.
-If we can fit a single-world inference model, it allows us to ask the question, ``What would the impact of this intervention have been?''
-
-We present a method for utilizing computational power to address more a precise counterfactual question about interventions.
-Our method of single-world inference improves precision in understanding the effects of interventions within the context of a single outbreak.
-With this precise understanding, the effectiveness of an intervention can be better determined.
-Consequently, this improves our ability to compare and select interventions to address disease spread.
-Finally, single-world inference also marks a new way of leveraging computational resources to solve epidemiological problems.
-
+Our next goal for this work is to take the results presented here, and apply them to epidemic data.
+If we can recreate (possible) pruned graphs from an existing epidemic, then we can ask the question, "What would have happened had we intervened?"
 
 \enlargethispage{20pt}
 
