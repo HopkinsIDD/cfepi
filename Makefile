@@ -1,24 +1,11 @@
-TEX=pdflatex
-R=Rscript
-BIB=bibtex
-.PHONY: all clean view figures
+TOPTARGETS := all clean
 
-all: main.pdf outline.pdf
+SUBDIRS := pdfs figures
 
-view: main.pdf
-	open main.pdf
-
-main.pdf: figures main.tex
-	$(TEX) tex/main.tex
-outline.pdf: figures outline.tex
-	$(TEX) tex/outline.tex
-
+$(TOPTARGETS): pdfs figures
+pdfs: figures
+	$(MAKE) -C pdfs $(MAKECMDGOALS)
 figures:
-	$(R) figures/make_figures.R
+	$(MAKE) -C figures $(MAKECMDGOALS)
 
-main.tex:
-
-outline.tex:
-
-clean:
-	rm -f main.log main.pdf main.aux outline.log outline.pdf outline.aux tex/main.log tex/main.synctex.gz tex/main.pdf tex/main.aux tex/outline.log tex/outline.synctex.gz tex/outline.pdf tex/outline.aux
+.PHONY: $(TOPTARGETS) $(SUBDIRS)

@@ -13,17 +13,19 @@
 % \tikzset{custom={latex[length=2in,width=2mm]}}
 
 %Colors
-\definecolor{recovery}{RGB}{27,158,119}
-\definecolor{infection}{RGB}{217,95,2}
-\definecolor{intervention}{RGB}{117,112,179}
+\definecolor{susceptible}{RGB}{141,160,203}
+\definecolor{recovery}{RGB}{102,194,165}
+\definecolor{infection}{RGB}{252,141,98}
+\definecolor{intervention}{RGB}{231,138,195}
+\definecolor{nothing}{RGB}{225,225,225}
 
 % Formatting macros:
 \tikzstyle{node}=[circle, draw]
 \tikzstyle{edge}=[diamond, draw]
 
-\tikzstyle{intervention}=[fill = intervention,text = white]
-\tikzstyle{contact}=[fill = infection, text = white]
-\tikzstyle{recovery}=[fill = recovery,text = white]
+\tikzstyle{intervention}=[fill = intervention]
+\tikzstyle{contact}=[fill = infection]
+\tikzstyle{recovery}=[fill = recovery]
 \tikzstyle{custom}=[-{Latex[scale=1,length=1.5mm,width=1.5mm]},color=black!40!white]
 
 \begin{document}

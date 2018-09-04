@@ -3,6 +3,8 @@
 \usepackage{tikz}
 \usepackage{amsmath}
 
+\newcommand{\R}{R\,}
+
 \renewcommand{\vec}[1]{{\textbf #1}}
 \begin{document}
 \section{Introduction}
@@ -11,6 +13,7 @@ Compartmental models are a standard in disease modeling \cite{}.%cite me
 We develop methods to [simulate a counterfactual process] %FIX ME
 on a general compartmental model without having the process error contribute to the results.  We demonstrate our method on an influenza model, and then extend that example to a general class of models.
 
+All of the methods presented in this paper are publically available in the \R package [counterfactual] % FIX ME (change formatting)
 %% Part on how code is available on cran etc.
 
 \subsection*{Example: Influenza}
@@ -36,8 +39,7 @@ In order to eliminate process error, we convert to an individual based model.  W
 
 To convert this model, rather than $S$, $I$, and $R$ representing the number of individuals in each compartment, we now assign each person $p_n$ (for $n$ from $1$ to $N$) to one of the compartments, keeping track of their individual state.
 
-We transform the model so that it models the transition of individuals instead of the number of transitions between compartments.  We do this by taking the coefficients ($\beta$ and $\gamma$) of the state based model and converting them to transition [probabilities] %FIX ME
-.
+We transform the model so that it models the transition of individuals instead of the number of transitions between compartments.  We do this by taking the coefficients ($\beta$ and $\gamma$) of the state based model and converting them to transition [probabilities]. %FIX ME
 
 In order to transform the model, we first make a distinction between the way that $I$ moves to $R$, and the way that $S$ moves to $I$.  $I$ moves to $R$ at a rate that only depends on $I$, while $S$ moves to $I$ at a rate that depends on both $S$ and $I$.  Intuitively, this is because infections happen between two people, but a person recovers on their own.  The probability of a person transitioning from $I$ to $R$ is $\beta$, and the probability that a person infects another specific person is $\frac{\beta}{N}$.  These probabilities are conditional on the people involved being in the right compartments.
 \begin{align*}
@@ -46,18 +48,65 @@ In order to transform the model, we first make a distinction between the way tha
 \end{align*}
 % Come back to technical parts about conditional probabilities
 
-From this model, we can simulate all possible compartment shifts. %DEFINE THIS SOMEWHERE BEFORE HERE
-Using these shifts, we can determine what actually happens given initial conditions (and interventions). %% This is super vague
+We can use these conditional probabilities to define the behaviour of the model over all possible interventions.  By generating $r_{n,m,I,t}$ and $r_{n,R,t}$ uniformly between $0$ and $1$ for each $n$, $m$, and $t$, we can define the behaviour of our model in the absence of intervention by
+\begin{align*}
+p_n(t+1) &= \begin{cases}
+     S & (p_n(t) = S) \wedge \bigwedge_m (f_1(n,m,t) = 0)
+  \\ I & ((p_n(t) = I) \wedge (f_2(n,t) = 0)) \vee ((p_n(t) = S) \wedge \bigvee_m (f_1(n,m,t) = 1))
+  \\ R & (p_n(t) = R) \vee ((p_n(t) = I) \wedge (f_2(n,t) = 1))
+  \end{cases}
+\end{align*}
+where
+\begin{align*}
+   f_1(n,m,t) &= \begin{cases}
+        1 & (r_{n,m,I,t} < P_I(p_n \xrightarrow{p_m} I  \vert p_n = S, p_m = I) ) \wedge (p_n(t) = S) \wedge (p_m(t) = I)
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\\ f_2(n,t) &= \begin{cases}
+        1 & (r_{n,R,t} < P_T(p_n \rightarrow R  \vert p_n = I)) \wedge (p_n(t) = I)
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\end{align*}
 
-To compute our counterfactual, we [subtract] the [run] with the intervention from the one without the intervention (using identical simulated compartment shifts).  This removes the error that would have come from simulating the compartment shifts twice.
+For our interventions, we will keep the same $r_{n,m,I,t}$ and $r_{n,R,t}$, but modify the process in the following way:
+\paragraph{Hygiene Intervention}
+Studies have shown that hand washing reduces the rate of transmission of flu by ??? %FIX ME
+.  For this intervention, we modify the infection rate $\beta$.  We assume that everyone in the population participates in the intervention.  We take $\rho = ???$ %FIX ME
+to be the effectiveness of the hand washing.
+\begin{align*}
+   f_1(n,m,t;\rho) &= \begin{cases}
+        1 & (r_{n,m,I,t} < \beta * \rho ) \wedge (p_n(t) = S) \wedge (p_m(t) = I)
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\end{align*}
+\paragraph{Treatment Intervention: Tamaflu}
+Tamaflu reduces the recovery time among patients who take it by a factor of ??? %FIX ME
+.  For this intervention, we modify the recovery rate $\gamma$.  We assume that everyone in the population takes Tamaflu immediately when sick.  We take $\varphi = ???$ %FIX ME
+to be the increase in recover rate.
+\begin{align*}
+f_2(n,t) &= \begin{cases}
+        1 & (r_{n,R,t} < \gamma * \varphi) \wedge (p_n(t) = I)
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\end{align*}
+\paragraph{Vaccination Intervention}
+This intervention has a set portion of the population vaccinated before the simulation begins.  We assume the vaccine is completely immunizing, but that only some proportion of people take it.  We change the initial compartment of these individuals to $V$, and leave the transition equations as they are.
 
 \subsection*{General Method}
 
 We now generalize these methods to a class of compartmental model.  We consider models with the following form
+\begin{align}\label{eqn:compartmental}
+\vec{x}_i(t+1) = x(t) + \sum_{j} \alpha_{i,j} \vec{x}_j(t) +  \sum_{j,k} \alpha_{i,j,k} \vec{x}_j(t) \vec x_k(t)
+\end{align}
+where $x_i(t)$ is the number of people in compartment $i$ at time $t$, $\alpha_{i,j}$ is the rate at which people in compartment $j$ move to compartment $i$, and $\alpha_{i,j,k}$ is the rate at which an interaction between someone in compartment $j$ and someone in compartment $k$ will cause the person in compartment $j$ to move into compartment $i$.  We say there are $M$ compartments.  Our previous example is the case where we have $x_1=S$, $x_2=I$, and $x_3=R$, and $\alpha_{2,1,2} = \frac{\beta}{N}$,$\alpha_{1,1,2} = -\frac{\beta}{N}$, $\alpha_{3,2} = \gamma$, $\alpha_{2,3} = -\gamma$, and the other $\alpha$ are $0$.
+
+In the same way we did before, we transform this model into an individual based model  Instead of using $x_i$ as the number of people in a compartment, we use $p_m$ as the compartment of person $m$.  However, before we can do that, we need to place some additional assumptions on the class of models, so that it makes sense on an individual level.  In order to have $\alpha_{i,j}$ make sense as a probability, we need people who leave $x_i$ to go to $x_j$ to be balanced by people entering $j$ from $i$.  In other words, we require that $\alpha_{i,j} = - \alpha_{j,i}$.  Similarly, we need that all the people who interact with people in $x_j$ and enter a compartment $x_j$ from $x_i$ to leave $x_i$
+
+Once again, we track compartment shifts using their conditional probabilities.  The difference between the transition and interaction terms is clearer here.  The transition terms form the second term of equation \ref{eqn:compartmental}, and the interaction terms form the third.  In this more general case
 \begin{align*}
-\vec{x}_i(t+1) = x(t) + \sum_{j \neq i} \alpha_{i,j} \vec{x}_j(t) +  \sum_{j \neq i,k} \alpha_{i,j,k} \vec{x}_j(t) \vec x_k(t)
+   P_T(p_m \rightarrow x_j \vert p_m = x_i) &= \alpha_{i,j}
+\\ P_I(p_m \rightarrow x_j; p_n \vert p_m = x_i, p_n = x_k) &= \alpha_{i,j,k}
 \end{align*}
-where $x_i(t)$ is the number of people in compartment $i$ at time $t$, and the above equations model the transition between compartments; where $\alpha_{i,j}$ is the rate at which people in compartment $j$ move to compartment $i$, and $\alpha_{i,j,k}$ is the rate at which an interaction between someone in compartment $j$ and someone in compartment $k$ will cause the person in compartment $j$ to move into compartment $i$.
 
 As in the influenza example, we can turn our compartmental model into an individual based model.  We do this by taking the coefficients $\alpha_{i,j}$ and $\alpha_{i,j,k}$ and turning them into transition probabilities.
 \begin{align*}
@@ -65,8 +114,27 @@ As in the influenza example, we can turn our compartmental model into an individ
 \\ P_I(p_n \xrightarrow{p_m} x_j  \vert p_n = x_i, p_m = x_k) &= \alpha_{i,j,k}
 \end{align*}
 
+We can again generate random variables $r_{n,j,m,t}$ and $r_{n,j,t}$ for all $n$ $j$ $m$ and $t$.  We can also define an update method for $p_n$ similar to the one in the influenza case.  We want to say something like $p_n(t+1)$ is $x_j$ if $f_2(n,j,t) = 1$, or if any of the $f_1(n,j,m,t) = 1)$, and $p_n(t)$ otherwise.  For many models, this works perfectly.  In some cases though, there might be multiple $j$ that satisfy the condition.  In this case, we choose randomly between all such unique $j$.  We define $f_1$ and $f_2$ by
+\begin{align*}
+   f_1(n,j,m,t) &= \begin{cases}
+        1 & r_{n,j,m,t} < \alpha_{p_n,j,p_m}
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\\ f_2(n,t) &= \begin{cases}
+        1 & r_{n,j,t} < \alpha_{p_n,j}
+     \\ 0 & \text{otherwise}
+   \end{cases}
+\end{align*}
 
+At their most general, interventions might simply take the results of the above process, use it to alter one or more parts of it, and regenerate the entire thing repeating until satisfied.  However, this definition of interventions would allow things like only triggering the intervention if the final number of cases is above a threshold.
 
+We assume that interventions can be broken into three parts.  For the first two parts, we allow interventions to alter $f_1$, and $f_2$.  For the third part, we allow interventions to alter the compartment of each $p_n$ based on all previously observed $p_m$.  
+
+While the process described above is fundamentally what occurs, to do it properly would involve generating $N^2 M^3 + N M^2)t$ random numbers.  For a population of $4$ million people, even if we ignore the unused $r$, that would mean over 16 terrabytes of data per time step per run for a single SIR model.  In order to reduce these numbers, we make additional assumptions about the interventions that allow us to only store some of the $r_{n,j,m}$ and $r_{n,j}$ instead of all of them.
+
+The first assumption we make, is that interventions do not increase the rate of infectious contact.  This assumption means that we only need to store $r_{n,j,m}$ if they satisfy $r_{n,j,m} < \alpha_{p_n,j,p_m}$.  This reduces the amount of storage we need to aboue $N^2 \sum_{i,j,k} \alpha_{i,j,k} + N \sum \alpha_{i,j}$.  In the case of SIR at a population of $4$ million, this reduces the amount of storage to about $4(\beta + \gamma)$ megabytes per time step per run. %Check these numbers to make sure they are correct (assuming we keep them in the first place)
+
+The second assumption is that $f_3$ does not change the compartment of any person to a compartment that they would then need to leave.  To make use of this assumption, we keep track of the possible states of each person at any given time  period, and only generate $r_{n,j,m}$ and $r_{n,j}$ if they might be in that compartment.==
 \section{Results}
 \section{Discussion}
 
