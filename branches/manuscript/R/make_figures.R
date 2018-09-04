@@ -2,8 +2,16 @@ try({remove.packages('counterfactual')},silent=T)
 install.packages('package',type='source',repos=NULL)
 # try({remove.packages('counterfactual')},silent=T)
 # install.packages('package',type='source',repos=NULL)
-library(counterfactual)
-library(cowplot)
+
+# Define relevent directories
+working_directory = rprojroot::find_root(rprojroot::has_file('.root')) # The location of the repository
+setwd(working_directory)
+
+if(!require(counterfactual)){
+  source("package/R/read.R")
+}
+# library(counterfactual)
+# library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -12,19 +20,23 @@ library(grid)
 output = read_scenario('output/figures0')
 multiworld_output = read_scenario('output/figures1')
 
-scenario_changer = c(
-  'Flat_None' = 'Social Distancing',
+scenario_changer = as.factor(c(
   'None_None' = 'Null',
-  'None_Single' = 'Vaccination',
-  'None_Constant' = 'Antivirals'
-)
+  'None_Constant' = 'Antivirals',
+  'Flat_None' = 'Social Distancing',
+  'None_Single' = 'Vaccination'
+))
+scenario_changer = relevel(scenario_changer,2,1,3,4)
 
 ## Figure 1 - Illustration of the Problem
 ### Simulated Epidemic Curves with and without intervention
     # color intervention
+
+npop = 4000
+
 plt = output %>%
   unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = 4000 - V1 - V2 - V3) %>%
+  mutate(V4 = npop - V1 - V2 - V3) %>%
   gather(Variable,Value,V1,V2,V3,V4) %>% 
   rename(People = Value,Time = t) %>%
   mutate(scenario = scenario_changer[scenario]) %>%
@@ -50,13 +62,6 @@ plt = output %>%
   xlab("Time (Days)") +
   facet_wrap(~scenario)
 
-scenario_changer = c(
-  'Flat_None' = "Social Distancing",
-  'None_None' = "Null",
-  'None_Single' = "Vaccination",
-  'None_Constant' = "Antivirals"
-)
-
 #### Final Size
 final_size = function(x){
 x %>%
@@ -69,7 +74,7 @@ x %>%
 time_series = function(x){
 x %>%
   unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = 4000-V1-V2-V3) %>% 
+  mutate(V4 = npop -V1-V2-V3) %>% 
   gather(variable,value,V1,V2,V3,V4) %>%
   select(scenario,trial,final_size=value,t,variable) %>%
   return()
@@ -188,6 +193,76 @@ time_series_summary = time_series_inference %>%
   group_by(t,variable,scenario,type) %>%
   summarize(`Change in Cases` = mean(Change_in_Cases),lq = quantile(Change_in_Cases,.025),uq = quantile(Change_in_Cases,.975))
 
+plt_sus = time_series_summary %>%
+  filter(variable == 'V1') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(scenario~type) +
+  theme(legend.position="none")
+
+plt_sus_t = time_series_summary %>%
+  filter(variable == 'V1') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(type~scenario) +
+  theme(legend.position="none")
+
+plt_inf = time_series_summary %>%
+  filter(variable == 'V2') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(scenario~type) +
+  theme(legend.position="none")
+
+plt_inf_t = time_series_summary %>%
+  filter(variable == 'V2') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(type~scenario) +
+  theme(legend.position="none")
+
+plt_rec = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_abline(slope=0,intercept=0,linetype=2) +
+  facet_grid(scenario~type) +
+  theme(legend.position="none")
+
+plt_rec_t = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(scenario = scenario_changer[scenario]) %>%
+  ggplot() +
+  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  facet_grid(type~scenario) +
+  theme(legend.position="none")
+pdf('figures/intervention-effects-final-size.pdf')
+print(plot_inference(final_size,'Final_Size'))
+dev.off()
+pdf('figures/intervention-effects-peak-time.pdf')
+print(plot_inference(peak_time,'Peak_Time'))
+dev.off()
+pdf('figures/intervention-effects-relative-risk.pdf')
+print(plot_inference(final_size,'Log_Relative_Risk'))
+dev.off()
+
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
@@ -236,4 +311,10 @@ print(plt_rec_t)
 dev.off()
 pdf('figures/intervention-effects-time-series-recovered.pdf')
 print(plt_rec_t)
+dev.off()
+pdf('figures/intervention-effects-time-series-susceptible-switched.pdf')
+print(plt_sus_t)
+dev.off()
+pdf('figures/intervention-effects-time-series-susceptible')
+print(plt_sus)
 while(dev.off() != 1){}

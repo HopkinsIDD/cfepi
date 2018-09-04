@@ -25,6 +25,7 @@
    CLOSED: [2018-08-06 Mon 17:48]
 ** TODO Make sure all things in the introduction are true
 ** TODO check assumptions hold in software package
+** TODO Estimation of the reproductive number (White Wallingo... ) serial interval (is 1/\gamma) unit days and R0 (beta = R0 * gamma)
 * Introduction
 ** Introduce Problem
 *** Infectious Diseases are bad.  We want to control them.  Planning control is hard.
@@ -184,6 +185,7 @@
      The more compartments we add, however, the larger the complete graph grows, and the harder it is for us to prune enough of it to make it manageable.
      There is a balance to strike between the simulated population, number of simulations, and number of compartments.
      This paragraph is too short something something someting %FIX ME.
+***** Table: Computational Time
     
 *** Simulating and Pruning
     Once we have our complete graph, we can prune it in much the same way as before.
@@ -218,6 +220,34 @@
 *** Tradeoffs
 ** Mathematical Reduction in error (derived)
 * Discussion
+  Here we show by this simulation method we can reduce the uncertainty and the variability in the counterfactual interventions to only reflect the uncertainty in the intervention itself and factor out inter-epidemic variation.
+  This allows for a more precise simulation of the impact of particular interventions and avoids counter-intuitive results where interventions that can only prevent infection appear to have some probability of increasing the number of infections
+
+  Discussing the fact that this is not always that this answers a slightly different question than De Novo simulations.
+  The classical approach is if you tkae tow completely independent epidemics in the same population and the intervention happened in one but not the other what is the difference.
+  Because the stochastic variability of the epidemic, then ...
+  
+  This is actually an important thing to know, when presenting to policy makers and things like that.
+  Here we're asking a more precise questoin, in an epidemic that's exactly the same except for the intervention, what would the impact of the intervention be.
+  This better isolates the impact of hte intervention iteself, and is perhaps better for comparing interventions to eachother and determining the impact of a control program compared to if you did not do it.
+  Its not that the other is wrong, but we're answering a slightly different question.
+  In most cases, doing something like this does a better job of answering that question, but that doesn't mean that the question the other answers isn't important in a lot of different ways.
+
+** Limitations and extensions.
+  What this does, what its limitations are.
+  Ways it could be improved.
+  Potential ideas for tweaks.
+  We pretty much do an entire transmission tree, but there might be ways to get mostly the same results with much less of the transmission tree.
+  It doesn't account for secular changes that might occur during the epidemic.
+  If people change their behaviours in ways that are not captured by the intervention.
+  We could possibly adapt things to account for this, but it would require a ton of extra information which would combinatorially explode.
+
+  An interesting area of research at the overlap of computer science and epidemiological modeling and simulation is to figure out ways to do this that are logically consistent and have less storage requirements.
+
+**** MAYBE:
+     Summarize the importance of this.  We've taken the approach that we can throw more computational power at things to make them better.
+     This approach is an example of how we can leverage that computational power beyond doing more simulations at more detail.
+     There is still interesting work to do out there, its not now just a matter of having more computational power.
 ** Philosohpical Discussion of Question Answered
 *** We often ask the question of what would happen if we had intervened in a previous epidemic.
 *** We often answer the question of what would happen if we intervene in a epidemic similar to the previous one.

@@ -13,10 +13,11 @@
 % \tikzset{custom={latex[length=2in,width=2mm]}}
 
 %Colors
-\definecolor{recovery}{RGB}{27,158,119}
-\definecolor{infection}{RGB}{217,95,2}
-\definecolor{intervention}{RGB}{117,112,179}
-\definecolor{susceptible}{RGB}{231,41,138}
+\definecolor{susceptible}{RGB}{141,160,203}
+\definecolor{recovery}{RGB}{102,194,165}
+\definecolor{infection}{RGB}{252,141,98}
+\definecolor{intervention}{RGB}{231,138,195}
+\definecolor{nothing}{RGB}{225,225,225}
 
 \makeatletter
 \tikzset{circle split part fill/.style  args={#1,#2,#3}{%
@@ -44,9 +45,9 @@
 \tikzset{intervened node fill/.style  args={#1,#2}{node,circle split part fill={#1,#2}}}
 \tikzstyle{edge}=[minimum size = .5in, diamond, draw]
 
-\tikzstyle{intervention}=[fill = intervention,text = white]
-\tikzstyle{contact}=[fill = infection, text = white]
-\tikzstyle{recovery}=[fill = recovery,text = white]
+\tikzstyle{intervention}=[fill = intervention]
+\tikzstyle{contact}=[fill = infection]
+\tikzstyle{recovery}=[fill = recovery]
 \tikzstyle{custom}=[-{Latex[scale=1,length=1.5mm,width=1.5mm]},color=black!40!white]
 
 \renewcommand{\Leftscissors}{\Huge X}
@@ -55,13 +56,11 @@
 
 
 \begin{tikzpicture}
-  \draw (0,4.5) node {\Huge Patterns we can prune};
-
   %% Infectious Contacts
   \draw (-10,0.5) node {\Leftscissors};
-  \draw (-15,2.5) node[intervened node fill={susceptible,infection!15!gray,recovery},white] (P11) {$\bm{\bm{P_{i,t}}}$};
+  \draw (-15,2.5) node[intervened node fill={susceptible,infection!15!gray,recovery}] (P11) {$\bm{\bm{P_{i,t}}}$};
  % \draw (-15,2.5) node[node,fill=susceptible] (P11) {$\bm{\bm{P_{i,t}}}$};
-  \draw (-15,0.5) node[intervened node fill={susceptible,infection,recovery},white] (P21) {$\bm{\bm{P_{j,t}}}$};
+  \draw (-15,0.5) node[intervened node fill={susceptible,infection,recovery}] (P21) {$\bm{\bm{P_{j,t}}}$};
   \draw (-13,2.7) node[edge, contact] (E121) {$\bm{C^*_{i,j,t}}$};
   \draw (-12,3.5) node[circle,draw,intervention] (I) {$\bm{N}$};
   \draw (-11,2.5) node[edge, intervention] (I121) {$\bm{N_{i,j,t}}$};
@@ -78,9 +77,9 @@
 
 
     \draw (5,0.5) node {\Leftscissors};
-  \draw (0,2.5) node[intervened node fill={susceptible,infection,recovery},white] (P11) {$\bm{\bm{P_{i,t}}}$};
+  \draw (0,2.5) node[intervened node fill={susceptible,infection,recovery}] (P11) {$\bm{\bm{P_{i,t}}}$};
  % \draw (-15,2.5) node[node,fill=susceptible] (P11) {$\bm{\bm{P_{i,t}}}$};
-  \draw (0,0.5) node[intervened node fill={susceptible!15!gray,infection,recovery},white] (P21) {$\bm{\bm{P_{j,t}}}$};
+  \draw (0,0.5) node[intervened node fill={susceptible!15!gray,infection,recovery}] (P21) {$\bm{\bm{P_{j,t}}}$};
   \draw (2,2.7) node[edge, contact] (E121) {$\bm{C^*_{i,j,t}}$};
   \draw (3,3.5) node[circle,draw,intervention] (I) {$\bm{N}$};
   \draw (4,2.5) node[edge, intervention] (I121) {$\bm{N_{i,j,t}}$};
@@ -97,10 +96,10 @@
   
   
       \draw (-2.5,-4) node {\Leftscissors};
-  \draw (-7.5,-2) node[intervened node fill={susceptible,infection,recovery},white] (P11) {$\bm{\bm{P_{i,t}}}$};
+  \draw (-7.5,-2) node[intervened node fill={susceptible,infection,recovery}] (P11) {$\bm{\bm{P_{i,t}}}$};
  % \draw (-15,2.5) node[node,fill=susceptible] (P11) {$\bm{\bm{P_{i,t}}}$};
-  \draw (-7.5,-4) node[intervened node fill={susceptible,infection,recovery},white] (P21) {$\bm{\bm{P_{j,t}}}$};
-  \draw (-5.5,-1.8) node[edge, text=white,fill=infection!15!gray] (E121) {$\bm{C^*_{i,j,t}}$};
+  \draw (-7.5,-4) node[intervened node fill={susceptible,infection,recovery}] (P21) {$\bm{\bm{P_{j,t}}}$};
+  \draw (-5.5,-1.8) node[edge,fill=infection!15!gray] (E121) {$\bm{C^*_{i,j,t}}$};
   \draw (-4.5,-1) node[circle,draw,intervention] (I) {$\bm{N}$};
   \draw (-3.5,-2) node[edge, intervention] (I121) {$\bm{N_{i,j,t}}$};
   \draw (2.5,-4) node[node] (P22) {$\bm{P_{j,t+1}}$};
@@ -117,7 +116,7 @@
     %% Recoveries
   \draw (-10,-6.5) node {\Leftscissors};
  % \draw (-15,2.5) node[node,fill=susceptible] (P11) {$\bm{\bm{P_{i,t}}}$};
-  \draw (-15,-6.5) node[intervened node fill={susceptible,infection!15!gray,recovery},white] (P21) {$\bm{\bm{P_{j,t}}}$};
+  \draw (-15,-6.5) node[intervened node fill={susceptible,infection!15!gray,recovery}] (P21) {$\bm{\bm{P_{j,t}}}$};
   \draw (-13,-4.7) node[edge, recovery] (E121) {$\bm{R^*_{j,t}}$};
   \draw (-12,-3.5) node[circle,draw,intervention] (I) {$\bm{N}$};
   \draw (-11,-4.5) node[edge, intervention] (I121) {$\bm{N_{j,t}}$};
@@ -134,8 +133,8 @@
 
     \draw (5,-8.5) node {\Leftscissors};
  % \draw (-15,2.5) node[node,fill=susceptible] (P11) {$\bm{\bm{P_{i,t}}}$};
-  \draw (0,-8.5) node[intervened node fill={susceptible,infection,recovery},white] (P21) {$\bm{\bm{P_{j,t}}}$};
-  \draw (2,-6.7) node[edge, fill=recovery!15!gray,text=white] (E121) {$\bm{R^*_{j,t}}$};
+  \draw (0,-8.5) node[intervened node fill={susceptible,infection,recovery}] (P21) {$\bm{\bm{P_{j,t}}}$};
+  \draw (2,-6.7) node[edge, fill=recovery!15!gray] (E121) {$\bm{R^*_{j,t}}$};
   \draw (3,-5.5) node[circle,draw,intervention] (I) {$\bm{N}$};
   \draw (4,-6.5) node[edge, intervention] (I121) {$\bm{N_{j,t}}$};
   \draw (10,-8.5) node[node] (P22) {$\bm{P_{j,t+1}}$};

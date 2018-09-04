@@ -355,6 +355,113 @@ We assume that our intervention does not directly move people to states they wil
 This assumption allows us to prune branches that are not connected to any of the possible states of a person.
 We assume that our intervention does not prevent recovery, and that it does not cause new infectious contacts.
 This means that anyone who hasn't had an infectious contact since the last time they recovered isn't infected.
+\invisiblesubsubsection{Individual Models}
+
+\label{sec:org2647868}
+\invisibleparagraph{Why we need stochasting models}
+
+\label{sec:org20f6c41}
+Our goal is to eliminate process error to improve power, but so far the models described are deterministic (and therefore have no process error).
+One could say that given a deterministic model, and a deterministic intervention, the effect of the intervention falls out cleanly.
+However, deterministic models are not widely used in the field \cite{}.
+Additionally, deterministic models cannot address a main question of interest, "How well is this intervention working?"
+
+\invisibleparagraph{Viewing SIR model as a stochastic model}
+
+\label{sec:org4342dba}
+Our SIR model makes implicit assumptions.
+\(\beta SI\) represents interactions between susceptible and infected individuals.
+\(\gamma I\) represents the probability of recovery.
+Our deterministic differential equation is actually the expectation of a stochastic process.
+Something something population size
+\(\beta SI\) is \ldots{}
+\(\gamma I\) is the expectation of a binomial distribution.
+
+\invisibleparagraph{Agent Based Versions}
+
+\label{sec:org13d5a55}
+Instead of modeling the number of susceptibles, infected, and recovered, we want to switch and model the state of each person in our population.
+We do this, because it works.
+Instead of a vector of the number of people in each compartment, we use a vector of the state of each person.
+Each susceptible person has a \(\frac{\beta}{N}\) probability of becoming infected by each infected person at each time step.
+Each infected person has a \(\gamma\) probability of recovering at each time step.
+
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:org7d3b331}
+\invisibleparagraph{Setting up the Complete Graph}
+
+\label{sec:org526de23}
+We are going to build a graph to represent the possible progression of disease through the population and time.
+We start by making a node for each person at each time.
+Each node will store the state of that person at that time.
+Since each person can transmit disease to each other person, we connect each person at each time to each other person at the next time.
+Since each person can also keep the disease over time (by not recovering), we connect each person to themselves at the next time.
+Each of these edges will 
+This graph is intractably large (for \(4000000\) people, \(3\) states, and \(365\) time points, it would take almost \(18\) pedabytes to store it).
+However, after we prune the graph, it will be small enough to use.
+
+\invisibleparagraph{Conditional Probabilities}
+
+\label{sec:org206c778}
+We know the probability that a person recovers given that they are infected is \(\gamma\).
+We know the probability that a person infects another person given that the first is susceptible and the second is infected is \(\frac{\beta}{N}\).
+We can simulate from these distributions without knowing if the conditionals are satisfied.
+This is helpful, since we won't know a priori what the intervention affects and doesn't.
+To simulate, we draw uniformly randomly from \([0,1]\), and compare that to the probability.
+If the random draw is less than the probability, it happens.
+Otherwise, it does not happen.
+
+\invisibleparagraph{Simulate all possible events}
+
+\label{sec:org6378921}
+We could account for every possible intervention by simulating every relevent conditional probability.
+Given a population size \(N\), and number of time steps \(T\), there are a finite number of things to simulate.
+For each time step, we need to simulate \(N\) recovery probabilities, and \(N^2\) infection probabilities.
+In total, we would need to simulate \(N(N+1)T\) numbers.
+For a population of \(4\) million, and daily time steps for a year, that would take almost \(6\) million gigabytes of storage. \%(4000000 * 4000001 * 365) * bytes = 5840001.46 gigabytes
+More complicated models with more compartments would take even more space.
+
+\invisibleparagraph{Pruning simulated events}
+
+\label{sec:orga8a8f96}
+For many interventions, not all simulations are necessary.
+By making some assumptions about the interventions, we can reduce the amount we need to store.
+We assume that the intervention can only increase the probability of infection.
+
+\invisiblesubsubsection{Intervention}
+
+\label{sec:org479cae4}
+\invisiblesubsection{General Framework}
+
+\label{sec:org91602c9}
+\invisiblesubsubsection{General Compartmental Model}
+
+\label{sec:org556f441}
+\invisiblesubsubsection{Agent Based Conversion}
+
+\label{sec:org184fe05}
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:org519e116}
+\invisibleparagraph{Assumptions}
+
+\label{sec:orgcecac7d}
+\invisiblesubsubsection{Interventions}
+
+\label{sec:org157b2af}
+\invisibleparagraph{None}
+
+\label{sec:org5aeb8b9}
+\invisibleparagraph{Vaccination}
+
+\label{sec:org4035a4c}
+\invisibleparagraph{Treatment}
+
+\label{sec:orgf3f40b5}
+\invisibleparagraph{Social Distancing}
+
+\label{sec:org0aeb8ad}
 \section{Results}
 
 \label{sec:orgb926d79}
