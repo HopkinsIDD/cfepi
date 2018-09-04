@@ -11,7 +11,7 @@ if(!require(counterfactual)){
   source("package/R/read.R")
 }
 # library(counterfactual)
-library(cowplot)
+# library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -144,8 +144,8 @@ plot_cross_world <- function(fun,name){
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
       ylim(quantile(all_inference[[name]],c(.05,.95))) +
-      ylab(gsub('_',' ',name)) +
-      background_grid(major = "y", minor = "none")
+      # background_grid(major = "y", minor = "none") + 
+      ylab(gsub('_',' ',name))
     rcout <- all_inference %>%
       mutate(scenario = scenario_changer[scenario]) %>%
       ggplot() +
@@ -153,8 +153,8 @@ plot_cross_world <- function(fun,name){
       scale_colour_brewer(type='qual',palette='Paired') +
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
-      ylab(gsub('_',' ',name)) +
-      background_grid(major = "y", minor = "none")
+      # background_grid(major = "y", minor = "none") + 
+      ylab(gsub('_',' ',name))
 
     print(rcout)
     # inset = viewport(height=.5,width=1)
@@ -168,8 +168,8 @@ plot_cross_world <- function(fun,name){
       scale_colour_brewer(type='qual',palette='Paired') +
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
-      ylab(gsub('_',' ',name)) +
-      background_grid(major = "y", minor = "none")
+      # background_grid(major = "y", minor = "none") + 
+      ylab(gsub('_',' ',name))
   }
 }
   
