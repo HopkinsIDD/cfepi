@@ -268,21 +268,16 @@ We compare the outcomes of our method to that of the multiple-world inference me
 We find that single-world inference generally has the same point estimates as multiple-world inference, but has narrower confidence intervals.
 We also see that multiple-world inference has some nonsensical results that single-world inference avoids.
 
-For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: handwashing $\neg 155$ (95\% Confidence Interval (CI) $\neg 297$--$\neg 20$), antivirals $\neg 811$ (95\% CI $\neg 2914$--$\neg 215$), vaccination $\neg 282$ (95\% CI $\neg 432$--$\neg 151$).
-For multiple-world inference, we found that two of the three non-null interventions had a significant (p<.05) effect on final size: handwashing $\neg 151$ (95\% CI $\neg 373$--$51$), antivirals $\neg 806$ (95\% CI $\neg 2908$--$\neg 168$), vaccination $\neg 277$ (95\% CI $\neg 488$--$\neg 60$).
+For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: Null $ 0 $ (CI $ 0 $ --- $ 0 $), Antivirals $ -819.125 $ (CI $ -2899.05 $ --- $ -206 $), Social Distancing $ -153.594 $ (CI $ -298 $ --- $ -12.975 $), Vaccination $ -284.955 $ (CI $ -437.075 $ --- $ -130 $).
+For multiple-world inference, we found that all but one non-null intervention had a significant (p<.05) effect on final size: Null $ 4.94 $ (CI $ -183.05 $ --- $ 195.1 $), Antivirals $ -814.185 $ (CI $ -2913.05 $ --- $ -176 $), Social Distancing $ -148.654 $ (CI $ -355.1 $ --- $ 69.025 $), Vaccination $ -280.015 $ (CI $ -499.2 $ --- $ -72 $).
 In addition to the effects on final size, we observe that multiple-world has unintuitive effects on the shape of the epidemic (Figure \ref{epicurve}).
 
-This method is implemented as a software package, \texttt{counterfactual}, released on \texttt{CRAN}. %NOTE: This is not true yet
-This package implements single-world inference. 
-It allows for a general class of compartmental models and integrates contact networks, but it does not deal with multiple conflicting state changes sensibly.
-It follows the pruning paradigm described above, except that it combines the eliminating impossible edges and testing possible edges into one step.
-It assumes the same assumptions we make above in our discussion of pruning, but does not (yet) enforce those assumptions.
-We use this software package for all calculations of space/time complexity in this paper, except where noted.
-
-In terms of performance, our method takes more disk space than standard methods (Table \ref{table:performance}).
-The amount of space and time pruning takes in the current implementation is $\mathcal O(E)$, where $E[O(E)] = O(t(n^2\sum \alpha_{i,j,k} + n \sum\alpha_{i,j}))$, which for the SIR model is $O(t(n^2\beta + n\gamma))$ per simulation.
-The amount of time the interventions take is also $\mathcal O(E)$, but the constant is lower.
-This shows us that the number of infectious compartments, the population, number of times, and number of simulations all impact the amount of time taken.
+We released a software package, \texttt{counterfactual}, on \texttt{CRAN}, %NOTE: This is not true yet
+which implements single-world inference as described in section \ref{sec:methods}.
+It follows the assumptions and procedures outlined above, but does not enforce those assumptions, or deal with conflicting state changes.
+The amount of space and time pruning takes in the software package is $\mathcal O(E)$, where $E[O(E)]$ which is on average $O(t(n^2\sum \alpha_{i,j,k} + n \sum\alpha_{i,j}))$ per simulation, or $O(t(n^2\beta + n\gamma))$ in the case of the SIR model.
+The amount of time the interventions take is also $\mathcal O(E)$, but the constant is lower (Table \ref{table:performance}).
+This shows us that the number of infectious compartments, the population, number of times, and number of simulations all impact the amount of time taken, but mostly population.
 
 \section{Discussion}
 In this paper, we present a single-world inference method that isolates the counterfactual comparison to reduce uncertainty in inference about interventions.
@@ -296,13 +291,6 @@ Our method out-performs multiple-world inference by answering a different questi
 They ask, "If you were to see another epidemic in the same population, what would the impact of an intervention look like in that epidemic?"
 For some problems, particularly those focused on a future epidemic, this question may be important in its own right.
 For others, particularly those focused on an intervention and when to use it, our question may be more appropriate.
-
-Our method is also more computationally intensive than multiple-world inference.
-For a population of $400000$ people over $365$ time steps, each simulation takes $1.73$ GB of space.
-Pruning takes $54$ seconds per simulation, and applying the intervention takes $16$ to $20$ seconds.
-This is a marked improvement over the $58.3$ TB our method would take without pruning, but it means that some problems are out of reach.
-We are limited to models with a relatively small number of compartments, mid-size populations, and one year.
-If we decrease one of these, we can increase the others, but there are still some problems outside the reach of our method.
 
 Additionally, some reasonable interventions are out of reach as they do not follow the assumptions we make about interventions as part of pruning.
 For a particular intervention, we can make stronger assumptions, even going so far as to run the intervention as we prune, keeping only the actual state as possible.
