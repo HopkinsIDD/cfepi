@@ -72,7 +72,7 @@ $^{2}$Department of Ecology and Evolutionary Biology, Princeton University, Prin
   To simultaneously keep track of both states, we store all transition states that are possible either with or without the intervention on a network. %21 words
   We can actualize this network to recover the events that occur both with and without the intervention. %
   We demonstrate our method on an influenza epidemic and compare the results of our method to an existing method.
-  We compare across three interventions: handwashing, vaccination, antivirals, and a control; and evaluate performance on the final size estimate.
+  We compare across three interventions: handwashing, vaccination, antivirals, and a control; and evaluate performance on the estimate of cases averted.
   We find that our method reduces the variance of all estimates, and in one case makes the results statistically significant. %25 words
   Although our method is more computationally intensive than traditional methods, it is still computationally tractable for many common use cases, making it a useful tool for selecting interventions. %17 words
 \end{abstract}
@@ -88,78 +88,80 @@ $^{2}$Department of Ecology and Evolutionary Biology, Princeton University, Prin
 Determining how to intervene in the face of an outbreak is a fundamental question in epidemiology.
 Dynamical models are one of the main tools for assessing the impact of an intervention or selecting which intervention to employ, as they provide a cost effective, timely approach to acurately evaluate interventions.
 Generally, stochastic models are used to represent both the disease process and the intervention.
-This allows us to evaluate the effects of an intervention in a theoretical capacity to provide insight into how to respond to an actual epidemic.
-Often these modeling approaches provide the best evidence-based estimates as randomized controlled trials or population-level causal inference are not feasible.
+This allows us to evaluate the effects of an intervention in a theoretical capacity in order to provide insight into how to respond to an actual epidemic.
+Often these modeling approaches provide the best evidence-based estimates of the impact of an intervention when other methods are not feasible.
 
-% Awkward
-Determining the effect of an intervention is fundamentally a counterfactual question: if one did intervene on this population during this epidemic, how would the quantity of interest be different than if they had not intervened on that same population during the same epidemic.
-In reality, it is impossible to have information on the results of both intervening and not intervening for the same population during the same epidemic.
-This is known as the fundamental problem in causal inference.\cite{holland:1986}
+Determining the effect of an intervention is a counterfactual question: how would the outcome of a given epidemic in a population have been different in the presence versus the absence of a control strategy.
+For example, one can ask, in the case of the $2014$ Ebola epidemic in Liberia, how many cases would have been averted by the widespread deployment of an effective vaccine.
+In actual epidemic, it is impossible to know the counterfactual outcome.
+This is known as the fundamental problem of causal inference.\cite{holland:1986}
 
-Although in an actual epidemic the fundamental problem of causal inference holds, it is not necessary or desirable to replicate this in a model. 
-However, many existing methods retain this problem, running separate simulations for interventions and non-interventions.
+In an actual epidemic, the fundamental problem of causal inference holds, however we can avert it when modeling an epidemic.
+However, despite the fact that it is possible to model two different control strategies in a identical epidemic, thus avoiding the fundamental problem of causal inference, this is rarely formally addressed.
+Most existing models run separate simulations for both arms of the control regime.
 We refer to this type of method as multiple-world inference.
-% Our proposed method avoids this pitfall, running running both the intervention and non-intervention in the same simulation.
 
 A number of recent studies use multiple-world inference to determine the effectiveness of interventions.
-For example, Lessler et al. used multiple-world inference to examine the effects of different ways to trigger Measles vaccination campaigns in Africa. They noted multiple-world inference as a limitation \cite{lessler-et-al:2016}.
-Longini et al. also used multiple-world inference in their assessment of controlling pandemic influenza \cite{longini-et-al:2005}.
-In 2014, Rivers et al. used multiple-world inference to determine the impact of interventions against Ebola, including at least one intervention whose confidence interval overlapped the baseline \cite{rivers-et-al:2014}.
-These are only a few of many published examples, and we assume there are other, unpublished examples where statistical power was not high enough for significant results.
-Multiple-world inference often has problems with low statistical power, and only the cases where power is sufficient are published.
+For example, to determine the best way to trigger a measles vaccination campaign in Africa, Lessler et al. used multiple-world inference.
+They noted multipele-world inference as a limiting factor since it requires the use of aggregate statistics \cite{lessler-et-al:2016}.
+When determining the impact of interventions against Ebola in $2014$, Rivers et al. used multiple-world inference to determine the impact of several interventions against Ebola, including increased contact tracing, improved access to personal protective equipment, and the use of a pharmaceutical intervention. 
+In at least one of their control strategies, the variance was too large to detect a significant effect of the intervention \cite{rivers-et-al:2014}.
+There are many other published examples of multiple-world inference and we assume, still more unpublished examples where statistical power was not high enough for significant results; as multiple world inference often has problems with low statistical power.
 
 Here, we describe an alternative to multiple-world inference, which we call single-world inference.
-Our method avoids running both intervention and non-intervention in a single simulation.  [
-Single-world inference is an adaptation of a contact-network epidemiological method called percolation \cite{miller-book}.
-In percolation, disease transmission is represented as a network whose nodes represent people and whose edges represent transmission.
-The percolation method starts with a graph of all possible transmissions, then removes transmissions that are either impossible, or are possible but do not actually occur according to the stochastic model.
+Our method avoids the fundamental problem of causal inference by running both arms of the counterfactual (i.e., employing the intervention and doing nothing) within a single simulation.
+Our method of single-world inference is an adaptation of a contact-network epidemiological method called percolation \cite{miller-book}.
+In percolation, disease transmission is modeled by a network whose nodes are people and whose edges are transmissions (i.e., the transition from susceptible to infected).
+The percolation method starts with a graph of all possible transmissions, it then removes both transmissions that are impossible and transmissions that are possible but do not happen as determined by the stochastic model.
 Any edges that remain transmit disease.
 
 Single-world inference expands on traditional percolation in two important ways.
-First, we explicitly model time, letting nodes represent people at specific times.
-As part of explicitly modeling time, we also directly model state changes rather than only considering infectious pairs.
-Second, we allow our model to include an intervention.
-This means we deal with the possible state of nodes instead of their actual states.
-Consequently, fewer transitions are impossible and we need to test more as part the method.
+First, we explicitly model time. Where nodes represent a people at a specific time.
+As part of explicitly modeling time, we directly model all state changes (e.g., susceptible to infected or infected to recovered) rather than only considering transmissions.
+Second, we include an intervention.
+This means that unlike the percolation model in which it is only necessary to assign one state to each node, in the single-world inference method, we must assign multiple states (i.e., a state for each intervention) to each node.
+Consequently, we remove fewer transitions than percolation would.
 
-Previous work has applied single-world inference methods for specific interventions, including targeting vaccinations, without defining a generalizable methodology that could be applied to other interventions \cite{kenah-miller:2011}.
-Kenah and Miller 2011 apply a single-world inference method to determine the impact of vaccinating different individuals within a network \cite{kenah-miller:2011}.
-They are able to obtain direct estimates for the effect of different vaccination strategies within the context of a single epidemic, because they first percolate the network then intervene (i.e. vaccinate).
+Here we present a generalized methodology that can be applied to a whole class of interventions.
+While we present a general method, previous work has applied single-world inference in the context of a specific model and intervention (i.e., targeted vaccinations) \cite{kenah-miller:2011}.
+In this work, Kenah and Miller applied a single-world inference method to determine the impact of vaccinating highly connected nodes in a contact network.
+Like in our method, Kenah and Miller percolate a contact network and apply the control strategy to that network.
+By sequentially applying percolation and control, both the outcome with and without control represent the same epidemic.
 
-%FIX ME awkward
-In this paper, we develop the single-world method using influenza as a guiding example.
-We then generalize the method to a large class of compartmental models and interventions.
-Finally, we compare our method to the multiple-world method in the context of three interventions and a control on final size in influenza.
+In this paper, we outline the single-world method using influenza as a guiding example.
+We then generalize the method to a large class of compartmental models and control strategies.
+Finally, we compare our method and a multiple-world method.
+We estimate the number of cases averted in an influenza epidemic for each method in the context of four control strategies.
 
 \section{Methods}
 
-For this paper, we restrict our description to compartmental models. 
+To develop a method that allows us to compare interventions without stochastic variation in the process model, we need a model.
+For the purpose of this paper, we restrict our development to compartmental models.
 While single-world inference methods can be applied to a larger class of epidemiological models, these extensions are beyond the scope of this paper.
 Compartmental models consist of classes (or compartments) of people and describe the transitions between the different compartments.
-There are many variations on compartmental models, but we focus on models where the transitions are stochastic, as deterministic models fundamentally ignore the problem of model variance.
+There are many variations on compartmental models, but we focus on models where the transitions are stochastic.
 Further, while compartmental models generally describe population-level events, they can also be at the individual-level.
 Most population-level models can be adapted to be written as individual-level models.
-In this paper, we use individual-level compartmental models since as the only information we have on the intervention is at the individual-level.
+In this paper, we use individual-level compartmental models as often the only information we have on the intervention is at the individual-level.
 
 \subsection{Example: Influenza}
 
-For our influenza example, we employ a standard SIR compartmental model, where individuals are either susceptible, infected, or removed.
-By modeling influenza transmission within a single season we do not need to account for loss of immunity, thus, we chose an SIR model (rather than an SIS model). 
-Additionally, by only modeling the outcomes of a single season, we assume births and deaths are negligible and do not include them. %Come back to this.
-People become infected at a rate $\beta = 0.78$ per day and are removed at a rate $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
-In the individual-level framework, $\beta$ represents the probability of infectious contact between any particular infected-susceptible pair and $\gamma$ represents the probability of recovery of an infected individual at each time step. %Convert this to conditional probabilities maybe.
+To demonstrate a single-world inference method, we construct an influenza example using a standard SIR compartmental model, where individuals are either susceptible, infected, or removed.
+By modeling influenza transmission within a single season we do not need to account for loss of immunity, thus, we chose an SIR model (rather than an SIS model), additionally we assume births and deaths are negligible and therefore do not include them.
+We allow people to become infected at a rate $\beta = 0.78$ per day and to be removed at a rate $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
+In the individual-level framework, $\beta$ represents the probability of infectious contact between any particular infected-susceptible pair and $\gamma$ represents the probability of recovery of an infected individual at each time step. 
 
-\begin{figure}{Table 1}\label{fig:performance}
+\begin{table}\label{table:performance}
+\caption{Space and time complexity results for a brute-force single-world inference, our single-world inference (first and second prunings), and multiple-world inference.}
 \begin{tabular}{|l|l|l|}
   \hline
   Task & Space Use & Time / simulation\\\hline
-  Unpruned Network & $58.4$ TB & forever \\\hline
-  Prune Network & $1.73$ GB & 54 seconds \\\hline
-  Realize Intervention& $1.3-1.4$ KB & $16-20$ seconds \\\hline
-  Multiple-World Inference& $2.6-2.8$ KB & ??? \\\hline
+  Unpruned Network & $58.4$ TB & \textemdash \\\hline
+  Prune Network (process model) & $1.73$ GB & 54 seconds \\\hline
+  Prune Network (Control Strategy) & $1.3-1.4$ KB & $16-20$ seconds \\\hline
+  Multiple-World Inference& $2.6-2.8$ KB &  22-24 seconds\\\hline
 \end{tabular}
-\caption{Parameters for the SIR model.}
-\end{figure}
+\end{table}
 
 
 
@@ -170,86 +172,112 @@ In the individual-level framework, $\beta$ represents the probability of infecti
 % 
 \begin{figure}\label{fig:pruning}
 \includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
-\caption{Diagram demonstrating pruning. \textbf{a)}--\textbf{i)} show an example of pruning.  The first column represents updating possible initial values.  The second column represents removing impossible events without testing them.  The third column represents testing the remaining edges to determine which actually occur.  In the final row, \textbf{j)} represents the results of the epidemic with the intervention, while \textbf{k)} reprents the results of the same epidemic without the intervention.  This example also shows how an epidemic which only prevents cases can actually cause new cases to occur.}
+\caption{Diagram demonstrating pruning.  In all panels, the nodes represent people at different times.  The nodes in the same horizontal line represent a single person, moving through time.  Each node is split into three sections, representing the possibility of being susceptible (purple), infected (orange), or recovered (green).  \textbf{a)}--\textbf{i)} show an example of pruning.  The first column represents updating possible initial values.  The second column represents removing impossible events without testing them.  The third column represents testing the remaining edges based on the SIR model.  In the final row, \textbf{j)} represents the results of the epidemic without the intervention, while \textbf{k)} represents the results of the same epidemic with an intervention removing two specific edges.}
 \end{figure}
 
-We present four example interventions: hand-washing, vaccination, antivirals, and null (control) interventions.
-We choose these examples to highlight the different ways interventions can interact with single-world inference.
+We evaluate the effects of four control measures on influenza cases averted: hand-washing, vaccination, antivirals, and a null (control) intervention.
+We choose these examples to highlight the different ways interventions can interact with a single-world inference method.
 We show how each intervention affects the SIR model, and the specific parameters we use to represent the intervention.
-We go on to present a general intervention framework in section \ref{sec:general}.
+We go on to present a general intervention framework below.
+For our hand-washing intervention, we assume that everyone washes their hands and that it reduces the transmissibility of influenza by $1\%$.
+For our vaccination intervention, we choose $25\%$ of people to be vaccinated at the beginning of the season, which fully protects $33\%$ of those vaccinated.
+For our antiviral intervention, we choose $25\%$ of people to take antivirals when they first become infected, which reduces their average duration of infection by $0.7$ days \cite{oseltamivir:2014}
+We model this reduction in duration of infection as an additional $36.1\%$ chance of recovering at each time step.
+To highlight the differences between single-world and multiple-world inference, we include a null intervention in which we do not intervene.
+While this is not a true intervention, it effectively demonstrates the ability of our method to reduce model variance.
+We compare single-world and multiple-world inference by running $1,000$ simulations of each type on a population of $4,000$ for $100$ days and calculating the estimated number of cases averted.
 
-For our hand-washing intervention, we assume that everyone washes their hands and that hand washing reduces the transmissibility by $1\%$.
-For our vaccination intervetnion, we choose $25\%$ of people to be vaccinated at the beginning of the year, and vaccination fully protects $33\%$ of vaccinated indiviuals.
-For our antiviral intervention, we choose $25\%$ of people to take antivirals when they first become infected, which reduce their average time infected by $.7$ days \cite{}.
-We model this as an additional $36.1\%$ chance to recover at each time step.
-For our null intervention, we do nothing.
-While this is not a true intervention, it is effective at highlighting the differences between single-world and multiple-world inference.
-We compare single-world and multiple-world inference by running $1000$ simulations of each type on a population of $4,000$ for $100$ days and calculating the estimated number of cases averted.
+To develop the single-world inference method, construct a network with a node for each person in each time step.
+In this example, there are three states that each node might occupy: susceptible, infected, or recovered; and two potential types of edges: transmissions or recoveries.
+At each time, each person will have a recovery edge connecting their current self to their future self at the next time step.
+Additionally at each time, each person will have an infectious contact edge connecting them to the node representing each other person in the network, one time step ahead.
+This is the complete network.
 
-Now that we have our SIR model and modifications for the interventions, we can develop single-world inference.
-We start with a network with a node for each person-time.
-Each node might possibly be susceptible, infected, or recovered.
-We will have two types of edges: one for infectious contacts, and one for recoveries.
-At each time, each person will have a recovery edge connecting them to themselves one time step in the future.
-At each time, each person will have an infectious contact edge connecting them to each other person at one time step in the future.
-We call this network the complete network.
+Once we have the complete network, we begin percolating. 
+The way we percolate a network and remove edges is known as pruning (Figure \ref{fig:pruning}).
+To prune the network, first we update the nodes based on what we know from all previous times.
+We know that each node can be susceptible, infected, or recovered, however, it is often possible to eliminate one or more states.
+For the states we cannot rule out as impossible, we say they are possible as they may occur in the intervention case or the non-intervention case.
+However, some of these edges may be mutually exclusive.
+Someone might possibly be susceptible (and get infected), or infected (and recover) and it might be true that we cannot rule out either possibility, but we know that it is impossible to do both at the same time step.
+Our method addresses these mutually exclusive events later.
+There are three ways to eliminate possible states of a node.
+The state of a node at time $t=0$ cannot be anything other than the initial state of that node.
+Anyone who cannot currently be infected, and does not have the potential to have an infectious contact between time steps, cannot be infected.
+Also, anyone who would have recovered if they were infected, but cannot have an infectious contact if the were not infected (i.e., susceptible) between time steps, cannot be infected.
 
-%FIX ME This shouldn't be the first tiem pruning is mentioned.
-Pruning the network happens in three steps, repeated for each time.
-First, we update the nodes based on what we know from all previous times.
-Second, we remove edges that we know to be impossible (e.g. a person cannot recover if they could not have been infected).
-Third, we test the remaining edges based on the SIR model to see which actually would occur and which would not.
-We now go into more detail about each of the steps (Figure \ref{fig:pruning}).
+With information about the current state of the nodes, we can see that certain types of edges are impossible (e.g. a person cannot recover if they could not have been infected).
+Then we remove edges those edges.
+For transmissions, we can rule out any edge where either the nodes at the previous time do not have compatible states.
+For recoveries, we can rule out any edge where the person cannot be currently infected.
 
-When we originally built the network, we said each node could be susceptible, infected, or recovered.
-However, we often can eliminate one or more states as impossible.
-We know the initial state of each person, so the node representing that person at time $0$ must be that, and cannot be any of the other states.
-Since none of our interventions cause infection, we assume that anyone who could not have been infected at the previous time, and did not get infected since then is still not infected.
-Since none of our interventions prevent recovery, we assume that anyone who recovered since the previous time, and did not get infected since the previous time is not currently infected.
-
-With this information about the current state of the nodes, we can see that certain types of edges are impossible.
-For infectious contacts, we can rule out any edge where either the infector cannot be infected, or the infectee cannot be susceptible.
-For recoveries, we can rule out any edge where the person cannot be infected.
-
-For the edges that remain, we randomly keep or remove them according to our SIR model.
-We keep infectious contacts with probability $\beta$.
-We keep recoveries with probability $\gamma$.
-These edges we keep will happen if the actual states of the nodes they depend on match their conditions, and the intervention doesn't change anything.
+Finally, for the edges that have not yet been ruled out, we utilize the stochastic SIR model to determine which edges to keep.
+This includes some edges which will later be removed, as they are dependent on their conditions being satisfied (i.e., a condition of recovery is to be currently infected).
+We keep transmission edges with probability $\beta$ and recovery edges with probability $\gamma$.
 We call this network the pruned network.
 
-Now that we have this pruned network, applying our intervention is fairly straightforward.
-We do exactly the same pruning procedure with one difference.
-Now when we update the states of the nodes, we are updating their actual state instead of their possible states.
-We can then read all of the events that actually happened from the graph, and use those events to recover, for example, the final size of the epidemic.
+Now that we have the pruned network, applying our intervention is fairly straightforward.
+We repeat the pruning procedure with one difference: now, instead of keeping track of potentialities, we update nodes with their actual state.
+This new graph is similar to a transmission tree, as it contains all of the events as they happen in time.
+In fact if we remove every recovery edge and any disconnected nodes, then this new graph is a transmission tree.
+Therefore it can be used to determine the course of the epidemic and, for example, the final size.
+It is important to note that the intervention is applied after the SIR model has pruned the network.
+Indeed, as long as we have the pruned graph, it can be used multiple times for different interventions.
 
-Notice, too, that the intervention is applied after all of SIR model has played out.
-Moreover, as long as we have the pruned graph, we can use it again on a different intervention.
-By comparing the final size of in the intervention case to the final size in the null intervention case, we can extract the number of cases the intervention averted in the single epidemic represented by the pruned graph.
+\subsection{General Framework}\label{subsection:general}
 
-\subsection{General Framework}
-
-The method described in the influenza example extends to a general class of compartmental models and interventions.
-We outline the differences between a general model and the influenza example below.
-
-
-We define a general compartmental model as a system of difference equations with $K$ compartments governed by \(\Delta x_{j} = \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k\).
-We can view $\alpha_{i,j}$ as the probability that a person transitions from state $j$ to state $i$, and $\alpha_{i,j,k}$ as the probability that a person transitions from state $j$ to state $i$ after interacting with an individual in state $k$.
+We extend the method described in the influenza example to a general class of compartmental models and generic interventions.
+Below, we outline the differences between the general method and the influenza example.
+In order to describe the method for a general class of models and generic interventions, we first need to describe the class of models and interventions we allow.
+We define a general compartmental model as a system of difference equations with $K$ compartments governed by \[\Delta x_{j} = \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k\].
+$\alpha_{i,j}$ is the probability that a person transitions from state $j$ to state $i$, and $\alpha_{i,j,k}$ is the probability that a person transitions from state $j$ to state $i$ after contacting with an individual in state $k$.
 Each transition is represented both as entering a compartment $\alpha > 0$, and leaving a compartment $\alpha < 0$.
-We only are interested in people entering new states, and so we only keep track of positive $\alpha$.
-We can rephrase our influenza example in these new terms by, $S=x_1$, $I=x_2$, $R=x_3$, $\beta = \alpha_{2,1,2}$, and $\gamma = \alpha_{3,2}$.
+Since we are only interested in people entering new states, we only keep track of positive values of $\alpha$.
+We can rephrase our influenza example in these new terms where,
+\begin{align*}
+    x_1 &= S \\
+    x_2 &= I \\
+    x_3 &= R
+\end{align*}
+and $\alpha_{2,1,2} = \beta $, and $\alpha_{3,2} = \gamma$ all other $\alpha_{i,j,k}$ and $\alpha_{i,j}$ are equal to $0$.
 
 We construct the graph similarly to how we did before.
-The nodes are the same, except now their possible states are $x_1 \dots x_K$.
-For each $\alpha$, we have a different type of edge.
-For $\alpha_{i,j,k}$ we connect each node to each other node at the next time with an edge of that type.
-For $\alpha_{i,j}$ we connect each node the same person at the next time step with an edge of that type.
+The nodes are the same, except now they have $K$ possible states, $x_1 \dots x_K$.
+For each $\alpha_{i,j,k}$ and $\alpha_{i,j}$, we have a different type of edge.
+For $\alpha_{i,j,k}$ we connect each node to the node for each other person at the next time with an edge of that type.
+We call these edges interaction edges.
+For $\alpha_{i,j}$ we connect each node the node for the same person at the next time step with an edge of that type.
+We call these edges transition edges.
 Unlike in the influenza example, there may be multiple edges connecting the same pair of nodes.
 
 We prune the same way as before.
-For each time step, we update the possible states, remove impossible edges, and test the remaining edges to see which would occur.
-Our assumptions about the intervention, which allow us to prune more effectively, carry over.
-We assume that our interventions do not add edges to the graph, unless those edges are to a new category or a terminal category (like recovered) and we assume that our interventions do not prevent any transitions governed by $\alpha_{i,j}$.
-These assumptions are more restrictive in the general case than the SIR case.
+For each time step, we update the possible states of the nodes, prune edges we do not need to test, and test the remaining edges according to our model.
+While the steps are the same, some of the reasoning behind them needs to be generalized.
+When updating the state of the nodes, we relied on assumptions about the intervention to let us eliminate possible states.
+We can generalize those assumptions to allow us to prune the same way.
+We assume that our intervention does not add any edges to the graph.
+This assumption allows us to say that if a person is not in a state, and no transition edge would cause them to become that state, and no interaction edge would cause them to become that state, then they are not that state.
+We weaken this assumption by allowing an intervention to add transitions, but only to states which the person will not leave (e.g. Removed in the SIR model).
+We assume that our intervention does not remove any transition edges from the graph.
+This assumption allows us to say that if a person may be in a state, and a transition edge would cause them to leave that state at the next time step, but no transition or interaction edges would cause them to enter that state at the next time step, then that person is not in that state.
+These assumptions are more restrictive in the general case than the SIR case, but do still include many interventions.
+
+In some ways, the general model makes pruning and testing edges easier to define.
+We prune an edge associated with $\alpha_{i,j}$ if it is impossible for the source to be in state $i$.
+We prune an edge associated with $\alpha_{i,j,k}$ if it is impossible for the source to be in state $k$.
+We also prune an edge associated with $\alpha_{i,j,k}$ if it is impossible for the node representing the same person as the destination at the previous time step as the destination to be in state $i$.
+For the edges that remain, we keep them with probability given by their associated $\alpha_{i,j}$ or $\alpha_{i,j,k}$.
+We now have enough information to construct our pruned graph.
+
+We then take our pruned graph, and do a second pruning to account for the intervention.
+The second pruning is almost identical to the influenza case, but there is an additional problem we might encounter.
+It is now possible that two different edges affect the same person at the same time, changing their state to two different states.
+Worse, those edges might both have their conditions met.
+As an example, in an age cohort model, a susceptible child might be infected, and become an adult the same time step .
+Unfortunately, there are many ways to handle this type of conflict, and the right way depends on the model.
+In the age case, the correct answer is that both events happen, the susceptible child becomes an infected adult.
+In a different case, the answer may be to choose randomly between the two events, or that one of the events takes priority over the other (a dead adult is just dead for example).
+
 
 % FIX ME tie up paragraph.
 We then apply our intervention and extract the actual states in almost the same way, but need to deal with an additional circumstance.
@@ -265,8 +293,12 @@ In a different case, the answer may be to choose randomly between the two events
 \centering
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-raw-boxplots}
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-combined-boxplots}
-\includegraphics[width=.31\textwidth]{../figures/intervention-effects-time-series-susceptible.pdf}
-\caption{\textbf{Left)} Boxplots of simulations results under the each intervention scenario.  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world change in final size for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
+\caption{\textbf{Left)} Boxplots of simulations results under the each intervention scenario.  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world estimate of cases averted for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
+\end{figure}
+\begin{figure}\label{fig:epicurve}
+\centering
+\includegraphics[width=.7\textwidth]{../figures/intervention-effects-time-series-susceptible-switched.pdf}
+\caption{Time series showing the number of cases averted at each time caused by the intervention calculated using single-world inference and multiple-world inference.  We observe that single-world inference performs how you would expect the interventios to perform; cases prevented are almost always positive, and many of the cases prevented stay prevented (though not all). On the other hand, multiple-world inference generally has a very different shape, apparently possibly causing a large number of cases in the middle of the epidemic, and a lot of uncertainty surrounding the peak of the epidemic.}
 \end{figure}
 
 We demonstrate our method by applying it to controlling an influenza outbreak where we compare the number of cases averted by three different interventions: hand-washing, vaccination, and antiviral interventions.
@@ -274,9 +306,9 @@ We compare the outcomes of our method to that of the multiple-world inference me
 We find that single-world inference generally has the same point estimates as multiple-world inference, but has narrower confidence intervals.
 We also see that multiple-world inference has some nonsensical results that single-world inference avoids.
 
-For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: Null $ 0 $ (CI $ 0 $ \textemdash $ 0 $), Antivirals $ -819.125 $ (CI $ -2899.05 $ \textemdash $ -206 $), Social Distancing $ -153.594 $ (CI $ -298 $ \textemdash $ -12.975 $), Vaccination $ -284.955 $ (CI $ -437.075 $ \textemdash $ -130 $).
-For multiple-world inference, we found that all but one non-null intervention had a significant (p<.05) effect on final size: Null $ 4.94 $ (CI $ -183.05 $ \textemdash $ 195.1 $), Antivirals $ -814.185 $ (CI $ -2913.05 $ \textemdash $ -176 $), Social Distancing $ -148.654 $ (CI $ -355.1 $ \textemdash $ 69.025 $), Vaccination $ -280.015 $ (CI $ -499.2 $ \textemdash $ -72 $).
-In addition to the effects on final size, we observe that multiple-world has unintuitive effects on the shape of the epidemic (Figure \ref{epicurve}).
+For single-world inference, we found that every non-null intervention had a significant (p<.05) number of cases averted: Null $ 0 $ (CI $ 0 $ \textemdash $ 0 $), Antivirals $ 819.125 $ (CI $ 206 $ \textemdash $ 2899.05 $), Social Distancing $ 153.594 $ (CI $ 12 $ \textemdash $ 298 $), Vaccination $ 284.955 $ (CI $ 130 $ \textemdash $ 438 $).
+For multiple-world inference, we found that all but one non-null intervention had a significant (p<.05) number of cases averted: Null $ -5 $ (CI $ -195 $ \textemdash $ 183 $), Antivirals $ 814.185 $ (CI $ 176 $ \textemdash $ 2913 $), Social Distancing $ 148.654 $ (CI $ -69 $ \textemdash $ 355 $), Vaccination $ 280.015 $ (CI $ 72 $ \textemdash $ 499 $).
+In addition to estimates of cases averted, we observe that multiple-world has unintuitive effects on the shape of the epidemic (Figure \ref{epicurve}).
 
 We released a software package, \texttt{counterfactual}, on \texttt{CRAN}, %NOTE: This is not true yet
 which implements single-world inference as described in section \ref{sec:methods}.
@@ -347,3 +379,4 @@ Then starting from our initial conditions, we can trace through the paths that a
 
 However, the amount of time the model spends running is not uniform: it takes $xx$ hours to set up the counterfactual, but only $xx$ to run the intervention.
 \textbf{In the context of comparing interventions, this is a benefit since the set up need only be run a single time.} THIS IS DISCUSSION
+
