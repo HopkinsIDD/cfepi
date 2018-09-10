@@ -342,3 +342,31 @@ dev.off()
 pdf('figures/intervention-effects-combined-boxplots.pdf')
 print(plt_box_intervene)
 while(dev.off() != 1){}
+single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='single_world') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
+multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='multi_world') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
+paste0(
+  "For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: ",
+  paste(
+    single_world_ci$scenario,
+    "$",
+    single_world_ci$final_size_m,
+    "$ (CI $",
+    single_world_ci$final_size_l,
+    "$ --- $",
+    single_world_ci$final_size_h,
+    "$)",
+    collapse=', '
+  ),".")
+paste0(
+  "For multiple-world inference, we found that every all but one non-null intervention had a significant (p<.05) effect on final size: ",
+  paste(
+    multiple_world_ci$scenario,
+    "$",
+    multiple_world_ci$final_size_m,
+    "$ (CI $",
+    multiple_world_ci$final_size_l,
+    "$ --- $",
+    multiple_world_ci$final_size_h,
+    "$)",
+    collapse=', '
+  ),".")
