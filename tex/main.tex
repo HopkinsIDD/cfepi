@@ -11,7 +11,7 @@
 %Publisher: Royal Society
 %Template Provided By: Typeset
 
-\usepackage{amsmath,tabulary,graphicx}
+\usepackage{amsmath,tabulary,graphicx,multicol}
 \usepackage[utf8]{inputenc}
 \long\def\ack#1{{\vskip5.5pt\noindent \fontsize{8}{11}\selectfont#1}}
 
@@ -40,7 +40,7 @@
 \def\rAlignHack{\rightskip\z@skip\leftskip\@flushglue \parindent\z@\parfillskip\z@skip}
 
 
-%\if@twocolumn\usepackage{dblfloatfix}\fi
+\if@twocolumn\usepackage{dblfloatfix}\fi
 \usepackage{ifxetex}
 \ifxetex\else\if@twocolumn\usepackage{dblfloatfix}\fi\fi
 
@@ -69,25 +69,25 @@
 {0ex}{\normalfont\small\itshape}}%
 }{}
 
-These are now gobbled, so won't appear in the PDF.
+%%% These are now gobbled, so won't appear in the PDF.
 \newcommand\role[1]{\unskip}
 \newcommand\aucollab[1]{\unskip}
   
 \@ifundefined{tsGraphicsScaleX}{\gdef\tsGraphicsScaleX{1}}{}
 \@ifundefined{tsGraphicsScaleY}{\gdef\tsGraphicsScaleY{.9}}{}
-To automatically resize figures to fit inside the text area
+%%% To automatically resize figures to fit inside the text area
 \def\checkGraphicsWidth{\ifdim\Gin@nat@width>\linewidth
 	\tsGraphicsScaleX\linewidth\else\Gin@nat@width\fi}
 
 \def\checkGraphicsHeight{\ifdim\Gin@nat@height>.9\textheight
 	\tsGraphicsScaleY\textheight\else\Gin@nat@height\fi}
 
-%\def\fixFloatSize#1{}%\@ifundefined{processdelayedfloats}{\setbox0=\hbox{\includegraphics{#1}}\ifnum\wd0<\columnwidth\relax\renewenvironment{figure*}{\begin{figure}}{\end{figure}}\fi}{}}
-%\let\ts@includegraphics\includegraphics
+\def\fixFloatSize#1{}%\@ifundefined{processdelayedfloats}{\setbox0=\hbox{\includegraphics{#1}}\ifnum\wd0<\columnwidth\relax\renewenvironment{figure*}{\begin{figure}}{\end{figure}}\fi}{}}
+\let\ts@includegraphics\includegraphics
 
 \def\inlinegraphic[#1]#2{{\edef\@tempa{#1}\edef\baseline@shift{\ifx\@tempa\@empty0\else#1\fi}\edef\tempZ{\the\numexpr(\numexpr(\baseline@shift*\f@size/100))}\protect\raisebox{\tempZ pt}{\ts@includegraphics{#2}}}}
 
-%\renewcommand{\includegraphics}[1]{\ts@includegraphics[width=\checkGraphicsWidth]{#1}}
+\renewcommand{\includegraphics}[1]{\ts@includegraphics[width=\checkGraphicsWidth]{#1}}
 \AtBeginDocument{\def\includegraphics{\@ifnextchar[{\ts@includegraphics}{\ts@includegraphics[width=\checkGraphicsWidth,height=\checkGraphicsHeight,keepaspectratio]}}}
 
 \def\URL#1#2{\@ifundefined{href}{#2}{\href{#1}{#2}}}
@@ -153,18 +153,18 @@ $^{2}$Department of Ecology and Evolutionary Biology, Princeton University, Prin
 %%%% Abstract text to be placed here %%%%%%%%%%%%
 % Recount words
 \begin{abstract} % 154 words MAX 183 words
-  Determining the effects of an intervention on a disease outbreak is an important problem in epidemiology.
-  However, multiple confounders and sources of noise make it difficult to address. %23 words
-  Here we present a method that addresses an important source of noise, stochastic variation within the same population. %21 words
-  This allows for improved ability to select the best interventions for an outbreak
-  Our method, like many others, employs compartmental models and extends an individual-level effect of the intervention to the population-level effect. %20 words
-  We eliminate stochastic variation between epidemics by tracking both what happens with intervention and what happens without intervention within a single simulated epidemic. %24 words
-  To simultaneously keep track of both states, we store all transition states that are possible either with or without the intervention on a network. %21 words
-  We can actualize this network to recover the events that occur both with and without the intervention. %
-  We demonstrate our method on an influenza epidemic and compare the results of our method to an existing method.
-  We compare across three interventions: hand-washing, vaccination, antivirals, and a control; and evaluate performance on the estimate of cases averted.
-  We find that our method reduces the variance of all estimates, and in one case makes the results statistically significant. %25 words
-  Although our method is more computationally intensive than traditional methods, it is still computationally tractable for many common use cases, making it a useful tool for selecting interventions. %17 words
+  Determining the effects of an intervention on a disease outbreak is an important problem in epidemiology. %15 words
+  However, multiple confounders and sources of noise make it difficult to address. %12 words
+  Here we present a method that addresses an important source of noise, stochastic variation within the same population. %18 words
+  This allows for improved ability to select the best interventions for an outbreak %18 words
+  Our method, like many others, employs compartmental models and extends an individual-level effect of the intervention to the population-level effect. %22 words
+  We eliminate stochastic variation between epidemics by tracking both what happens with intervention and what happens without intervention within a single simulated epidemic. %23 words
+  To simultaneously keep track of both states, we store all transition states that are possible either with or without the intervention on a network. %24 words
+  We can actualize this network to recover the events that occur both with and without the intervention. %17 words
+  We demonstrate our method on an influenza epidemic and compare the results of our method to an existing method. %19 words
+  We compare across three interventions: hand-washing, vaccination, antivirals, and a control; and evaluate performance on the estimate of cases averted. %21 words
+  We find that our method reduces the variance of all estimates, and in one case makes the results statistically significant. %20 words
+  Although our method is more computationally intensive than traditional methods, it is still computationally tractable for many common use cases, making it a useful tool for selecting interventions. %28 words
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -173,10 +173,10 @@ $^{2}$Department of Ecology and Evolutionary Biology, Princeton University, Prin
 
 \maketitle
 
-
+\begin{multicols}{2}
 \section{Introduction}
 Determining how to control an infectious disease outbreak is a fundamental question in epidemiology.
-This process often relies on a combination of assessments, expert opinion, and disease surveillance, however in many outbreak settings, these may be unavailable. % CITE THIS PAPER [An approach to and web-based tool for infectious disease outbreak intervention analysis Ashlynn R. Daughton, Nicholas Generous, Reid Priedhorsky & Alina Deshpande]
+This process often relies on a combination of assessments, expert opinion, and disease surveillance, however in many outbreak settings, these may be unavailable \cite{daughton-et-al:2017}.
 By using available data across multiple levels, dynamical models provide quantitative estimates of outbreak progression in a timely manner, providing insight into how to respond.
 Often these modeling approaches provide the best evidence-based estimates of the impact of an intervention when other methods are not feasible.
 
@@ -190,7 +190,7 @@ However despite the fact that it can be averted, it is rarely formally addressed
 While most existing models run separate simulations for both arms of the control regime, it is possible to model two different control strategies in a identical epidemic.
 In this paper, we refer to models which run separate simulations for the outbreak and the intervention as multiple-world inference and we present a method here that runs a single simulation for the outbreak and all interventions, which we call single-world inference.
 
-The majority of quantitative efforts used to determine the effectiveness of an intervention employ multiple-world inference \cite{} %CITE LESSLER, RIVERS, LONGINI, AND THE PAPER I ADDED ABOVE
+The majority of quantitative efforts used to determine the effectiveness of an intervention employ multiple-world inference \cite{lessler-et-al:2016,rivers-et-al:2014,daughton-et-al:2017,longini-et-al:2005}.
 However, multiple-world inference methods suffer from high variance and low statistical power, as the method involves comparing different simulated epidemics which often results in the effect of the intervention being obfuscated by process model variance.
 For example, Lessler et al. 2016 encountered a common problem of multiple-world inference while determining the best way to trigger a measles vaccination campaign in Africa. 
 They noted the requisite use of aggregate statistics as a limitation resulting from the use of multiple-world inference \cite{lessler-et-al:2016}.
@@ -229,15 +229,15 @@ We allow the probability of an infectious contact between any particular suscept
 
 %% FIGURE 1
 \begin{figure}[hp]
-% \includegraphics[width=\textwidth]{../figures/figure8} %Probably turn the coloration into a legend.
-\caption{Diagram of the steps in the pruning process.  We start with the complete network \textbf{a)}.  We prune according to the SIR model ignoring the intervention to obtain a potential network \textbf{b)}.  We then can choose to apply an intervention to obtain an intervention potential network \textbf{b${}^*$)}.  In either case, we then actualize the network \textbf{c)} or \textbf{c${}^*$)}.}
+\includegraphics[width=\textwidth]{../figures/figure8}
+\caption{\textbf{Diagram of the steps in the pruning process.}  We start with the complete network \textbf{a)}.  We prune according to the SIR model ignoring the intervention to obtain a potential network \textbf{b)}.  We then can choose to apply an intervention to obtain an intervention potential network \textbf{b${}^*$)}.  In either case, we then actualize the network \textbf{c)} or \textbf{c${}^*$)}.}
 \label{fig:outline}
 \end{figure}
 
 %% FIGURE 2
 \begin{figure}[hp]
-% \includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
-\caption{Diagram demonstrating pruning a complete network to obtain a potential network.  In all panels, the nodes represent people at different times.  The nodes in the same horizontal line represent a single person, moving through time.  Each node is split into three sections, representing wether it is potentially susceptible (upper left, purple), potentially infected (upper right, orange), or potentially removed (bottom, green).  If we know a node cannot be a state, we color the corresponding section of that node grey instead of its normal color.  The green edges represent potential recovery, the orange edges represent potential transmission.  Because the edges and nodes represent potential states, we make them translucent.  We mark removed edges by making them even more translucent (as they are impossible), before removing them entirely in the next panel.  \textbf{a)}--\textbf{k)} show a step by step example of pruning a complete network to construct a potential network.  Between the first and second columns, we update possible states of the nodes.  Between the second and third columns, we prune edges incompatible with the possible states on the network.  Between the third and first columns (wrapped around), we use the SIR model to determine which potential edges would occur in the epidemic.  The edges we remove at this stage are more transparent, and then removed in the next panel.}
+\includegraphics[width=\textwidth]{../figures/figure6}
+\caption{\textbf{Diagram demonstrating pruning a complete network to obtain a potential network.}  In all panels, the nodes represent people at different times.  The nodes in the same horizontal line represent a single person, moving through time.  Each node is split into three sections, representing wether it is potentially susceptible (upper left, purple), potentially infected (upper right, orange), or potentially removed (bottom, green).  If we know a node cannot be a state, we color the corresponding section of that node grey instead of its normal color.  The green edges represent potential recovery, the orange edges represent potential transmission.  Because the edges and nodes represent potential states, we make them translucent.  We mark removed edges by making them even more translucent (as they are impossible), before removing them entirely in the next panel.  \textbf{a)}--\textbf{k)} show a step by step example of pruning a complete network to construct a potential network.  Between the first and second columns, we update possible states of the nodes.  Between the second and third columns, we prune edges incompatible with the possible states on the network.  Between the third and first columns (wrapped around), we use the SIR model to determine which potential edges would occur in the epidemic.  The edges we remove at this stage are more transparent, and then removed in the next panel.}
 \label{fig:pruning}
 \end{figure}
 
@@ -391,18 +391,18 @@ In a different case, the answer may be to choose randomly between the two events
 \end{table}
 
 %% FIGURE 3
-\begin{figure}[hp]
+\begin{figure}
 \centering
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-raw-boxplots}
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-combined-boxplots}
-\caption{\textbf{Left)} Boxplots of simulations results under the each intervention scenario.  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world estimate of cases averted for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
+\caption{\textbf{Left)} \textbf{Boxplots of simulations results under the each intervention scenario.}  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world estimate of cases averted for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
 \label{fig:boxplots}
 \end{figure}
 
 %% FIGURE 4
-\begin{figure}[hp]
+\begin{figure}
 \centering
-\includegraphics[width=.7\textwidth]{../figures/intervention-effects-time-series-susceptible-switched.pdf}
+\includegraphics[width=\textwidth]{../figures/intervention-effects-time-series-susceptible-switched.pdf}
 \caption{Time series showing the number of cases averted at each time caused by the intervention calculated using single-world inference and multiple-world inference.  We observe that single-world inference performs how you would expect the interventios to perform; cases prevented are almost always positive, and many of the cases prevented stay prevented (though not all). On the other hand, multiple-world inference generally has a very different shape, apparently possibly causing a large number of cases in the middle of the epidemic, and a lot of uncertainty surrounding the peak of the epidemic.}
 \label{fig:epicurve}
 \end{figure}
@@ -412,8 +412,8 @@ We compare the outcomes of single-world inference to the current standard way to
 We find that single-world inference generally has the same point estimates as multiple-world inference, but with narrower confidence intervals.
 We also see that multiple-world inference has some nonsensical results that single-world inference avoids.
 
-For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: Null $0$ (CI $0-0$), Antivirals $819.125$ (CI $206 - 2899.05$), Social Distancing $153.594 $ (CI $12 - 298$), Vaccination $ 284.955 $ (CI $130 - 438$).
-For multiple-world inference, we found that all but one non-null intervention had a significant ($p<0.05$) number of cases averted: Null  -$5 $ (CI  -$195 - 183$), Antivirals $814.185$ (CI $176 - 2913 $), Social Distancing $148.654$ (CI -$69 - 355$), Vaccination $280.015$ (CI $72 - 499$).
+For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ 0 $ (CI $ 0 $ \textemdash $ 0 $), Antivirals $ 819.125 $ (CI $ 206 $ \textemdash $ 2900 $), Social Distancing $ 153.594 $ (CI $ 12 $ \textemdash $ 298 $), Vaccination $ 284.955 $ (CI $ 130 $ \textemdash $ 438 $).
+For multiple-world inference, we found that every all but one non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ \neg4.94 $ (CI $ \neg196 $ \textemdash $ 184 $), Antivirals $ 814.185 $ (CI $ 176 $ \textemdash $ 2914 $), Social Distancing $ 148.654 $ (CI $ \neg70 $ \textemdash $ 356 $), Vaccination $ 280.015 $ (CI $ 72 $ \textemdash $ 500 $).
 In addition to estimates of cases averted, we observe that multiple-world has an unintuitive effect on the shape of the epidemic (Figure \ref{epicurve}).
 
 We released a software package, \texttt{counterfactual}, on \texttt{CRAN}, %NOTE: This is not true yet
@@ -474,9 +474,11 @@ Approval of the final manuscript: JK, LTK, CJM, and JL}
 \funding{Insert funding text here.}
 
 \ack{Insert acknowledgment text here.}
+\end{multicols}
 
-
-
-\bibliographystyle{apalike}
+\begin{multicols}{3}
+\bibliographystyle{RS}
 \bibliography{bibliography}
+\end{multicols}
+\twocolumn
 \end{document}
