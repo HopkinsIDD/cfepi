@@ -50,10 +50,37 @@ intervention-effects-raw-boxplots.pdf:
 	$(R) ../R/make_figures.R
 intervention-effects-relative-risk.pdf:
 	$(R) ../R/make_figures.R
+intervention-effects-time-series-recovered.pdf:
+	$(R) ../R/make_figures.R
+intervention-effects-time-series-recovered-switched.pdf:
+	$(R) ../R/make_figures.R
+intervention-effects-time-series-susceptible.pdf:
+	$(R) ../R/make_figures.R
+intervention-effects-time-series-susceptible-switched.pdf:
+	$(R) ../R/make_figures.R
+
+intervention-effects-combined-boxplots-cropped.pdf: intervention-effects-combined-boxplots.pdf
+	$(CROP) intervention-effects-combined-boxplots.pdf intervention-effects-combined-boxplots-cropped.pdf
+intervention-effects-final-size-cropped.pdf: intervention-effects-final-size.pdf
+	$(CROP) intervention-effects-final-size.pdf intervention-effects-final-size-cropped.pdf
+intervention-effects-peak-time-cropped.pdf: intervention-effects-peak-time.pdf
+	$(CROP) intervention-effects-peak-time.pdf intervention-effects-peak-time-cropped.pdf
+intervention-effects-raw-boxplots-cropped.pdf: intervention-effects-raw-boxplots.pdf
+	$(CROP) intervention-effects-raw-boxplots.pdf intervention-effects-raw-boxplots-cropped.pdf
+intervention-effects-relative-risk-cropped.pdf: intervention-effects-relative-risk.pdf
+	$(CROP) intervention-effects-relative-risk.pdf intervention-effects-relative-risk-cropped.pdf
+intervention-effects-time-series-recovered-cropped.pdf: intervention-effects-time-series-recovered.pdf
+	$(CROP) intervention-effects-time-series-recovered.pdf intervention-effects-time-series-recovered-cropped.pdf
+intervention-effects-time-series-recovered-switched-cropped.pdf: intervention-effects-time-series-recovered-switched.pdf
+	$(CROP) intervention-effects-time-series-recovered-switched.pdf intervention-effects-time-series-recovered-switched-cropped.pdf
+intervention-effects-time-series-susceptible-cropped.pdf: intervention-effects-time-series-susceptible.pdf
+	$(CROP) intervention-effects-time-series-susceptible.pdf intervention-effects-time-series-susceptible-cropped.pdf
+intervention-effects-time-series-susceptible-switched-cropped.pdf: intervention-effects-time-series-susceptible-switched.pdf
+	$(CROP) intervention-effects-time-series-susceptible-switched.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf
 
 figures: tikz-figures r-figures
 tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure8.pdf
-r-figures: intervention-effects-combined-boxplots.pdf intervention-effects-final-size.pdf intervention-effects-peak-time.pdf intervention-effects-raw-boxplots.pdf intervention-effects-relative-risk.pdf
+r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf
 
 clean:
 	rm -f *.aux *.log *.pdf
