@@ -61,6 +61,7 @@ plt = output %>%
   ),alpha=.7) +
   xlab("Time (Days)") +
   theme_bw() + 
+  theme(aspect.ratio= 1) +
   facet_wrap(~scenario)
 
 #### Final Size
@@ -113,9 +114,9 @@ all_world_inference <- function(fun,name){
   
   join_names = intersect(names(lhs),names(rhs))
   all_inference = inner_join(lhs,rhs,by=join_names) %>%
-    rename_(.dots = setNames(name,'multi_world')) %>%
-    mutate(single_world = None_None) %>%
-    gather(type,null,single_world,multi_world)
+    rename_(.dots = setNames(name,'Multi_World')) %>%
+    mutate(Single_World = None_None) %>%
+    gather(type,null,Single_World,Multi_World)
   # var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
   var_names = names(all_inference)[grepl('_',names(all_inference))]
   if(rr){
@@ -142,7 +143,7 @@ plot_cross_world <- function(fun,name){
       ggplot() +
       geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
       scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=0.9) +
+      theme(legend.position="none", aspect.ratio=1) +
       xlab("Scenario") +
       ylim(quantile(all_inference[[name]],c(.05,.95))) +
       theme_bw() + 
@@ -153,7 +154,7 @@ plot_cross_world <- function(fun,name){
       ggplot() +
       geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
       scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=0.9) +
+      theme(legend.position="none", aspect.ratio=0.1) +
       xlab("Scenario") +
       background_grid(major = "y", minor = "none") + 
       theme_bw() + 
@@ -169,7 +170,7 @@ plot_cross_world <- function(fun,name){
       ggplot() +
       geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
       scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=0.9) +
+      theme(legend.position="none", aspect.ratio=0.1) +
       xlab("Scenario") +
       background_grid(major = "y", minor = "none") + 
       theme_bw() + 
@@ -206,7 +207,7 @@ plt_sus = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_sus_t = time_series_summary %>%
   filter(variable == 'V1') %>%
@@ -217,7 +218,7 @@ plt_sus_t = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_inf = time_series_summary %>%
   filter(variable == 'V2') %>%
@@ -228,7 +229,7 @@ plt_inf = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_inf_t = time_series_summary %>%
   filter(variable == 'V2') %>%
@@ -239,7 +240,7 @@ plt_inf_t = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
@@ -251,7 +252,7 @@ plt_rec = time_series_summary %>%
   geom_abline(slope=0,intercept=0,linetype=2) +
   facet_grid(scenario~type) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_rec_t = time_series_summary %>%
   filter(variable == 'V3') %>%
@@ -262,7 +263,7 @@ plt_rec_t = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 pdf('figures/intervention-effects-final-size.pdf')
 print(plot_inference(final_size,'Final_Size'))
 dev.off()
@@ -282,7 +283,7 @@ plt_rec = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_rec_t = time_series_summary %>%
   filter(variable == 'V3') %>%
@@ -293,7 +294,7 @@ plt_rec_t = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
-  theme(legend.position="none")
+  theme(legend.position="none",aspect.ratio=1)
 
 plt_box_intervene = final_size(output) %>%
   group_by(trial) %>%
@@ -356,8 +357,8 @@ dev.off()
 pdf('figures/intervention-effects-combined-boxplots.pdf')
 print(plt_box_intervene)
 while(dev.off() != 1){}
-single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='single_world') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
-multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='multi_world') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
+single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Single_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
+multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Multi_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
 paste0(
   "For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: ",
   paste(
