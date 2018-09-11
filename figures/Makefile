@@ -13,7 +13,6 @@ handout.pdf: figures
 view: main.pdf
 	open main.pdf
 
-
 figure1.pdf:
 	$(TEX) ../tex/figure1.tex 
 figure2.pdf:
