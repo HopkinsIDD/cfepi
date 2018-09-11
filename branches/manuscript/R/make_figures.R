@@ -60,6 +60,7 @@ plt = output %>%
     group=Variable
   ),alpha=.7) +
   xlab("Time (Days)") +
+  theme_bw() + 
   facet_wrap(~scenario)
 
 #### Final Size
@@ -144,7 +145,8 @@ plot_cross_world <- function(fun,name){
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
       ylim(quantile(all_inference[[name]],c(.05,.95))) +
-      # background_grid(major = "y", minor = "none") + 
+      theme_bw() + 
+      background_grid(major = "y", minor = "none") + 
       ylab(gsub('_',' ',name))
     rcout <- all_inference %>%
       mutate(scenario = scenario_changer[scenario]) %>%
@@ -153,7 +155,8 @@ plot_cross_world <- function(fun,name){
       scale_colour_brewer(type='qual',palette='Paired') +
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
-      # background_grid(major = "y", minor = "none") + 
+      background_grid(major = "y", minor = "none") + 
+      theme_bw() + 
       ylab(gsub('_',' ',name))
 
     print(rcout)
@@ -168,7 +171,8 @@ plot_cross_world <- function(fun,name){
       scale_colour_brewer(type='qual',palette='Paired') +
       theme(legend.position="none", aspect.ratio=0.9) +
       xlab("Scenario") +
-      # background_grid(major = "y", minor = "none") + 
+      background_grid(major = "y", minor = "none") + 
+      theme_bw() + 
       ylab(gsub('_',' ',name))
   }
 }
@@ -201,6 +205,7 @@ plt_sus = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_sus_t = time_series_summary %>%
@@ -211,6 +216,7 @@ plt_sus_t = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_inf = time_series_summary %>%
@@ -221,6 +227,7 @@ plt_inf = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_inf_t = time_series_summary %>%
@@ -231,6 +238,7 @@ plt_inf_t = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_rec = time_series_summary %>%
@@ -242,6 +250,7 @@ plt_rec = time_series_summary %>%
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   geom_abline(slope=0,intercept=0,linetype=2) +
   facet_grid(scenario~type) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_rec_t = time_series_summary %>%
@@ -252,6 +261,7 @@ plt_rec_t = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
+  theme_bw() + 
   theme(legend.position="none")
 pdf('figures/intervention-effects-final-size.pdf')
 print(plot_inference(final_size,'Final_Size'))
@@ -271,6 +281,7 @@ plt_rec = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_rec_t = time_series_summary %>%
@@ -281,6 +292,7 @@ plt_rec_t = time_series_summary %>%
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
+  theme_bw() + 
   theme(legend.position="none")
 
 plt_box_intervene = final_size(output) %>%
@@ -291,6 +303,7 @@ plt_box_intervene = final_size(output) %>%
   ggplot() +
   geom_boxplot(aes(x=Intervention, y=`Cases Averted`)) +
   ylim(c(-100,1000)) +
+  theme_bw() + 
   geom_abline(slope=0)
 
 plt_box_no_intervene = final_size(output) %>%
@@ -298,6 +311,7 @@ plt_box_no_intervene = final_size(output) %>%
   mutate(`Final Size` = final_size,Intervention=scenario_changer[scenario]) %>%
   ggplot() +
   geom_boxplot(aes(x=Intervention, y=`Final Size`)) +
+  theme_bw() + 
   ylim(c(2000,3200))
   
 
