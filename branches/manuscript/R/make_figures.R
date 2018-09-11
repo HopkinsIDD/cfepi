@@ -1,17 +1,18 @@
+# Define relevent directories
+working_directory = rprojroot::find_root(rprojroot::has_file('.root')) # The location of the repository
+setwd(working_directory)
+
 try({remove.packages('counterfactual')},silent=T)
 install.packages('package',type='source',repos=NULL)
 # try({remove.packages('counterfactual')},silent=T)
 # install.packages('package',type='source',repos=NULL)
 
-# Define relevent directories
-working_directory = rprojroot::find_root(rprojroot::has_file('.root')) # The location of the repository
-setwd(working_directory)
 
 if(!require(counterfactual)){
   source("package/R/read.R")
 }
 # library(counterfactual)
-# library(cowplot)
+library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -201,7 +202,7 @@ time_series_summary = time_series_inference %>%
 plt_sus = time_series_summary %>%
   filter(variable == 'V1') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -212,7 +213,7 @@ plt_sus = time_series_summary %>%
 plt_sus_t = time_series_summary %>%
   filter(variable == 'V1') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -223,7 +224,7 @@ plt_sus_t = time_series_summary %>%
 plt_inf = time_series_summary %>%
   filter(variable == 'V2') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -234,7 +235,7 @@ plt_inf = time_series_summary %>%
 plt_inf_t = time_series_summary %>%
   filter(variable == 'V2') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -245,7 +246,7 @@ plt_inf_t = time_series_summary %>%
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -257,7 +258,7 @@ plt_rec = time_series_summary %>%
 plt_rec_t = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -277,7 +278,7 @@ dev.off()
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -288,7 +289,7 @@ plt_rec = time_series_summary %>%
 plt_rec_t = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
+  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
   ggplot() +
   geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
   geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
@@ -359,29 +360,33 @@ print(plt_box_intervene)
 while(dev.off() != 1){}
 single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Single_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
 multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Multi_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
-paste0(
-  "For single-world inference, we found that every non-null intervention had a significant (p<.05) effect on final size: ",
+ci_string_1 = paste0(
+  "For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: ",
   paste(
     single_world_ci$scenario,
     "$",
-    single_world_ci$final_size_m,
+    -single_world_ci$final_size_m,
     "$ (CI $",
-    single_world_ci$final_size_l,
-    "$ --- $",
-    single_world_ci$final_size_h,
+    -ceiling(single_world_ci$final_size_h),
+    "$ \textemdash $",
+    -floor(single_world_ci$final_size_l),
     "$)",
     collapse=', '
   ),".")
-paste0(
-  "For multiple-world inference, we found that every all but one non-null intervention had a significant (p<.05) effect on final size: ",
+ci_string_2 = paste0(
+  "For multiple-world inference, we found that every all but one non-null intervention had a significant ($p<0.05$) number of cases averted: ",
   paste(
     multiple_world_ci$scenario,
     "$",
-    multiple_world_ci$final_size_m,
+    - multiple_world_ci$final_size_m,
     "$ (CI $",
-    multiple_world_ci$final_size_l,
-    "$ --- $",
-    multiple_world_ci$final_size_h,
+    - ceiling(multiple_world_ci$final_size_h),
+    "$ \textemdash $",
+    -floor(multiple_world_ci$final_size_l),
     "$)",
     collapse=', '
   ),".")
+ci_string_1 = gsub(' -',' \neg',ci_string_1)
+ci_string_2 = gsub(' -',' \neg',ci_string_2)
+print(ci_string_1)
+print(ci_string_2)
