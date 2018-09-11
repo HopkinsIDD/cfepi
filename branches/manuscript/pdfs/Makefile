@@ -18,4 +18,4 @@ outline.pdf:
 	$(TEX) ../tex/outline.tex
 
 clean:
-	rm -f main.log main.pdf main.aux outline.log outline.pdf outline.aux main.bbl main.blg main.out outline.out outline.toc
+	rm -f main.log main.pdf main.aux outline.log outline.pdf outline.aux main.bbl main.blg main.out outline.out outline.toc main.fff main.ttt
