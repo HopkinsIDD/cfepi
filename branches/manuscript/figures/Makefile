@@ -37,7 +37,7 @@ figure7_pg_2.pdf: figure7-burst
 figure7_pg_3.pdf: figure7-burst
 figure7_pg_4.pdf: figure7-burst
 figure7_pg_5.pdf: figure7-burst
-figure8.pdf: figure7-burst
+figure8.pdf: figure7_pg_1.pdf figure7_pg_2.pdf figure7_pg_3.pdf figure7_pg_4.pdf figure7_pg_5.pdf
 	$(TEX) ../tex/figure8.tex 
 
 intervention-effects-combined-boxplots.pdf:
