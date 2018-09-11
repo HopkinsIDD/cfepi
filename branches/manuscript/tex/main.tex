@@ -5,132 +5,131 @@
 %% developed by Techset
 %%
 %% This file describes the coding for rsproca.cls
-% \documentclass[PTRSB]{rsos}
 \documentclass[PTRSB]{rsos}
-% \makeatletter\if@twocolumn\PassOptionsToPackage{switch}{lineno}\else\fi\makeatother
-% 
-% %Publisher: Royal Society
-% %Template Provided By: Typeset
-% 
-% \usepackage{amsmath,tabulary,graphicx}
-% \usepackage[utf8]{inputenc}
-% \long\def\ack#1{{\vskip5.5pt\noindent \fontsize{8}{11}\selectfont#1}}
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % Following additional macros are required to function some 
-% % functions which are not available in the class used.
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \usepackage{url,multirow,morefloats,floatflt,cancel,tfrupee}
-% \makeatletter
-% 
-% 
-% \AtBeginDocument{\@ifpackageloaded{textcomp}{}{\usepackage{textcomp}}}
-% \makeatother
-% \usepackage{colortbl}
-% \usepackage{xcolor}
-% \usepackage{pifont}
-% \usepackage[nointegrals]{wasysym}
-% \urlstyle{rm}
-% \makeatletter
-% 
-% %%%For Table column width calculation.
-% \def\mcWidth#1{\csname TY@F#1\endcsname+\tabcolsep}
-% 
-% %%Hacking center and right align for table
-% \def\cAlignHack{\rightskip\@flushglue\leftskip\@flushglue\parindent\z@\parfillskip\z@skip}
-% \def\rAlignHack{\rightskip\z@skip\leftskip\@flushglue \parindent\z@\parfillskip\z@skip}
-% 
-% 
-% %\if@twocolumn\usepackage{dblfloatfix}\fi
-% \usepackage{ifxetex}
-% \ifxetex\else\if@twocolumn\usepackage{dblfloatfix}\fi\fi
-% 
-% \AtBeginDocument{
-% \expandafter\ifx\csname eqalign\endcsname\relax
-% \def\eqalign#1{\null\vcenter{\def\\{\cr}\openup\jot\m@th
-%   \ialign{\strut$\displaystyle{##}$\hfil&$\displaystyle{{}##}$\hfil
-%       \crcr#1\crcr}}\,}
-% \fi
-% }
-% 
-% %For fixing hardfail when unicode letters appear inside table with endfloat
-% \AtBeginDocument{%
-%   \@ifpackageloaded{endfloat}%
-%    {\renewcommand\efloat@iwrite[1]{\immediate\expandafter\protected@write\csname efloat@post#1\endcsname{}}}{}%
-% }%
-% 
-% \def\BreakURLText#1{\@tfor\brk@tempa:=#1\do{\brk@tempa\hskip0pt}}
-% \let\lt=<
-% \let\gt=>
-% \def\processVert{\ifmmode|\else\textbar\fi}
-% \let\processvert\processVert
-% 
-% \@ifundefined{subparagraph}{
-% \def\subparagraph{\@startsection{paragraph}{5}{2\parindent}{0ex plus 0.1ex minus 0.1ex}%
-% {0ex}{\normalfont\small\itshape}}%
-% }{}
-% 
-% % These are now gobbled, so won't appear in the PDF.
-% \newcommand\role[1]{\unskip}
-% \newcommand\aucollab[1]{\unskip}
-%   
-% \@ifundefined{tsGraphicsScaleX}{\gdef\tsGraphicsScaleX{1}}{}
-% \@ifundefined{tsGraphicsScaleY}{\gdef\tsGraphicsScaleY{.9}}{}
-% % To automatically resize figures to fit inside the text area
-% \def\checkGraphicsWidth{\ifdim\Gin@nat@width>\linewidth
-% 	\tsGraphicsScaleX\linewidth\else\Gin@nat@width\fi}
-% 
-% \def\checkGraphicsHeight{\ifdim\Gin@nat@height>.9\textheight
-% 	\tsGraphicsScaleY\textheight\else\Gin@nat@height\fi}
-% 
-% \def\fixFloatSize#1{}%\@ifundefined{processdelayedfloats}{\setbox0=\hbox{\includegraphics{#1}}\ifnum\wd0<\columnwidth\relax\renewenvironment{figure*}{\begin{figure}}{\end{figure}}\fi}{}}
-% \let\ts@includegraphics\includegraphics
-% 
-% \def\inlinegraphic[#1]#2{{\edef\@tempa{#1}\edef\baseline@shift{\ifx\@tempa\@empty0\else#1\fi}\edef\tempZ{\the\numexpr(\numexpr(\baseline@shift*\f@size/100))}\protect\raisebox{\tempZ pt}{\ts@includegraphics{#2}}}}
-% 
-% %\renewcommand{\includegraphics}[1]{\ts@includegraphics[width=\checkGraphicsWidth]{#1}}
-% \AtBeginDocument{\def\includegraphics{\@ifnextchar[{\ts@includegraphics}{\ts@includegraphics[width=\checkGraphicsWidth,height=\checkGraphicsHeight,keepaspectratio]}}}
-% 
-% \def\URL#1#2{\@ifundefined{href}{#2}{\href{#1}{#2}}}
-% 
-% %%For url break
-% \def\UrlOrds{\do\*\do\-\do\~\do\'\do\"\do\-}%
-% \g@addto@macro{\UrlBreaks}{\UrlOrds}
-% 
-% \@ifundefined{quoteAttrib}
-% 	{\long\def\quoteAttrib#1{\par\raggedleft\itshape#1\unskip}}
-% 	{}
-% 
-% \@ifundefined{titlequoteAttrib}
-% 	{\long\def\titlequoteAttrib#1{\list{}{\topsep-3pt\leftmargin.5in\rightmargin0pt}%
-%   \item\relax---\upshape#1\endlist}}{}
-% 
-% \renewenvironment{quote}
-% 	{\list{}{\leftmargin.5in\rightmargin\leftmargin}%
-%   \item\relax}
-%   {\endlist}
-% 
-% \newenvironment{title-quote}
-% 	{\list{}{\fontsize{10pt}{12pt}\selectfont\leftmargin.5in\itshape\rightmargin\leftmargin}%
-%   \item\relax}
-%   {\endlist}
-% 
-% 
-% \makeatother
-% % \def\floatpagefraction{0.8} 
-% % \def\dblfloatpagefraction{0.8}
-% \def\style#1#2{#2}
-% \def\xxxguillemotleft{\fontencoding{T1}\selectfont\guillemotleft}
-% \def\xxxguillemotright{\fontencoding{T1}\selectfont\guillemotright}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-% 
-% 
-% \Journal{Phil. Trans. R. Soc. B }
-% 
-% \usepackage[nolists,nomarkers]{endfloat}
-% 
-% %%%% Article title to be placed here
+\makeatletter\if@twocolumn\PassOptionsToPackage{switch}{lineno}\else\fi\makeatother
+
+%Publisher: Royal Society
+%Template Provided By: Typeset
+
+\usepackage{amsmath,tabulary,graphicx}
+\usepackage[utf8]{inputenc}
+\long\def\ack#1{{\vskip5.5pt\noindent \fontsize{8}{11}\selectfont#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Following additional macros are required to function some 
+% functions which are not available in the class used.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{url,multirow,morefloats,floatflt,cancel,tfrupee}
+\makeatletter
+
+
+\AtBeginDocument{\@ifpackageloaded{textcomp}{}{\usepackage{textcomp}}}
+\makeatother
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage[nointegrals]{wasysym}
+\urlstyle{rm}
+\makeatletter
+
+%%%For Table column width calculation.
+\def\mcWidth#1{\csname TY@F#1\endcsname+\tabcolsep}
+
+%%Hacking center and right align for table
+\def\cAlignHack{\rightskip\@flushglue\leftskip\@flushglue\parindent\z@\parfillskip\z@skip}
+\def\rAlignHack{\rightskip\z@skip\leftskip\@flushglue \parindent\z@\parfillskip\z@skip}
+
+
+%\if@twocolumn\usepackage{dblfloatfix}\fi
+\usepackage{ifxetex}
+\ifxetex\else\if@twocolumn\usepackage{dblfloatfix}\fi\fi
+
+\AtBeginDocument{
+\expandafter\ifx\csname eqalign\endcsname\relax
+\def\eqalign#1{\null\vcenter{\def\\{\cr}\openup\jot\m@th
+  \ialign{\strut$\displaystyle{##}$\hfil&$\displaystyle{{}##}$\hfil
+      \crcr#1\crcr}}\,}
+\fi
+}
+
+%For fixing hardfail when unicode letters appear inside table with endfloat
+\AtBeginDocument{%
+  \@ifpackageloaded{endfloat}%
+   {\renewcommand\efloat@iwrite[1]{\immediate\expandafter\protected@write\csname efloat@post#1\endcsname{}}}{}%
+}%
+
+\def\BreakURLText#1{\@tfor\brk@tempa:=#1\do{\brk@tempa\hskip0pt}}
+\let\lt=<
+\let\gt=>
+\def\processVert{\ifmmode|\else\textbar\fi}
+\let\processvert\processVert
+
+\@ifundefined{subparagraph}{
+\def\subparagraph{\@startsection{paragraph}{5}{2\parindent}{0ex plus 0.1ex minus 0.1ex}%
+{0ex}{\normalfont\small\itshape}}%
+}{}
+
+These are now gobbled, so won't appear in the PDF.
+\newcommand\role[1]{\unskip}
+\newcommand\aucollab[1]{\unskip}
+  
+\@ifundefined{tsGraphicsScaleX}{\gdef\tsGraphicsScaleX{1}}{}
+\@ifundefined{tsGraphicsScaleY}{\gdef\tsGraphicsScaleY{.9}}{}
+To automatically resize figures to fit inside the text area
+\def\checkGraphicsWidth{\ifdim\Gin@nat@width>\linewidth
+	\tsGraphicsScaleX\linewidth\else\Gin@nat@width\fi}
+
+\def\checkGraphicsHeight{\ifdim\Gin@nat@height>.9\textheight
+	\tsGraphicsScaleY\textheight\else\Gin@nat@height\fi}
+
+%\def\fixFloatSize#1{}%\@ifundefined{processdelayedfloats}{\setbox0=\hbox{\includegraphics{#1}}\ifnum\wd0<\columnwidth\relax\renewenvironment{figure*}{\begin{figure}}{\end{figure}}\fi}{}}
+%\let\ts@includegraphics\includegraphics
+
+\def\inlinegraphic[#1]#2{{\edef\@tempa{#1}\edef\baseline@shift{\ifx\@tempa\@empty0\else#1\fi}\edef\tempZ{\the\numexpr(\numexpr(\baseline@shift*\f@size/100))}\protect\raisebox{\tempZ pt}{\ts@includegraphics{#2}}}}
+
+%\renewcommand{\includegraphics}[1]{\ts@includegraphics[width=\checkGraphicsWidth]{#1}}
+\AtBeginDocument{\def\includegraphics{\@ifnextchar[{\ts@includegraphics}{\ts@includegraphics[width=\checkGraphicsWidth,height=\checkGraphicsHeight,keepaspectratio]}}}
+
+\def\URL#1#2{\@ifundefined{href}{#2}{\href{#1}{#2}}}
+
+%%For url break
+\def\UrlOrds{\do\*\do\-\do\~\do\'\do\"\do\-}%
+\g@addto@macro{\UrlBreaks}{\UrlOrds}
+
+\@ifundefined{quoteAttrib}
+	{\long\def\quoteAttrib#1{\par\raggedleft\itshape#1\unskip}}
+	{}
+
+\@ifundefined{titlequoteAttrib}
+	{\long\def\titlequoteAttrib#1{\list{}{\topsep-3pt\leftmargin.5in\rightmargin0pt}%
+  \item\relax---\upshape#1\endlist}}{}
+
+\renewenvironment{quote}
+	{\list{}{\leftmargin.5in\rightmargin\leftmargin}%
+  \item\relax}
+  {\endlist}
+
+\newenvironment{title-quote}
+	{\list{}{\fontsize{10pt}{12pt}\selectfont\leftmargin.5in\itshape\rightmargin\leftmargin}%
+  \item\relax}
+  {\endlist}
+
+
+\makeatother
+\def\floatpagefraction{0.8} 
+\def\dblfloatpagefraction{0.8}
+\def\style#1#2{#2}
+\def\xxxguillemotleft{\fontencoding{T1}\selectfont\guillemotleft}
+\def\xxxguillemotright{\fontencoding{T1}\selectfont\guillemotright}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\Journal{Phil. Trans. R. Soc. B }
+
+\usepackage[nolists,nomarkers]{endfloat}
+
+%%%% Article title to be placed here
 \title{Single-World Counterfactual Inference}
 
 \author{%%%% Author details
@@ -202,11 +201,11 @@ These papers exemplify the most common problems associated with multiple-world i
 The method we describe here, single-world inference, is an adaptation of a contact-network epidemiological method called percolation \cite{miller-book}.
 Importantly, single-world inference avoids the fundamental problem of causal inference by running both arms of the counterfactual (i.e., employing the intervention and doing nothing) within a single simulation.
 Percolation models disease transmission as a network whose nodes are people, and whose edges are transmissions (i.e., the transition from susceptible to infected).
-It starts with a graph of all possible transmissions and then removes both transmissions that are impossible and transmissions that are possible but do not happen as determined by the stochastic model, this removal of edges is known as ``pruning''.
+It starts with a network of all possible transmissions and then removes both transmissions that are impossible and transmissions that are possible but do not happen as determined by the stochastic model, this removal of edges is known as ``pruning''.
 Any edges that remain after pruning transmit disease.
 
 Single-world inference expands the traditional percolation method in two important ways.
-First, it explicitly models time: in single world inference, nodes represent a person at a specific time step and thus it directly models all state changes (e.g., susceptible to infected or infected to recovered) rather than only considering transmissions.
+First, it explicitly models time: in single world inference, nodes represent a person at a specific time step and thus it directly models all state changes (e.g., susceptible to infected or infected to removed) rather than only considering transmissions.
 Second, it includes an intervention: in single-world inference, each node gets assigned multiple states (i.e., a state for each intervention), unlike the percolation model in which it is only necessary to assign one state to each node.
 As a result, in single-world inference, fewer transitions are removed than percolation would.
 
@@ -215,8 +214,9 @@ While Kenah and Miller 2011 also percolate a contact network before applying an 
 Here we outline single-world inference using an influenza outbreak as a guiding example and then present a generalized method that can be applied to a whole class of compartmental models and a diversity of intererventions.
 
 \section{Methods}
-Single-world inference can take a large class of epidemiological models to explore an outbreak trajectories with and without intervention. 
-For the purpose of this paper, we restrict our development to compartmental models, extensions to other classes of models are beyond the scope of this paper.
+Single-world inference can take a large class of epidemiological models to explore outbreak trajectories with and without intervention. 
+For the purpose of this paper, we restrict our development to compartmental models.
+Extensions to other classes of models are beyond the scope of this paper.
 Compartmental models consist of classes (or compartments) of people and describe the transitions between the different compartments.
 There are many variations on compartmental models, but we focus on models where the transitions are stochastic.
 Further, compartmental models generally describe population-level events, however most population-level models can be adapted to be written as individual-level models.
@@ -227,67 +227,82 @@ To demonstrate single-world inference, we construct an influenza example using a
 By modeling influenza transmission within a single season we do not account for loss of immunity and we assume that births and deaths are negligible.
 We allow the probability of an infectious contact between any particular susceptible-infected pair to be $\beta = 0.78$ per day and the probability of an infected individual recovering at any time step to be $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
 
-%% TABLE 1
-\begin{table}\label{table:performance}
-\caption{Space and time complexity results for a brute-force single-world inference, our single-world inference (first and second prunings), and multiple-world inference.}
-\begin{tabular}{|l|l|l|}
-  \hline
-  Task & Space Use & Time / simulation\\\hline
-  Unpruned Network & $58.4$ TB & \textemdash \\\hline
-  Prune Network (process model) & $1.73$ GB & 54 seconds \\\hline
-  Prune Network (Control Strategy) & $1.3-1.4$ KB & $16-20$ seconds \\\hline
-  Multiple-World Inference& $2.6-2.8$ KB &  22-24 seconds\\\hline
-\end{tabular}
-\end{table}
-
 %% FIGURE 1
-\begin{figure}\label{fig:pruning}
-\includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
-\caption{Diagram demonstrating pruning.  In all panels, the nodes represent people at different times.  The nodes in the same horizontal line represent a single person, moving through time.  Each node is split into three sections, representing the possibility of being susceptible (upper left, purple), infected (upper right, orange), or recovered (bottom, green).  If we know a state to be impossible, we color the corresponding section of that node grey instead of its normal color.  The green edges represent recovery, the orange edges represent infectious contact.  \textbf{a)}--\textbf{i)} show an example of pruning.  The first column represents updating possible initial values.  The second column represents removing impossible events without testing them.  Removed edges are marked with an $X$.  The third column represents testing the remaining edges based on the SIR model.  The edges we remove at this stage are also marked with an $X$.  In the final row, \textbf{j)} represents the results of the epidemic without the intervention, while \textbf{k)} represents the results of the same epidemic with an intervention removing two specific edges.}
+\begin{figure}[hp]
+% \includegraphics[width=\textwidth]{../figures/figure8} %Probably turn the coloration into a legend.
+\caption{Diagram of the steps in the pruning process.  We start with the complete network \textbf{a)}.  We prune according to the SIR model ignoring the intervention to obtain a potential network \textbf{b)}.  We then can choose to apply an intervention to obtain an intervention potential network \textbf{b${}^*$)}.  In either case, we then actualize the network \textbf{c)} or \textbf{c${}^*$)}.}
+\label{fig:outline}
 \end{figure}
 
 %% FIGURE 2
-\begin{figure}\label{fig:outline}
-\includegraphics[width=\textwidth]{../figures/figure8} %Probably turn the coloration into a legend.
-\caption{Diagram of the steps in the pruning process.  We start with the complete graph \textbf{a)}.  We prune according to the SIR model ignoring the intervention to obtain a potential network \textbf{b)}.  We then can choose to apply an intervention if we want \textbf{b${}^*$)}.  In either case, we then realize the network \textbf{c)} or \textbf{c${}^*$)}.}
+\begin{figure}[hp]
+% \includegraphics[width=\textwidth]{../figures/figure6} %Probably turn the coloration into a legend.
+\caption{Diagram demonstrating pruning a complete network to obtain a potential network.  In all panels, the nodes represent people at different times.  The nodes in the same horizontal line represent a single person, moving through time.  Each node is split into three sections, representing wether it is potentially susceptible (upper left, purple), potentially infected (upper right, orange), or potentially removed (bottom, green).  If we know a node cannot be a state, we color the corresponding section of that node grey instead of its normal color.  The green edges represent potential recovery, the orange edges represent potential transmission.  Because the edges and nodes represent potential states, we make them translucent.  We mark removed edges by making them even more translucent (as they are impossible), before removing them entirely in the next panel.  \textbf{a)}--\textbf{k)} show a step by step example of pruning a complete network to construct a potential network.  Between the first and second columns, we update possible states of the nodes.  Between the second and third columns, we prune edges incompatible with the possible states on the network.  Between the third and first columns (wrapped around), we use the SIR model to determine which potential edges would occur in the epidemic.  The edges we remove at this stage are more transparent, and then removed in the next panel.}
+\label{fig:pruning}
 \end{figure}
 
-Single-world inference begins with a network in which there is a node for each person I at each time step.
-In this example, there are three states that each node might occupy: susceptible, infected, or recovered; and two potential types of edges: transmissions or recoveries.
-At each time step, each person (node) will have a recovery edge connecting their current self to their future self in the next time step.
-Additionally at each time step, each person will have an edge connecting them to each other person in the network one time step ahead, representing an infectious contact.
-This is the complete network.
+Single-world inference begins with a network, which it prunes repeatedly to obtain the actual events that occur (Figure \ref{fig:outline}).
+The network consists of a node for each person at each time step, and directed edges between the nodes.
+In this example, there are three states that each node might have: potentially susceptible, potentially infected, and potentially removed; and two types of edges: potential transmissions and potential recoveries.
+We first prune this network using information from the initial conditions and SIR model to construct a potential network.
+We then prune the potential network using information from the intervention to construct an intervention potential network.
+The potential networks represent that will happen if they are consistent with reality.
+We finally prune both potential networks, removing inconsistencies, and recovery what actually does happen (Figure \ref{fig:outline}).
 
-From the the complete network, we begin percolating. 
-%% THIS BELONGS SOMEWHERE NOW (Figure \ref{fig:pruning}).
-To prune the network, we update the nodes based on what we know from all previous time steps.
-Although each node can potentially be susceptible, infected, or recovered, however, it is often possible to eliminate one or more states.
-%For the states we cannot rule out as impossible, we say they are possible as they may occur in the intervention case or the non-intervention case. %% THIS DOESNT ADD ANYTHING. NOT IMPOSSIBLE NODES ARE POSSIBLE... TAUTOLOGICAL? 
-However, some of these edges may be mutually exclusive.
-It is possible for a person to be susceptible (and get infected), or infected (and recover) and it might be true that we cannot rule out either possibility, but we know that it is impossible to do both in the same time step.
-Our method addresses these mutually exclusive events later. %% WHERE LATER? YOU SHOULD SAY 
-There are three ways to eliminate possible states of a node.
-First, the state of a node at time $t=0$ cannot be anything other than the initial state of that node.
-Next, anyone who cannot currently be infected, and does not have the potential to have an infectious contact between time steps, cannot be an infected node.
-Finally, anyone who would have recovered if they were infected, but cannot have an infectious contact if the were not infected (i.e., susceptible) between time steps, cannot be an infected node.
+We use these networks for figures and computation, but when we discuss them we will use more natural language.
+Instead of saying that there is a conditional tranmission edge between person $i$ at time $t$ and person $j$ at time $t+1$, we will say that person $i$ could transmit to person $j$ at time $t$.
+Instead of saying that there is a conditional recovery edge between person $i$ at time $t$ and person $i$ at time $t+1$, we will say that person $i$ could recover at time $t$.
 
-With information about the current state of the nodes, we can see that certain types of edges are impossible (e.g. a person cannot recover if they could not have been infected).
+Without any information about the epidemic or intervention we can say almost nothing: each person is potentially infectious, potentially susceptible, and potentially removed at every time.
+Additionally, each person could recover at any time, and each person could infect any other person at any time.
+We call the network that contains all of these possibilities the complete network (Figure \ref{fig:outline} a)).
+
+From the the complete network, we begin pruning.
+Starting at time $0$, we do three things at each time step: determine the potential states of each person, determine the potential transmissions and recoveries, and evaluate potential transmissions and recoveries using the SIR model.
+These steps are phrased positively, but we should actually think of this process as using additional information about the epidemic to rule out parts of the complete network.
+In the first step, we eliminate node states, in the second step we eliminate edges, and in the third we get new information about the epidemic (Figure \ref{fig:pruning}).
+
+To determine the potential states of each person, we look at their potential states at the last time step, whether they could have recovered, and whether another person could have transmitted to them.
+We then use our knowledge about the model and the intervention to eliminate possible states.
+Our initial conditions tell us that we can eliminate all but one state at time $0$.
+No one becomes susceptible, so a person cannot be susceptible if they were not susceptible at the previous time step.
+Only infected people can become removed, so a person is not removed if they could not have been infected nor removed at the previous time step.
+Only people who are transmitted to become infected, so a person is not infected if they were not previously infected and there are no potential transmissions to them.
+More than that, we know that no intervention prevents recovery, so any potential recoveries at the previous time step will happen if their conditions are met.
+This means a person potentially infected at the previous time will not remain infected if there is a potential recovery.
+We say that a person is not infected if they potentially recovered and there are not potential transmissions to them at the previous time step.
+We could potentially make other observations that would allow us to prune more nodes, but these are all we prune in this case.
+We discuss these observations more thoroughly in the general method.
+
+With information about the current state of each person, we can eliminate possible transmissions and recoveries (e.g. a person cannot recover if they could not have been infected).
 We then remove those edges.
-For transmissions, we can rule out any edge where either of the nodes at the previous time step do not have compatible states.
-For recoveries, we can rule out any edge where the person cannot be currently infected.
+We know that someone who cannot be infected does not transmit disease.
+We know that someone who cannot be susceptible cannot have disease transmitted to them.
+We know that someone who is not infected cannot recover.
 
-Finally, for the edges that have not yet been ruled out, we refer to the stochastic SIR model to determine which edges to keep.
-This includes some edges which will later be removed, as they are dependent on their conditions being satisfied (i.e., a condition of recovery is to be currently infected).
-We keep transmission edges with probability $\beta$ and recovery edges with probability $\gamma$.
-We call this the pruned network.
+At this stage, we need more information from the SIR model to proceed.
+Transmissions are part of the epidemic with probability $\beta$; recoveries are part of the epidemic with probability $\gamma$.
+Of all of the potential transmissions and recoveries, we eliminate them with the appropriate probability.
+We then repeat all three steps for each time step.
+The result is a network we a the potential network (Figure \ref{fig:outline} b)).
 
 Now that we have the pruned network, applying our intervention is fairly straightforward.
-We repeat the pruning procedure with one difference: now, instead of keeping track of potentialities, we update nodes with their actual state.
-This new graph is similar to a transmission tree, as it contains all of the events as they happen in time.
-In fact if we remove every recovery edge and any disconnected nodes, then this new graph is a transmission tree.
+We repeat the pruning procedure with one difference: instead of consulting the SIR model for information, we consult the intervention model.
+This process modifies the potential network into a second potential network containin information from both the intervention and the SIR model (Figure \ref{fig:outline} b${}^*$)).
+We could even, if we wanted to, apply another intervention on top of the first one, resulting in a potential network representing two interventions at the same time.
+
+After we have applied any interventions we want, we need to actualize the network so that it represents actual states and events instead of potential ones.
+Actualizing the network is very similar to the pruning process: we update the states of the nodes, and remove inconsistent edges.
+Starting at time $0$, we set the state of each person to their initial state.
+We then assume every potential transmission or recovery at time $0$ actually happens, which tells us everyone's state at time $1$.
+This will make some transmissions and recoveries at time $1$ inconsistent (e.g. a recovered person transmitting to someone), so we remove those states.
+We repeat this process for each time and obtain an actualized network (Figure \ref{fig:outline} c) and c${}^*$)).
+
+This new network is similar to a transmission tree, as it contains all of the events as they happen in time.
+In fact if we remove every recovery edge and any disconnected nodes, then this new newtork is a transmission tree.
 Therefore it can be used to determine the course of the epidemic.
 It is important to note that the intervention is applied after the SIR model has pruned the network.
-Indeed, as long as we have the pruned graph, it can be used multiple times for different interventions.
+Indeed, as long as we have the potential network, it can be used multiple times for different interventions.
 
 We evaluate the effects of four control measures on influenza cases averted: hand-washing, vaccination, antivirals, and a null intervention.
 We selected these example interventions to highlight different ways in which interventions can interact with single-world inference.
@@ -301,78 +316,95 @@ We run $1,000$ simulations of each type of inference, for each intervention, on 
 \subsection{General Framework}\label{subsection:general}
 
 We extend the single-world inference example to a general class of compartmental models and generic interventions by outlining the differences between the general method and the influenza example.
-Single-world inference allows a general class of compartmental models. 
-We define these as a system of difference equations with $K$ compartments governed by \[\Delta x_{j} = \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k.\]
-Where $\alpha_{i,j}$ is the probability that a person transitions from state $j$ to state $i$, and $\alpha_{i,j,k}$ is the probability that a person transitions from state $j$ to state $i$ after contacting with an individual in state $k$.
+We define these as a system of difference equations with $K$ compartments governed by 
+\begin{align*}
+\Delta x_{j} &= \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k.
+\end{align*}
+Where $\alpha_{i,j}$ is the probability that a person transitions from state $i$ to state $j$, and $\alpha_{i,j,k}$ is the probability that a person transitions from state $i$ to state $j$ after contacting with an individual in state $k$.
 Each transition is represented both as entering a compartment $\alpha > 0$, and leaving a compartment $\alpha < 0$.
 Since we are only interested in people entering new states, we only track positive values of $\alpha$.
-We can rephrase our influenza example in these new terms where,
+We can rephrase our influenza example in these new terms where
 \begin{align*}
-    x_1 &= S \\
-    x_2 &= I \\
-    x_3 &= R
+    x_1 &= S, \\
+    x_2 &= I, \\
+    x_3 &= R,
 \end{align*}
-and $\alpha_{2,1,2} = \beta $, and $\alpha_{3,2} = \gamma$ all other $\alpha_{i,j,k}$ and $\alpha_{i,j}$ are equal to $0$.
+$\alpha_{2,1,2} = \beta $, and $\alpha_{3,2} = \gamma$ all other $\alpha_{i,j,k}$ and $\alpha_{i,j}$ are equal to $0$.
 
-We construct the graph similarly to the influenza example.
-Where the nodes now have $K$ possible states, $x_1 \dots x_K$.
-For each $\alpha_{i,j,k}$ and $\alpha_{i,j}$, we have a different type of edge.
-For $\alpha_{i,j,k}$ we connect each node to the node for each other person at the next time with an edge of that type.
-We call these edges interaction edges.
-For $\alpha_{i,j}$ we connect each node the node for the same person at the next time step with an edge of that type.
-We call these edges transition edges.
+We still use a network with a node representing each person at each time.
+The nodes still have multiple potential states, but now they are $x_1 \dots x_K$ instead of $S$, $I$, and $R$.
+For each positive $\alpha_{i,j,k} $ and $\alpha_{i,j}$, we have a different type of edge.
+Since $\alpha_{i,j,k}$ edges represent contacts, we connect each person at each time to every other person at the next time.
+We call this type of edges interaction edges.
+Since $\alpha_{i,j}$ edges represent spontaneous transitions, we connect each person at each time to themselves at the next time.
+We call this type of edges transition edges.
+For either category of edge, we call $i$ the from state and $j$ the to state.
 Unlike in the influenza example, there may be multiple edges connecting the same pair of nodes.
 
-We prune the network the same way: for each time step, we update the possible states of the nodes, prune edges we do not need to test, and testing the remaining edges according to the model.
+We prune the network using the same three steps at each time step: determine potential states, determine potential edges, and consult the model for more information.
 While the steps are the same, some of the reasoning needs to be generalized.
-When updating the state of the nodes, we relied on assumptions about the intervention to let us eliminate possible states.
-We can generalize those assumptions to allow us to prune the same way.
-We only allow interventions such that that the intervention does not add any edges to the graph.
-This assumption allows us to say that if a person is not in a state, and no transition edge or interaction edge would cause them to move to that state, then they are not in that state.
-We weaken this assumption by allowing an intervention to add transitions, but only to states which the person will not leave (e.g., Removed in the SIR model).
-We require that our intervention does not remove any transition edges from the graph.
-This assumption allows us to say that if a person may be in a state, and a transition edge would cause them to leave that state at the next time step, but no transition or interaction edges would cause them to enter that state at the next time step, then that person is not in that state. %%% HUH?? NO IDEA WHAT YOU'RE SAYING HERE
+We need to generalize the assumptions that allow us to update the potential states of the nodes.
+Once we generalize those assumptions, we will use them to generate rules for eliminating potential states.
+We also need to generalize the edge elimination process for steps two and three.
+
+We make two assumptions about interventions in the general case.
+To state these assumptions, we first need two definitions.
+A compartment $i$ is terminal if no one leaves that compartment ($\alpha_{i,j,k},\alpha_{i,j} \leq 0$ for all $j,k$).
+An edge is redundant if its to state is terminal, or if it does not alter the potential state of any node.
+Our first assumption is that an intervention does not add edges that are not redundant.
+Our second assumption is that an intervention does not remove transition edges that are not redundant.
 These assumptions are more restrictive in the general case than the SIR case, but still include most common interventions.
 
-To prune the generic network, we can prune any edge associated with $\alpha_{i,j}$ if it is impossible for the source to be in state $i$ and any edge associated with $\alpha_{i,j,k}$ if it is impossible for the source to be in state $k$.
-We also prune an edge associated with $\alpha_{i,j,k}$ if it is impossible for the node representing the same person as the destination at the previous time step as the destination to be in state $i$. %%% HUH?? NO IDEA WHAT YOU'RE SAYING HERE
-For the edges that remain, we keep them with probability $\alpha_{i,j}$ or $\alpha_{i,j,k}$.
-We now have our pruned graph.
+Using these assumptions about the intervention, we can use the following pruning rules.
+A person is not in a compartment if they were not potentially in that compartment at the previous time, and could not have entered that compartment.
+A person is not in a compartment if they would have left a compartment at the previous time if they were in it, and could not have entered the compartment.
 
-We then do a second pruning to account for the intervention.
-The second pruning is almost identical to the influenza case, but there is an additional problem we might encounter.
-It is now possible that two different edges affect the same person at the same time, changing their state to two different states.
-Worse, those edges might both have their conditions met.
-As an example, in an age cohort model, a susceptible child might be infected, and become an adult the same time step .
+We group the changes to both edge pruning steps together.
+We can eliminate an interaction edge associated with $\alpha_{i,j,k}$ if $i$ is not a potential state of the source person.
+We can eliminate an interaction edge associated with $\alpha_{i,j,k}$ if $k$ is not a potential state of the target person.
+We can eliminate an interaction edge associated with $\alpha_{i,j}$ if $i$ is not a potential state of the person.
+When consulting the model, we keep an edge with probability of the associated $\alpha_{i,j}$ or $\alpha_{i,j,k}$.
+Once we have completed the three steps at each time step, we have our potential network.
+We can do our second pruning to account for our intervention in the same way as the influenza example.
+
+Our last step is to actualize the network.
+Unlike in the influenza case, it is now possible that two different edges affect the same person at the same time, changing their state to two different states.
+As an example, in an age cohort model, a susceptible child might be infected, and become an adult the same time step.
 Unfortunately, there are many ways to handle this type of conflict, and the right way depends on the model.
 In the age case, the correct answer is that both events happen, the susceptible child becomes an infected adult.
 In a different case, the answer may be to choose randomly between the two events, or that one of the events takes priority over the other (a dead adult is just dead for example).
 
-
-% FIX ME tie up paragraph.-- It doesn't help to have notes like this if you don't do them. 
-%We apply our intervention and extract the actual states in almost the same way as the influenza example, however, we need to account for an additional circumstance:
-%It is now possible that two different events affect the same person at the same time, changing their state to two different states.
-%As an example, in an age cohort model, someone might be infected, and move to a higher age state at the same time.
-%There are many reasonable ways to handle this, and the right one depends on the model.
-%In the age case, the correct answer is that both events happen.
-%In a different case, the answer may be to choose randomly between the two events, or something even more complicated.
-%%% ISN'T THIS THE EXACT SAME AS THE PARAGRAPH ABOVE? I THOUGHT YOU FIXED THIS SECTION BEFORE SENDING IT OUT? YOU SHOULD MAKE SURE TO READ EVERYTHING THROUGH BEFORE SENDING IT OUT. (I commented it out to see how much space you have left)
-
 \section{Results}
 
+%% TABLE 1
+\begin{table}
+\caption{Space and time complexity results for a brute-force single-world inference, our single-world inference (first and second prunings), and multiple-world inference.}
+\begin{tabular}{|l|l|l|}
+  \hline
+  Task & Space Use & Time / simulation\\\hline
+  Unpruned Network & $58.4$ TB & \textemdash \\\hline
+  Prune Network (process model) & $1.73$ GB & 54 seconds \\\hline
+  Prune Network (Control Strategy) & $1.3-1.4$ KB & $16-20$ seconds \\\hline
+  Multiple-World Inference& $2.6-2.8$ KB &  22-24 seconds\\\hline
+\end{tabular}
+\label{table:performance}
+\end{table}
+
 %% FIGURE 3
-\begin{figure}\label{fig:boxplots}
+\begin{figure}[hp]
 \centering
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-raw-boxplots}
 \includegraphics[width=.31\textwidth]{../figures/intervention-effects-combined-boxplots}
 \caption{\textbf{Left)} Boxplots of simulations results under the each intervention scenario.  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world estimate of cases averted for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
+\label{fig:boxplots}
 \end{figure}
 
 %% FIGURE 4
-\begin{figure}\label{fig:epicurve}
+\begin{figure}[hp]
 \centering
 \includegraphics[width=.7\textwidth]{../figures/intervention-effects-time-series-susceptible-switched.pdf}
 \caption{Time series showing the number of cases averted at each time caused by the intervention calculated using single-world inference and multiple-world inference.  We observe that single-world inference performs how you would expect the interventios to perform; cases prevented are almost always positive, and many of the cases prevented stay prevented (though not all). On the other hand, multiple-world inference generally has a very different shape, apparently possibly causing a large number of cases in the middle of the epidemic, and a lot of uncertainty surrounding the peak of the epidemic.}
+\label{fig:epicurve}
 \end{figure}
 
 We define and demonstrate single-world inference and apply it to determining the impact of three interventions on the number of cases averted.
@@ -394,7 +426,7 @@ This shows us that the number of infectious compartments, the population, number
 \section{Discussion}
 In this paper, we present a method that can reduce uncertainty and variability in the underlying process model to reflect variability only in the intervention itself.
 We demonstrate the ability of our method to factor away inter-epidemic variation via simulation and show that through precise simulation, our method avoids the issue of counterintuitive results. 
-Single-world inference is modular and can be applied to a broad class of models and interventions, simultaneously; most of which are supported by our software package.
+Additionally, our method is tractable when applied to a broad class of models and interventions, simultaneously: most of which are supported by our software package.
 
 Inherently, our method sets out to address a different question than most simulation-based methods. 
 Traditional methods simulate two completely independent epidemics in the same population, from the same parameters, with one epidemic intervened upon while the other is not. 
@@ -403,29 +435,25 @@ While the questions that traditional simulation-based method can address are vit
 Given two precisely identical epidemics what is the effect of the intervention. 
 This method precisely isolates the expected intervention impact which allows for a better comparison of interventions or a better understanding of the true differences between control programs.
 
-Additionally, our model does have some limitations.
-Some reasonable interventions are out of reach as they do not follow the assumptions we make about interventions as part of pruning.
-For a particular intervention, we can make stronger assumptions, even going so far as to run the intervention as we prune, keeping only the actual state as possible.
-We think there may be a better middle ground, one that allows more interventions, and also improves performance.
-It would be nice to be able to make probabilistic assumptions about the interventions, which would guarantee success with high probability.
-Even with these changes, interventions that fundamentally change the way the disease behaves (changes the underlying model) are beyond the scope of this method.
-
-Another set of limitations is that discrete time compartmental models are not cutting edge modeling techniques.
+Even at asking this different question, single-world inference has some inherent limitations.
+Discrete time compartmental models are not cutting edge modeling techniques.
 Our method is discrete time, but Gillespie algorithms would allow it to be extended into continuous time.
 Our method considers compartmental models, but it could be extended to network or agent based models.
-Our method also uses a fixed difference equation, a stronger limitation than we would like.
-We can construct interventions to overcome this limitation to some extent, but it could be improved.
-Moreover, to account for all of them would result in  combinatorial explosion and quickly become computationally intractable. % FIX ME: is this sentence actually true?
-%%% FOLLOW THE COMMENTS I SENT EARLIER TO COMBINE THESE TWO PARAGRAPHS INTO ONE
+Extending the method in the above ways is non-trivial, even if we know the general way to proceed.
 
-Although we present a methodology for removing process error by simulating an epidemic with and without interventions, our model is too computationally intensive to include secular changes that are not captured directly by an intervention such as the change in behavior of individuals in response to disease spread (i.e., cite Ebola). 
-These secular changes represent a combinatorial explosion of potentialities that make this method computationally impossible. 
-For example, the influenza SIR model presented here \textbf{[josh confirm this]} 18 petabytes. 
+On the other hand, there are limitations caused by our assumptions about interventions that provide no clear path forward
+Some reasonable interventions do not follow the assumptions about interventions outlined above in the general method.
+Even if the intervention does follow our assumptions, the potential network may still be computationally intractable to store for complex models, large populations, or long times.
+While we can address this concern for a particular intervention, the stronger assumptions we make, the less interventions follow them.
+Worse, even if we ignore tractability some interventions are beyond the scope of this method.
+We need to express the intervention in a way that the potential network captures, so if an intervention is too radical of a change, there is nothing we can do.
+
 Going forward, an important extension of the work at the intersection of of computer science and epidemiology is to improve upon this method such that it remains logically consistent with fewer storage requirements. 
 Interesting work remains to be done to improve our ability to make inference without continuing to significantly increase the computational power needed.
 We have developed a method for utilizing computational power to address more a precise counterfactual question about interventions. 
 Single-world inference allows us to more precisely understand the effects of interventions within the context of a single outbreak. 
-With precise understanding, we can better determine when an intervention is effective, and when it is spurious. Single-world inference also allows us to better compare interventions, and aids in choosing the best intervention from many possibilities. 
+With precise understanding, we can better determine when an intervention is effective, and when it is spurious.
+Single-world inference also allows us to better compare interventions, and aids in choosing the best intervention from many possibilities. 
 Single-world inference also mark a new way of leveraging computational resources to solve epidemiological problems.
 
 \enlargethispage{20pt}
