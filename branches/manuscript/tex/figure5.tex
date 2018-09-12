@@ -17,7 +17,7 @@
 
 %New commands
 \newcommand{\Leftscissor}{\large  X}
-\newcommand{\Largescissor}{\Huge  X}
+\newcommand{\Hugescissor}{\Huge  X}
 
 % Formatting macros:
 \tikzstyle{node}=[minimum size= .5in,circle, draw]
@@ -26,6 +26,8 @@
 \tikzset{potential/.style={opacity=.7}}
 \tikzset{actual/.style={opacity=1}}
 \tikzset{impossible/.style={opacity=.2}}
+\tikzset{y=-1cm}
+\tikzset{x=1cm}
 
 \tikzstyle{edge}=[diamond, draw]
 \tikzstyle{intervention}=[fill = intervention]
@@ -73,7 +75,7 @@
 \begin{document}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{a)}};
+  \draw (-3.5,0) node {\Huge \textbf{a)}};
 
   \draw (0,0) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P21) {};
@@ -159,14 +161,22 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-2,0) -- (-2,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{b)}};
+  \draw (-3.5,0) node {\Huge \textbf{b)}};
 
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
@@ -252,14 +262,22 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{c)}};
+  \draw (-3.5,0) node {\Huge \textbf{c)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
@@ -344,14 +362,22 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{d)}};
+  \draw (-3.5,0) node {\Huge \textbf{d)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
@@ -424,20 +450,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{e)}};
+  \draw (-3.5,0) node {\Huge \textbf{e)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -501,20 +535,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{f)}};
+  \draw (-3.5,0) node {\Huge \textbf{f)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -580,20 +622,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{g)}};
+  \draw (-3.5,0) node {\Huge \textbf{g)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -651,20 +701,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{h)}};
+  \draw (-3.5,0) node {\Huge \textbf{h)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -717,20 +775,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{i)}};
+  \draw (-3.5,0) node {\Huge \textbf{i)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -783,20 +849,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{j)}};
+  \draw (-3.5,0) node {\Huge \textbf{j)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -840,20 +914,28 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{k)}};
+  \draw (-3.5,0) node {\Huge \textbf{k)}};
   \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
   \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
   \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
   \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,recovery}] (P12) {};
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
   \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
   \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
   \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
@@ -893,14 +975,22 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{l)}};
+  \draw (-3.5,0) node {\Huge \textbf{l)}};
   \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
   \draw (0,1.5) node[node,actual,circle,fill=susceptible] (P21) {};
   \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
@@ -946,10 +1036,18 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 
 \begin{tikzpicture}
@@ -957,7 +1055,7 @@
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \draw (-1.5,5) node {\Huge \textbf{m)}};
+  \draw (-3.5,0) node {\Huge \textbf{m)}};
   \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
   \draw (0,1.5) node[node,actual,circle,fill=susceptible] (P21) {};
   \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
@@ -978,12 +1076,12 @@
   \draw (12,3) node[node,actual,circle,fill=recovery] (P34) {};
   \draw (12,4.5) node[node,actual,circle,fill=susceptible] (P44) {};
 
-  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- node[pos=.3,text=intervention]{\Largescissor} (P22);
+  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- node[pos=.3,text=intervention]{\Hugescissor} (P22);
   \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
   
   \draw[-latex,impossible,line width=1mm, color=infection] (P12) --   (P33);
   \draw[-latex,impossible,line width=1mm, color=infection] (P22) --   (P33);
-  \draw[-latex,actual,line width=1mm, color=infection] (P32) -- node[pos=.3,text=intervention]{\Largescissor} (P23);
+  \draw[-latex,actual,line width=1mm, color=infection] (P32) -- node[pos=.3,text=intervention]{\Hugescissor} (P23);
   
   \draw[-latex,actual,line width=1mm, color=recovery] (P12) -- (P13);
   \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
@@ -1003,9 +1101,17 @@
   \draw (4,6) node[rotate=90]{\Huge \dots};
   \draw (8,6) node[rotate=90]{\Huge \dots};
   \draw (12,6) node[rotate=90]{\Huge \dots};
-  \draw (14,6) node[rotate=30]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
-  \draw[-latex,line width=1mm,white!60!black] (4,-1) -- (8,-1) node[midway, below,text=black] {\textbf{Time}};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,1.5) -- (-1.75,3) node[midway, above,text=black,rotate=90] {\textbf{Population}};
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
+  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
 \end{tikzpicture}
 \end{document}

@@ -88,4 +88,4 @@ tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure
 r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf
 
 clean:
-	rm -f *.aux *.log *.pdf
+	rm -f *.aux *.log *.pdf intervention-effects-time-series-susceptible *.txt

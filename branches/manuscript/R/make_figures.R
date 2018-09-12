@@ -202,10 +202,10 @@ time_series_summary = time_series_inference %>%
 plt_sus = time_series_summary %>%
   filter(variable == 'V1') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
@@ -213,10 +213,10 @@ plt_sus = time_series_summary %>%
 plt_sus_t = time_series_summary %>%
   filter(variable == 'V1') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
@@ -224,10 +224,10 @@ plt_sus_t = time_series_summary %>%
 plt_inf = time_series_summary %>%
   filter(variable == 'V2') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   facet_grid(scenario~type) +
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
@@ -235,10 +235,10 @@ plt_inf = time_series_summary %>%
 plt_inf_t = time_series_summary %>%
   filter(variable == 'V2') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
@@ -246,10 +246,10 @@ plt_inf_t = time_series_summary %>%
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   geom_abline(slope=0,intercept=0,linetype=2) +
   facet_grid(scenario~type) +
   theme_bw() + 
@@ -258,10 +258,10 @@ plt_rec = time_series_summary %>%
 plt_rec_t = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
   ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
   facet_grid(type~scenario) +
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
