@@ -103,6 +103,8 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   char tfn[1000];
   char fn[1000];
   int var,var2;
+  int i;
+  person_t npop;
 
   // Parameters for (some) interventions:
   int* param_vector1;
@@ -139,8 +141,12 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   R2cvecint(RinitialConditions,&init,&nvar);
   ntime = R2cint(Rntime);
   ntrial = R2cint(Rntrial);
+  npop = 0;
+  for(i=0;i<nvar;++i){
+    npop = npop + init[i];
+  }
   if(RUN_DEBUG == 1){
-    Rf_warning("Simulating %d simulations over %d times.",ntime,ntrial);
+    Rf_warning("Simulating %d simulations over %d times.",ntrial,ntime);
   }
   //These may change later
   R2cstring(RreduceBeta,&reduceBeta_name);
@@ -173,8 +179,10 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
     param_susceptible = param_constant_susceptible(
       R2cint(VECTOR_ELT(RsusceptiblePars,0)),
       R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
-      R2cint(VECTOR_ELT(RsusceptiblePars,2)),
+      npop,
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,2)),
       R2cint(VECTOR_ELT(RsusceptiblePars,3)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,4)),
       1
     );
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
