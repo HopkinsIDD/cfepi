@@ -15,7 +15,7 @@ gamma = 1/mu
 beta = R0 * gamma
 npop = 4000 #For testing only
 ntime = 100
-warning("Using testing values for number of trials")
+# warning("Using testing values for number of trials")
 ntrial = 1000 #1000 for final figures
 
 output_name1 = 'output/figures0'
