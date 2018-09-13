@@ -5,7 +5,7 @@
 #include "twofunctions.h"
 
 #define CONSTRUCT_DEBUG 0
-#define RUN_DEBUG 1
+#define RUN_DEBUG 0
 
 #define IND(i,j,n) ((i) * (n) + (j))
 #define IND4(i,j,k,l,n,o,p) ((i) * (n) * (o) * (p) + (j) * (o) * (p) + (k) * (p) + (l))
