@@ -177,8 +177,8 @@ $^{2}$Department of Ecology and Evolutionary Biology, Princeton University, Prin
 \begin{multicols}{2}
 \section{Introduction}
 Dynamic models are frequently used to assess the likely impact of disease control strategies.
-These exercises range from modeling the impact of a new intervention or strategy an established pathogen [CITE], to models of the containment and control of emergent epidemics [CITE].
-While deterministic models are frequently used [CITE], stochastic simulations are increasingly common as they can account for both uncertainty in the underlying parameters and the random nature of the disease process [CITE].
+These exercises range from modeling the impact of a new intervention or strategy on an established pathogen [CITE], to models of the containment and control of emergent epidemics \cite{lessler-et-al:2016}.
+While deterministic models are frequently used \cite{fraser-et-al:2004}, stochastic simulations are increasingly common as they can account for both uncertainty in the underlying parameters and the random nature of the disease process \cite{ferguson-et-al:2003}.
 In both stochastic and deterministic models, the impact of interventions are typically determined by comparison of simulations with and without the intervention.
 
 In the deterministic setting, this comparison is straight forward, as with a given set of parameters and starting conditions the epidemic will always behave exactly the same; hence any comparison between an intervention scenario and its non-intervention ‘counterfactual’ can only be attributed to the intervention itself.
@@ -189,39 +189,56 @@ Likewise, there may be cases in the intervention scenario where large numbers ar
 If these stochastic effects are large, they may lead uncertainty intervals in effect estimates to include the intervention having no effect, or even a negative impact, even if the intervention is modeled in such a way that it can only have a beneficial effect.
 For example, the results of a study of measles vaccination strategies by Lessler et al. appears to leave open the possibility that more cases of measles could occur in a country if supplementary vaccination activities were conducted than if those campaigns had not occurred.
 Likewise, Rivers et al. appears to leave open the possibility that more cases of Ebola could occur in a country if pharmaceuticals were introduced to help patient survivability than if no pharmaeuticals were introduced.
+% Potentially find one more example.
 These effects will be exacerbated if the processes being modeled are complex or we are simultaneously sampling over parameter uncertainty.
 
 The results of this approach have a very specific interpretation: they represent the difference between what we expect to be observed in an uncontrolled epidemic compared to a completely independent epidemic where the intervention occurred (conditional on the starting conditions).
 However, what we often want to know is what would have happen had the intervention occurred in the exact same epidemic.
 This is equivalent to the problem of counterfactual inference in randomized trials and observational studies, where we take one set of individuals (or populations) as a stand in for what would have happened in another in the counterfactual situation that they had experienced some exposure.
-A number of techniques of trial design and statistical analysis have been developed to help such real world studies better approximate the true counterfactual situation ([CITE], [CITE] and [CITE] are just a few examples of the large literature on the subject).
+A number of techniques of trial design and statistical analysis have been developed to help such real world studies better approximate the true counterfactual situation (\cite{hudgens-halloran:2008,murray-et-al:2017,buchanan:2014} are just a few examples of the large literature on the subject). %Potentially find another reference than the dissertation
 However, in computational simulations it is possible to take a more exact approach.
 
-Here, we present a method for simulation of direct counterfactuals to stochastic simulations using principles borrowed from the percolation approach to epidemic simulation [CITE].
+Here, we present a method for simulation of direct counterfactuals to stochastic simulations using principles borrowed from the percolation approach to epidemic simulation \cite{miller-book}.
 We illustrate this ‘single-world’ approach using simulations of interventions against an influenza like illness, and outline how the general approach can be adapted to a wide variety of disease systems and simulation methodologies.
 
 \section{Methods}
-Single-world inference can take a large class of epidemiological models to explore outbreak trajectories with and without intervention. 
-For the purpose of this paper, we restrict our development to compartmental models.
-Extensions to other classes of models are beyond the scope of this paper.
-Compartmental models consist of classes (or compartments) of people and describe the transitions between the different compartments.
-There are many variations on compartmental models, but we focus on models where the transitions are stochastic.
-Further, compartmental models generally describe population-level events, however most population-level models can be adapted to be written as individual-level models.
-In this paper, we use individual-level compartmental models because often the only information we have on an intervention is at the individual-level.
+\subsection*{Overall Approach}
+%% Key points
+Our proposed method separates modeling the epidemic and the intervention so we can apply them sequentially ensuring the intervention and non-intervention results come from the same epidemic.
+In order to separate the epidemic from the intervention, we need to model events that occur in the intervention case, but not the non-intervention case, and vice versa.
+Because some of the events we model will not happen in at least one case, any appropriate modeling approach must consider potential events rather than actual events.
 
-\subsection{Example: Influenza}
-To demonstrate single-world inference, we construct an influenza example using a standard Susceptible, Infected, Removed compartmental model.
-By modeling influenza transmission within a single season we do not account for loss of immunity and we assume that births and deaths are negligible.
-We allow the probability of an infectious contact between any particular susceptible-infected pair to be $\beta = 0.78$ per day and the probability of an infected individual recovering at any time step to be $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
+%% Graph
+Our approach begins with an implicit set of all possible events, which we think of as a large graph where each edge is an event, and each node is a person at a time. %The model implies this
+We call this graph the complete graph
+The underlying epidemic model assigns each event (edge) a probability of occuring conditional on the states of people at the previous time for any potential intervention.
+We could stochastically determine whether each event occurs under those same conditions with and without the intervention, removing those events which do not occur.
+We call the remaining graph the epidemic potential graph.
+We can then apply initial conditions to determine which edges actually occur, and the state of each person at each time.
+We call this graph the realized epidemic graph.
+
+%% Pruning
+If the above approach were computationally feasible, we would apply it and be finished.
+However the method is intractable except in small populations for simple models (more detail in results).
+By making assumptions about the way interventions work, we are able to prune enough potential events for the problem to become tractable.
+
+\subsection*{General Framework}
+We define a general compartmental model as a system of difference equations with $K$ compartments governed by 
+\begin{align*}
+\Delta x_{j} &= \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k.
+\end{align*}
+We can interpret $\alpha_{i,j} > 0$ as the probability a person transitions to state $j$ conditional on being in state $i$, and $\alpha_{i,j,k} > 0$ as the probability that a person transitions to state $j$ conditional on being in state $i$ another specific person being in state $k$.
+Then, these $\alpha_{i,j}$ and $\alpha_{i,j,k}$ each represent a type of event corresponding to several edges in the graph: $\alpha_{i,j,k}$ edges connect a person at one time to a different person at the next time, and $\alpha_{i,j}$ edges connect a person at one time to the same person at the next time.
+Each person also has the potential to be in each of the $K$ compartments at each time, and we use the nodes of our graph to keep track of this.
+%%%% Explanation of how we make edges out of them probably seems right about now.
+
+%% Pruning Overview
+To construct the epidemic potential graph, we prune the complete graph by applying three steps at each time: we prune events that deterministically cannot occur; we stochastically prune the remaining events according to the model; and we eliminate potential states from the nodes according to our assumptions (Figure \ref{fig:pruning}).
+If we make no assumptions about pruning, then this collapses back to the method presented in the overview and any potential intervention is allowed.
+If we assume that each node only has one potential state, its actual state, then this method collapses back to the compartmental model presented above and no intervention is allowed.
+We want assumptions general enough to admit interventions of interest, but not so general the problem becomes intractable.
 
 %% FIGURE 1
-\begin{figure}[hp]
-\includegraphics[width=\textwidth]{../figures/figure8.pdf}
-\caption{\textbf{Diagram of the steps in the pruning process.}  We start with the complete network \textbf{a)}.  We prune according to the SIR model ignoring the intervention to obtain a potential network \textbf{b)}.  We then can choose to apply an intervention to obtain an intervention potential network \textbf{b${}^*$)}.  In either case, we then actualize the network \textbf{c)} or \textbf{c${}^*$)}.}
-\label{fig:outline}
-\end{figure}
-
-%% FIGURE 2
 \begin{figure}[hp]
 \includegraphics[width=\textwidth]{../figures/figure6.pdf}
 \caption{\textit{‘Single-world’ simulation process.}
@@ -237,6 +254,16 @@ We allow the probability of an infectious contact between any particular suscept
 }
 \label{fig:pruning}
 \end{figure}
+
+%% Pruning assumptions
+When pruning we assume that interventions do not add any events to the graph, do not alter the initial conditions, and do not remove events associated with $\alpha_{i,j}$ from the graph.
+As stated, these assumptions are too strong, and prevent many standard interventions (vaccination, for example, adds transitions to a vaccinated compartment).
+We \emph{only} use these assumptions to say eventst deterministically cannot happen, and so we only need them to hold to the extent that they remove edges from the graph.
+Adding a transition to a state that a person never leaves, or a state that was otherwise among their potential states does not cause any new events to be deterministically impossible.
+
+To construct the realized epidemic graph from the epidemic potential graph, we prune the epidemic potential graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:acutalizing}).
+The intervention plays two roles here, both preventing some events from happening in step $2$, and altering the states of individuals directly in step $3$.
+Altering the states of individuals is equivalent to adding new events to the graph, and therefore restricted by our assumptions above.
 
 %% FIGURE 1
 \begin{figure}[hp]
@@ -256,13 +283,15 @@ We allow the probability of an infectious contact between any particular suscept
 \label{fig:actualizing}
 \end{figure}
 
-Single-world inference begins with a network, which it prunes repeatedly to obtain the actual events that occur (Figure \ref{fig:outline}).
-The network consists of a node for each person at each time step, and directed edges between the nodes.
-In this example, there are three states that each node might have: potentially susceptible, potentially infected, and potentially removed; and two types of edges: potential transmissions and potential recoveries.
-We first prune this network using information from the initial conditions and SIR model to construct a potential network.
-We then prune the potential network using information from the intervention to construct an intervention potential network.
-The potential networks represent that will happen if they are consistent with reality.
-We finally prune both potential networks, removing inconsistencies, and recovery what actually does happen (Figure \ref{fig:outline}).
+At this stage, we also need to account for the possibility of two conflicting events occuring (e.g. a person may become infected and grow older in an age cohort model).
+In some cases the events interact (the person grows older and is infected), in other cases one event takes precedence over the other (a person who dies and gets infected is dead).
+It is up to the modeler to account for these cases, and determine what should happen.
+
+\subsection*{Influenza Example}
+To demonstrate single-world inference, we construct an influenza example using a standard Susceptible (S), Infected (I), Immune (R) compartmental model.
+By modeling influenza transmission within a single season we do not account for loss of immunity and we assume that births and deaths are negligible.
+We allow the probability of an infectious contact between any particular susceptible-infected pair to be $\beta = 0.78$ per day and the probability of an infected individual recovering at any time step to be $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
+
 
 We use these networks for figures and computation, but when we discuss them we will use more natural language.
 Instead of saying that there is a conditional tranmission edge between person $i$ at time $t$ and person $j$ at time $t+1$, we will say that person $i$ could transmit to person $j$ at time $t$.
@@ -409,8 +438,8 @@ In a different case, the answer may be to choose randomly between the two events
 %% FIGURE 3
 \begin{figure}
 \centering
-\includegraphics[width=.31\textwidth]{../figures/intervention-effects-raw-boxplots}
-\includegraphics[width=.31\textwidth]{../figures/intervention-effects-combined-boxplots}
+\includegraphics[width=.31\textwidth]{../figures/intervention-effects-raw-boxplots-cropped}
+\includegraphics[width=.31\textwidth]{../figures/intervention-effects-combined-boxplots-cropped}
 \caption{\textbf{Left)} \textbf{Boxplots of simulations results under the each intervention scenario.}  Notice that all of the boxplots overlap, which implies that from the population perspective, the effects of the interventions are all insignificant.  \textbf{Right)} The single-world estimate of cases averted for each intervention scenario.  Unlike the right hand figure, very few of the boxplots overlap with The null intervention.}
 \label{fig:boxplots}
 \end{figure}
@@ -418,7 +447,7 @@ In a different case, the answer may be to choose randomly between the two events
 %% FIGURE 4
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{../figures/intervention-effects-time-series-susceptible-switched.pdf}
+\includegraphics[width=\textwidth]{../figures/intervention-effects-time-series-susceptible-switched-cropped.pdf}
 \caption{Time series showing the number of cases averted at each time caused by the intervention calculated using single-world inference and multiple-world inference.  We observe that single-world inference performs how you would expect the interventios to perform; cases prevented are almost always positive, and many of the cases prevented stay prevented (though not all). On the other hand, multiple-world inference generally has a very different shape, apparently possibly causing a large number of cases in the middle of the epidemic, and a lot of uncertainty surrounding the peak of the epidemic.}
 \label{fig:epicurve}
 \end{figure}
@@ -492,9 +521,8 @@ Approval of the final manuscript: JK, LTK, CJM, and JL}
 \ack{Insert acknowledgment text here.}
 \end{multicols}
 
-\begin{multicols}{3}
 \bibliographystyle{RS}
+\begin{multicols}{3}
 \bibliography{bibliography}
 \end{multicols}
-\twocolumn
 \end{document}
