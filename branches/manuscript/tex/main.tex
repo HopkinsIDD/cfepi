@@ -187,14 +187,14 @@ Typically, two sets of simulations are conducted, one with the intervention and 
 Because these are independent sets of simulations, there may be some simulations in the non-intervention scenario where the disease dies off quickly due to random chance, and fewer cases occur than the majority of intervention simulations.
 Likewise, there may be cases in the intervention scenario where large numbers are infected through sheer ‘bad luck’ for the virtual populations involved.
 If these stochastic effects are large, they may lead uncertainty intervals in effect estimates to include the intervention having no effect, or even a negative impact, even if the intervention is modeled in such a way that it can only have a beneficial effect.
-For example, the results of a study of measles vaccination strategies by Lessler et al. appears to leave open the possibility that more cases of measles could occur in a country if supplementary vaccination activities were conducted than if those campaigns had not occurred.
-Likewise, Rivers et al. appears to leave open the possibility that more cases of Ebola could occur in a country if pharmaceuticals were introduced to help patient survivability than if no pharmaeuticals were introduced \cite{rivers-et-al:2014}.
+For example, the results of a study of measles vaccination strategies by Lessler et al. appears to leave open the possibility that more cases of measles could occur in a country if supplementary vaccination activities were conducted than if those campaigns had not occurred \cite{lessler-et-al:2016}.
+Likewise, Rivers et al. is consistent with low coverage of pharmaceuticals causing additional cases of Ebola when compared to no coverage, even though the model assumes they have an effect \cite{rivers-et-al:2014}.
 % Potentially find one more example.
 These effects will be exacerbated if the processes being modeled are complex or we are simultaneously sampling over parameter uncertainty.
 
-The results of this approach have a very specific interpretation: they represent the difference between what we expect to be observed in an uncontrolled epidemic compared to a completely independent epidemic where the intervention occurred (conditional on the starting conditions).
+The results of this independent simulation approach have a very specific interpretation: they represent the difference between what we expect to be observed in an uncontrolled epidemic compared to a completely independent epidemic where the intervention occurred (conditional on the starting conditions).
 However, what we often want to know is what would have happen had the intervention occurred in the exact same epidemic.
-This is equivalent to the problem of counterfactual inference in randomized trials and observational studies, where we take one set of individuals (or populations) as a stand in for what would have happened in another in the counterfactual situation that they had experienced some exposure.
+This is equivalent to the problem of counterfactual inference in randomized trials and observational studies, where we take one set of individuals (or populations) as a stand in for what would have happened in the counterfactual situation that they had experienced some exposure.
 A number of techniques of trial design and statistical analysis have been developed to help such real world studies better approximate the true counterfactual situation (\cite{hudgens-halloran:2008,murray-et-al:2017,buchanan:2014} are just a few examples of the large literature on the subject). %Potentially find another reference than the dissertation
 However, in computational simulations it is possible to take a more exact approach.
 
@@ -209,13 +209,14 @@ In order to separate the epidemic from the intervention, we need to model events
 Because some of the events we model will not happen in at least one case, any appropriate modeling approach must consider potential events rather than actual events.
 
 %% Graph
+%% MAKE EDGES CLEARER HERE
 Our approach begins with an implicit set of all possible events, which we think of as a large graph where each edge is an event, and each node is a person at a time. %The model implies this
 We call this graph the complete graph.
 The underlying epidemic model assigns each event (edge) a probability of occuring conditional on the states of people at the previous time for any potential intervention.
 We could stochastically determine whether each event occurs under those same conditions with and without the intervention, removing those events which do not occur.
-We call the remaining graph the epidemic potential graph.
+We call the remaining graph the [epidemic potential] graph.
 We can then apply initial conditions to determine which events actually occur, and the state of each person at each time.
-We call this graph the realized epidemic graph.
+We call this graph the [realized epidemic] graph.
 
 %% Pruning
 If the above approach were computationally feasible, we would apply it and be finished.
@@ -233,57 +234,50 @@ Each person also has the potential to be in each of the $K$ compartments at each
 %%%% Explanation of how we make edges out of them probably seems right about now.
 
 %% Pruning Overview
-To construct the epidemic potential graph, we prune the complete graph by applying three steps at each time: we prune events that deterministically cannot occur; we stochastically prune the remaining events according to the model; and we eliminate potential states from the nodes according to our assumptions (Figure \ref{fig:pruning}).
-If we make no assumptions about pruning, then this collapses back to the method presented in the overview and any potential intervention is allowed.
-If we assume that each node only has one potential state, its actual state, then this method collapses back to the compartmental model presented above and no intervention is allowed.
-We want assumptions general enough to admit interventions of interest, but not so general the problem becomes intractable.
+To construct the [epidemic potential] graph, we prune the complete graph by applying three steps at each time: we prune events with conditions we know cannot be satisfied (a person who cannot be infected definitely does not recover); we stochastically prune the remaining events according to the model; and we eliminate potential states from the nodes according to our assumptions detailed below (Figure \ref{fig:pruning}).
+If we make no assumptions about the intervention, then we cannot eliminate any potential states from the nodes, our solution reduces to the method presented in the overview and any potential intervention is allowed.
+Conversely, if we assume that the only potential state for each node is its actual state, then we can eliminate all but one potential state from the nodes, our solution reduces to a standard compartmental model, and no potential interventions are allowed.
+We present assumptions somewhere in between: general enough to admit interventions of interest, but not so general to make the problem intractable.
 
 %% FIGURE 1
 \begin{figure}[hp]
 \includegraphics[width=\textwidth]{../figures/figure6.pdf}
 \caption{\textit{‘Single-world’ simulation process.}
   To simulate an initial epidemic and interventions, we start with a (implicit) graph where each node represents the possible states a person at particular time in the epidemic and edges represent possible events that can change a nodes state (a).
-  In the above example, a person can be susceptible (purple pie slice), infectious (orange) or immune (green), and the possible events are infection (orange arrows) and recovery (green arrows).
-  We start by assigning each individual in the population a state at time 0 (b), here infecting person 1.
-  We next remove all edges that are deterministically impossible based on the initial state (c).
+  In the above example, a person $p_i$ can be susceptible (purple pie slice), infectious (orange) or immune (green), and the possible events are infection (orange arrows) and recovery (green arrows).
+  We start by assigning each individual in the population a state at time $t_0$ (b), here infecting $p_1$.
+  We next remove all edges with conditions we know are not satisfied based on the initial state (c).
   We then prune those edges stochastically selected not to occur by our underlying infection model (d).
-  The possible states of each person for time 1 based on the edges still existing in the graph, so each person’s set of potential states encompasses those that could exist if each of the previous set of events did or did not exist (e).
-  We now repeat steps c-e for events between time 1 and time 2 (f-h), and times 2 and 3 (i-k) and so on.
-  Note that when we prune the edges between steps 1 and 2 (i) we still keep the those for persons 1 and 2 infecting person 3, even though person 3 has already been infected, because susceptibility is still a possible state for person 3 at time 2 in an intervention scenario (i.e., elimination of event edges could lead to a scenario where person 3 is susceptible at time 2).
+  The possible states of each person at $t_1$ based on the edges still existing in the graph, so each person’s set of potential states encompasses those that could exist if each of the previous set of events did or did not exist (e).
+  We now repeat steps c-e for events between $t_0$ and $t_1$ (f-h), $t_1$ and $t_2$ times 2 and 3 (i-k) and so on.
+  Note that when we prune the edges with unattainable conditions, (i) we still keep the those for $p_1$ and $p_2$ infecting $p_3$, even though $p_3$ was potentially infected at $t_1$, because susceptibility is still a possible state for $p_3$ at $t_2$ in an intervention scenario (i.e., removing the infection event at $t_1$ could lead to a scenario where $p_3$ is susceptible at $t_2$.)
   This final [potential epidemic] graph can then be used to obtain simulated epidemics with and without interventions (see Figure \ref{fig:actualizing}).
 }
 \label{fig:pruning}
 \end{figure}
 
-%% Pruning assumptions
-%% This paragraph is not great, but i'm not sure how to fix it currently.
-%% The goal is to introduce the strong pruning assumptions: do not alter the initial conditions, do not remove $\alpha_{i,j}$ edges, and do not add edges.
-%% These assumptions are not our actual assumptions, but we pretend they are.
-%% Our actual assumptions are that the pruned graph for the intervention will have all the same edges as the graph that we get with this assumption ^^.
-%% This allows us to add terminal transitions, and transition into a state they would already have been able to be in. (We use the first of these but not the second).
-When pruning, we assume that interventions do not add any events to the graph, do not alter the initial conditions, and do not remove events associated with $\alpha_{i,j}$ from the graph.
-As stated, these assumptions are too strong, and prevent many standard interventions (vaccination, for example, adds transitions to a vaccinated compartment).
-We \emph{only} use these assumptions to say events deterministically cannot happen, and so we only require that 
-Adding a transition to a state that a person never leaves, or a state that was otherwise among their potential states does not cause any new events to be deterministically impossible.
+When pruning, we remove edges assuming that interventions do not add any events to the graph, do not alter the initial conditions, and do not remove events associated with $\alpha_{i,j}$ from the graph.
+However, many interventions would not meet these assumptions (e.g. vaccination), so when choosing interventions we relax the assumption and permit an intervention to add an event or alters initial conditions as long as that addition never adds events to the pruned graph.
+In the case of vaccination, we alter the initial conditions so some individuals start vaccinated, but because they will never stop being vaccinated, and so no new potential events occur.
+We can always add events that transition a person to a state they will never leave, or to one of their potential states.
 
-To construct the realized epidemic graph from the epidemic potential graph, we prune the epidemic potential graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:actualizing}).
+To construct the [realized epidemic] graph from the [epidemic potential] graph, we prune the [epidemic potential] graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:actualizing}).
 The intervention plays two roles here, both preventing some events from happening in step $2$, and altering the states of individuals directly in step $3$.
 Altering the states of individuals is equivalent to adding new events to the graph, and therefore restricted by our assumptions above.
 
 %% FIGURE 2
 \begin{figure}[hp]
-\includegraphics[width=\textwidth]{../figures/figure10.pdf}
+\includegraphics[width=\textwidth]{../figures/figure11.pdf}
 \caption{\textit{‘Single-world’ simulation process (continued).}
-  To obtain a simulated epidemic including a potential intervention, we start with a potential epidemic graph (a) (see Figure \ref{fig:pruning} for how to create a epidemic potential graph).
+  To obtain simulated epidemics, we start with a potential epidemic graph (a) (see Figure \ref{fig:pruning} for how to create a [epidemic potential] graph).
   In the above example, a person can be susceptible (purple pie slice), infectious (orange) or immune (green), and the possible events are infection (orange arrows) and recovery (green arrows). %Potentially remove this
-  There is only one possible state at time $0$, so we set the true state of each node to that possible state (b).
-  We next remove all edges that are impossible based on the actual state (c). %This will never actually do anything, so could remove
-  We then prune those edges stochastically selected not to occur by our underlying intervention model (d).
-  The actual state of each person for time $1$ is the the color of any incoming edges, or its previous state if there are no incoming edges.
-  We also allow the intervention to change the actual state of any node at this stage (e).
-  We now repeat steps c-e for events between time 1 and time 2 (f-h), and times 2 and 3 (i-k) and so on.
-  This final [epidemic] graph can be used to extract our outcome of interest.
-  Any epidemic graphs made from the same epidemic potential graph represent the results of different interventions in a `single-world'.
+  In order to measure the impact of the intervention on the epidemic, we will use the potential epidemic graph to construct two epidemics: one uncontrolled (left) one with intervention (right).
+  We start by setting the actual state of each person at time $t_0$ to their initial condition, and then allowing the intervention to modify the state of each person (b,c).
+  We then prune edges between $t_0$ and $t_1$: removing inconsistent edges and allowing the intervention to stochastically remove edges.
+  We then use those edges to determine the actual state of each person at $t_1$ (d,e).
+  We repeat the process for times $t_2$ (f,g), $t_3$ (h,i), and so on.
+  This final [realized epidemic] graph can be used to extract our outcome of interest.
+  Any [realized epidemic] graphs made from the same [epidemic potential] graph represent the results of different interventions in a `single-world'.
 }
 \label{fig:actualizing}
 \end{figure}
@@ -294,7 +288,7 @@ It is up to the modeler to account for these cases, and determine what should ha
 
 %% Missing from this section: Realized epidemic graph includes a transmission tree as a subgraph, and contains the case counts
 %% This sentence below should go somewhere
-%We can obtain many quantities of interest from the realized epidemic graph, including transmission trees, compartment populations over time, and anything else you can get from an individual SIR level model.
+%We can obtain many quantities of interest from the [realized epidemic] graph, including transmission trees, compartment populations over time, and anything else you can get from an individual SIR level model.
 
 \subsection*{Influenza Example}
 To demonstrate single-world inference, we construct an influenza example using a standard Susceptible (S), Infected (I), Immune (R) compartmental model.

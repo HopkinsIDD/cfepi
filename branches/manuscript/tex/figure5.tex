@@ -1,3 +1,7 @@
+% DONE use subscripts instead of t=1 etc
+% DONE Remove population arrow
+% 
+
 % tikzpic.teP
 \documentclass[crop,tikz]{standalone}% 'crop' is the default for v1.0, before it was 'preview'
 
@@ -35,6 +39,7 @@
 \tikzstyle{recovery}=[fill = recovery]
 
 \makeatletter
+%% Modifiecd from stack exchange https://tex.stackexchange.com/questions/55594/tikz-two-colored-circle-split
 \tikzset{circle split part fill/.style  args={#1,#2}{%
     alias=tmp@name, % Jake's idea !!
     postaction={%
@@ -52,6 +57,7 @@
  \makeatother  
  
  \makeatletter
+%% Modifiecd from stack exchange https://tex.stackexchange.com/questions/55594/tikz-two-colored-circle-split
 \tikzset{circle tri split part fill/.style  args={#1,#2,#3}{%
     alias=tmp@name, % Jake's idea !!
     postaction={%
@@ -164,11 +170,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-2,0) -- (-2,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -265,11 +270,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -365,11 +369,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -453,11 +456,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -538,11 +540,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -625,11 +626,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -704,11 +704,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -778,11 +777,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -852,11 +850,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -897,10 +894,10 @@
 
   \draw[-latex,impossible,line width=1mm, color=recovery] (P33) --   (P34);
   \draw[-latex,impossible,line width=1mm, color=infection] (P33) --  (P24);
-  \draw[-latex,impossible,line width=1mm, color=infection] (P23) --  (P44);
+  \draw[-latex,impossible,line width=1mm, color=infection] (P33) -- (P44);
   
   \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P33) -- (P44);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) --  (P44);
   
   \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
 
@@ -917,11 +914,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -961,7 +957,7 @@
   \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
 
   \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P33) -- (P44);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
   
   \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
 
@@ -978,11 +974,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -1022,7 +1017,7 @@
   \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
 
   \draw[-latex,impossible,line width=1mm, color=infection] (P23) --  (P34);
-  \draw[-latex,impossible,line width=1mm, color=infection] (P33) --  (P44);
+  \draw[-latex,impossible,line width=1mm, color=infection] (P23) --  (P44);
   
   \draw[-latex,impossible,line width=1mm, color=recovery] (P23) --  (P24);
 
@@ -1039,11 +1034,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
@@ -1087,7 +1081,7 @@
   \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
 
   \draw[-latex,impossible,line width=1mm, color=infection] (P23) --   (P34);
-  \draw[-latex,impossible,line width=1mm, color=infection] (P33) --   (P44);
+  \draw[-latex,impossible,line width=1mm, color=infection] (P23) --   (P44);
   
   \draw[-latex,impossible,line width=1mm, color=recovery] (P23) --   (P24);
 
@@ -1104,11 +1098,10 @@
   \draw (14,6) node[rotate=150]{\Huge \dots};
   %% Legend things
   \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
-  \draw (0 ,6.5) node[below,text=black] {\Huge $t=0$};
-  \draw (4 ,6.5) node[below,text=black] {\Huge $t=1$};
-  \draw (8 ,6.5) node[below,text=black] {\Huge $t=2$};
-  \draw (12,6.5) node[below,text=black] {\Huge $t=3$};
-  \draw[-latex,line width=1mm,white!60!black] (-1.75,0) -- (-1.75,4.5) node[midway,above,rotate=90,text=black] {\Huge \textbf{Population}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
   \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
   \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
   \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
