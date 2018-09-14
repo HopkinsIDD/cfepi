@@ -3,8 +3,8 @@ options(warn=1)
 source("R/intervention_params.R")
 ## antivirals
 coverage=.25
-sick_reduction = 16.8/24 #When it works reduces days infected by 1.5
-rate = (1/(mu - sick_reduction) - gamma)/(1-gamma) * prop
+sick_reduction = 16.8/24 #When it works reduces infection by 16.8 hours
+rate = (1/(mu - sick_reduction) - gamma)/(1-gamma)
 beta_pars <- list()
 move_to = 2
 move_from = 1

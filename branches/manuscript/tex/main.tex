@@ -210,11 +210,11 @@ Because some of the events we model will not happen in at least one case, any ap
 
 %% Graph
 Our approach begins with an implicit set of all possible events, which we think of as a large graph where each edge is an event, and each node is a person at a time. %The model implies this
-We call this graph the complete graph
+We call this graph the complete graph.
 The underlying epidemic model assigns each event (edge) a probability of occuring conditional on the states of people at the previous time for any potential intervention.
 We could stochastically determine whether each event occurs under those same conditions with and without the intervention, removing those events which do not occur.
 We call the remaining graph the epidemic potential graph.
-We can then apply initial conditions to determine which edges actually occur, and the state of each person at each time.
+We can then apply initial conditions to determine which events actually occur, and the state of each person at each time.
 We call this graph the realized epidemic graph.
 
 %% Pruning
@@ -256,16 +256,21 @@ We want assumptions general enough to admit interventions of interest, but not s
 \end{figure}
 
 %% Pruning assumptions
-When pruning we assume that interventions do not add any events to the graph, do not alter the initial conditions, and do not remove events associated with $\alpha_{i,j}$ from the graph.
+%% This paragraph is not great, but i'm not sure how to fix it currently.
+%% The goal is to introduce the strong pruning assumptions: do not alter the initial conditions, do not remove $\alpha_{i,j}$ edges, and do not add edges.
+%% These assumptions are not our actual assumptions, but we pretend they are.
+%% Our actual assumptions are that the pruned graph for the intervention will have all the same edges as the graph that we get with this assumption ^^.
+%% This allows us to add terminal transitions, and transition into a state they would already have been able to be in. (We use the first of these but not the second).
+When pruning, we assume that interventions do not add any events to the graph, do not alter the initial conditions, and do not remove events associated with $\alpha_{i,j}$ from the graph.
 As stated, these assumptions are too strong, and prevent many standard interventions (vaccination, for example, adds transitions to a vaccinated compartment).
-We \emph{only} use these assumptions to say eventst deterministically cannot happen, and so we only need them to hold to the extent that they remove edges from the graph.
+We \emph{only} use these assumptions to say events deterministically cannot happen, and so we only require that 
 Adding a transition to a state that a person never leaves, or a state that was otherwise among their potential states does not cause any new events to be deterministically impossible.
 
 To construct the realized epidemic graph from the epidemic potential graph, we prune the epidemic potential graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:acutalizing}).
 The intervention plays two roles here, both preventing some events from happening in step $2$, and altering the states of individuals directly in step $3$.
 Altering the states of individuals is equivalent to adding new events to the graph, and therefore restricted by our assumptions above.
 
-%% FIGURE 1
+%% FIGURE 2
 \begin{figure}[hp]
 \includegraphics[width=\textwidth]{../figures/figure10.pdf}
 \caption{\textit{‘Single-world’ simulation process (continued).}
@@ -287,137 +292,24 @@ At this stage, we also need to account for the possibility of two conflicting ev
 In some cases the events interact (the person grows older and is infected), in other cases one event takes precedence over the other (a person who dies and gets infected is dead).
 It is up to the modeler to account for these cases, and determine what should happen.
 
+%% Missing from this section: Realized epidemic graph includes a transmission tree as a subgraph, and contains the case counts
+%% This sentence below should go somewhere
+%We can obtain many quantities of interest from the realized epidemic graph, including transmission trees, compartment populations over time, and anything else you can get from an individual SIR level model.
+
 \subsection*{Influenza Example}
 To demonstrate single-world inference, we construct an influenza example using a standard Susceptible (S), Infected (I), Immune (R) compartmental model.
 By modeling influenza transmission within a single season we do not account for loss of immunity and we assume that births and deaths are negligible.
 We allow the probability of an infectious contact between any particular susceptible-infected pair to be $\beta = 0.78$ per day and the probability of an infected individual recovering at any time step to be $\gamma = 0.44$ per day \cite{forsberg-white-et-al:2009}.
 
-
-We use these networks for figures and computation, but when we discuss them we will use more natural language.
-Instead of saying that there is a conditional tranmission edge between person $i$ at time $t$ and person $j$ at time $t+1$, we will say that person $i$ could transmit to person $j$ at time $t$.
-Instead of saying that there is a conditional recovery edge between person $i$ at time $t$ and person $i$ at time $t+1$, we will say that person $i$ could recover at time $t$.
-
-Without any information about the epidemic or intervention we can say almost nothing: each person is potentially infectious, potentially susceptible, and potentially removed at every time.
-Additionally, each person could recover at any time, and each person could transmit to any other person at any time.
-We call the network that contains all of these possibilities the complete network (Figure \ref{fig:outline} a)).
-
-From the the complete network, we begin pruning.
-Starting at time $0$, we do three things at each time step: determine the potential states of each person, determine the potential transmissions and recoveries, and evaluate potential transmissions and recoveries using the SIR model.
-These steps are phrased positively, but we should actually think of this process as using additional information about the epidemic to rule out parts of the complete network.
-In the first step, we eliminate node states, in the second step we eliminate edges, and in the third we get new information about the epidemic (Figure \ref{fig:pruning}).
-
-To determine the potential states of each person, we look at their potential states at the last time step, whether they could have recovered, and whether another person could have transmitted to them.
-We then use our knowledge about the model and the intervention to eliminate possible states.
-Our initial conditions tell us that we can eliminate all but one state at time $0$.
-No one becomes susceptible, so a person cannot be susceptible if they were not susceptible at the previous time step. %This is still confusing.
-Only infected people can become removed, so a person is not removed if they could not have been infected nor removed at the previous time step.
-Only people who are transmitted to become infected, so a person is not infected if they were not previously infected and there are no potential transmissions to them.
-More than that, we know that no intervention prevents recovery, so any potential recoveries at the previous time step will happen if their conditions are met.
-This means a person potentially infected at the previous time will not remain infected if there is a potential recovery.
-We say that a person is not infected if they potentially recovered and there are not potential transmissions to them at the previous time step.
-We could potentially make other observations that would allow us to prune more nodes, but these are all we prune in this case.
-We discuss these observations more thoroughly in the general method.
-
-With information about the current state of each person, we can eliminate potential transmissions and potential recoveries (e.g. a person cannot recover if they could not have been infected).
-We then remove those edges.
-We know that someone who cannot be infected does not transmit disease.
-We know that someone who cannot be susceptible cannot have disease transmitted to them.
-We know that someone who is not infected cannot recover.
-
-At this stage, we need more information from the SIR model to proceed.
-Transmissions are part of the epidemic with probability $\beta$; recoveries are part of the epidemic with probability $\gamma$.
-Of all of the potential transmissions and recoveries, we eliminate them with the appropriate probability.
-We then repeat all three steps for each time step.
-The result is a network we a the potential network (Figure \ref{fig:outline} b)).
-
-Now that we have the pruned network, applying our intervention is fairly straightforward.
-We repeat the pruning procedure with one difference: instead of consulting the SIR model for information, we consult the intervention model.
-This process modifies the potential network into a second potential network containin information from both the intervention and the SIR model (Figure \ref{fig:outline} b${}^*$)).
-We could even, if we wanted to, apply another intervention on top of the first one, resulting in a potential network representing two interventions at the same time.
-
-After we have applied any interventions we want, we need to actualize the network so that it represents actual states and events instead of potential ones.
-Actualizing the network is very similar to the pruning process: we update the states of the nodes, and remove inconsistent edges.
-Starting at time $0$, we set the state of each person to their initial state.
-We then assume every potential transmission or recovery at time $0$ actually happens, which tells us everyone's state at time $1$.
-This will make some transmissions and recoveries at time $1$ inconsistent (e.g. a recovered person transmitting to someone), so we remove those states.
-We repeat this process for each time and obtain an actualized network (Figure \ref{fig:outline} c) and c${}^*$)).
-
-This new network is similar to a transmission tree, as it contains all of the events as they happen in time.
-In fact if we remove every recovery edge and any disconnected nodes, then this new newtork is a transmission tree.
-Therefore it can be used to determine the course of the epidemic.
-It is important to note that the intervention is applied after the SIR model has pruned the network.
-Indeed, as long as we have the potential network, it can be used multiple times for different interventions.
-
 We evaluate the effects of four control measures on influenza cases averted: hand-washing, vaccination, antivirals, and a null intervention.
 We selected these example interventions to highlight different ways in which interventions can interact with single-world inference.
-We assume that for hand-washing, everyone washes their hands and that it reduces the transmissibility of influenza by $1\%$.
-For vaccination intervention, we choose $25\%$ of people to be vaccinated at the beginning of the season and assume it fully protects $33\%$ of those vaccinated
-For the antiviral intervention, we choose $25\%$ of people to take antivirals when they first become infected, assume that it reduces their average duration of infection by $0.7$ days \cite{oseltamivir:2014}, and model this reduction in duration of infection as an additional $36.1\%$ chance of recovering at each time step.
+We assume that hand-washing reduces transmissibility by $1\%$, and therefore removes $1\%$ of transmissions.
+For vaccination, we chose $8.25\%$ of people to be fully vaccinated against influenza, and therefore begin as Vaccinated instead of Susceptible.
+For the antiviral intervention, we choose $25\%$ of people to take antivirals when they first become infected, assume that it reduces their average duration of infection by $0.7$ days \cite{oseltamivir:2014}.
+We model this by choosing $25\%$ of people at the start of the epidemic, and if they become infected, they have a $36.1\%$ additional chance to recover at each time step.
 To highlight the differences between single-world and multiple-world inference, we include a null intervention in which we do not intervene.
 While this is not an intervention, it effectively demonstrates the ability of our method to reduce the process model variance.
 We run $1,000$ simulations of each type of inference, for each intervention, on a population of $4,000$ for $100$ days and calculate the estimated number of cases averted.
-
-\subsection{General Framework}\label{subsection:general}
-
-We extend the single-world inference example to a general class of compartmental models and generic interventions by outlining the differences between the general method and the influenza example.
-We define these as a system of difference equations with $K$ compartments governed by 
-\begin{align*}
-\Delta x_{j} &= \sum_{i \neq j} \alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k.
-\end{align*}
-Where $\alpha_{i,j}$ is the probability that a person transitions from state $i$ to state $j$, and $\alpha_{i,j,k}$ is the probability that a person transitions from state $i$ to state $j$ after contacting with an individual in state $k$.
-Each transition is represented both as entering a compartment $\alpha > 0$, and leaving a compartment $\alpha < 0$.
-Since we are only interested in people entering new states, we only track positive values of $\alpha$.
-We can rephrase our influenza example in these new terms where
-\begin{align*}
-    x_1 &= S, \\
-    x_2 &= I, \\
-    x_3 &= R,
-\end{align*}
-$\alpha_{2,1,2} = \beta $, and $\alpha_{3,2} = \gamma$ all other $\alpha_{i,j,k}$ and $\alpha_{i,j}$ are equal to $0$.
-
-We still use a network with a node representing each person at each time.
-The nodes still have multiple potential states, but now they are $x_1 \dots x_K$ instead of $S$, $I$, and $R$.
-For each positive $\alpha_{i,j,k} $ and $\alpha_{i,j}$, we have a different type of edge.
-Since $\alpha_{i,j,k}$ edges represent contacts, we connect each person at each time to every other person at the next time.
-We call this type of edges interaction edges.
-Since $\alpha_{i,j}$ edges represent spontaneous transitions, we connect each person at each time to themselves at the next time.
-We call this type of edges transition edges.
-For either category of edge, we call $i$ the from state and $j$ the to state.
-Unlike in the influenza example, there may be multiple edges connecting the same pair of nodes.
-
-We prune the network using the same three steps at each time step: determine potential states, determine potential edges, and consult the model for more information.
-While the steps are the same, some of the reasoning needs to be generalized.
-We need to generalize the assumptions that allow us to update the potential states of the nodes.
-Once we generalize those assumptions, we will use them to generate rules for eliminating potential states.
-We also need to generalize the edge elimination process for steps two and three.
-
-We make two assumptions about interventions in the general case.
-To state these assumptions, we first need two definitions.
-A compartment $i$ is terminal if no one leaves that compartment ($\alpha_{i,j,k},\alpha_{i,j} \leq 0$ for all $j,k$).
-In the influenza example, the recovered compartment is terminal.
-An edge is redundant if its to state is terminal, or if it does not alter the potential state of any node.
-Our first assumption is that an intervention does not add edges that are not redundant.
-Our second assumption is that an intervention does not remove transition edges that are not redundant.
-These assumptions are more restrictive in the general case than the SIR case, but still include most common interventions.
-
-Using these assumptions about the intervention, we can use the following pruning rules.
-A person is not in a compartment if they were not potentially in that compartment at the previous time, and could not have entered that compartment.
-A person is not in a compartment if they would have left a compartment at the previous time if they were in it, and could not have entered the compartment.
-
-We group the changes to both edge pruning steps together.
-We can eliminate an interaction edge associated with $\alpha_{i,j,k}$ if $i$ is not a potential state of the source person.
-We can eliminate an interaction edge associated with $\alpha_{i,j,k}$ if $k$ is not a potential state of the target person.
-We can eliminate an interaction edge associated with $\alpha_{i,j}$ if $i$ is not a potential state of the person.
-When consulting the model, we keep an edge with probability of the associated $\alpha_{i,j}$ or $\alpha_{i,j,k}$.
-Once we have completed the three steps at each time step, we have our potential network.
-We can do our second pruning to account for our intervention in the same way as the influenza example.
-
-Our last step is to actualize the network.
-Unlike in the influenza case, it is now possible that two different edges affect the same person at the same time, changing their state to two different states.
-As an example, in an age cohort model, a susceptible child might be infected, and become an adult the same time step.
-Unfortunately, there are many ways to handle this type of conflict, and the right way depends on the model.
-In the age case, the correct answer is that both events happen, the susceptible child becomes an infected adult.
-In a different case, the answer may be to choose randomly between the two events, or that one of the events takes priority over the other (a dead adult is just dead for example).
 
 \section{Results}
 
@@ -457,14 +349,14 @@ We compare the outcomes of single-world inference to multiple-world inference.
 We find that single-world inference generally has the same point estimates as multiple-world inference, but with narrower confidence intervals.
 We also see that multiple-world inference has some nonsensical results that single-world inference avoids.
 
-For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ 0 $ (CI $ 0 $ \textemdash $ 0 $), Antivirals $ 819.125 $ (CI $ 206 $ \textemdash $ 2900 $), Social Distancing $ 153.594 $ (CI $ 12 $ \textemdash $ 298 $), Vaccination $ 284.955 $ (CI $ 130 $ \textemdash $ 438 $).
-For multiple-world inference, we found that every all but one non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ \neg4.94 $ (CI $ \neg196 $ \textemdash $ 184 $), Antivirals $ 814.185 $ (CI $ 176 $ \textemdash $ 2914 $), Social Distancing $ 148.654 $ (CI $ \neg70 $ \textemdash $ 356 $), Vaccination $ 280.015 $ (CI $ 72 $ \textemdash $ 500 $).
+For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ 0 $ (CI $ 0 $ \textemdash $ 0 $), Antivirals $ 632.133 $ (CI $ 318 $ \textemdash $ 2806 $), Social Distancing $ 151.961 $ (CI $ 9 $ \textemdash $ 295 $), Vaccination $ 284.449 $ (CI $ 149 $ \textemdash $ 431 $).
+For multiple-world inference, we found that every all but one non-null intervention had a significant ($p<0.05$) number of cases averted: Null $ \neg4.94 $ (CI $ \neg196 $ \textemdash $ 184 $), Antivirals $ 627.193 $ (CI $ 292 $ \textemdash $ 2808 $), Social Distancing $ 147.021 $ (CI $ \neg67 $ \textemdash $ 354 $), Vaccination $ 279.509 $ (CI $ 82 $ \textemdash $ 495 $).
 In addition to estimates of cases averted, we observe that multiple-world has an unintuitive effect on the shape of the epidemic (Figure \ref{fig:epicurve}).
 
 We released a software package, \texttt{counterfactual}, on \texttt{CRAN}, %NOTE: This is not true yet
 which implements single-world inference as described the methods section.
-It follows the assumptions and procedures outlined above, but does not enforce those assumptions, or deal with conflicting state changes.
-The amount of space and time pruning takes in the software package is $\mathcal O(E)$, where $E[O(E)]$ which is on average $O(t(n^2\sum \alpha_{i,j,k} + n \sum\alpha_{i,j}))$ per simulation, or $O(t(n^2\beta + n\gamma))$ in the case of the SIR model.
+It follows the assumptions and procedures outlined above, but does not enforce our intervention assumptions or deal with conflicting state changes.
+The amount of space and time pruning takes in the software package is $\mathcal O(E)$, where $E[O(E)] = O(t(n^2\sum \alpha_{i,j,k} + n \sum\alpha_{i,j}))$ per simulation, or $O(t(n^2\beta + n\gamma))$ in the case of the SIR model.
 The amount of time the interventions take is also $\mathcal O(E)$, but the constant is lower (Table \ref{table:performance}).
 This shows us that the number of infectious compartments, the population, number of times, and number of simulations all impact the amount of time taken, but population has the biggest impact.
 
