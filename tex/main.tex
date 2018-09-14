@@ -188,7 +188,7 @@ Because these are independent sets of simulations, there may be some simulations
 Likewise, there may be cases in the intervention scenario where large numbers are infected through sheer ‘bad luck’ for the virtual populations involved.
 If these stochastic effects are large, they may lead uncertainty intervals in effect estimates to include the intervention having no effect, or even a negative impact, even if the intervention is modeled in such a way that it can only have a beneficial effect.
 For example, the results of a study of measles vaccination strategies by Lessler et al. appears to leave open the possibility that more cases of measles could occur in a country if supplementary vaccination activities were conducted than if those campaigns had not occurred.
-Likewise, Rivers et al. appears to leave open the possibility that more cases of Ebola could occur in a country if pharmaceuticals were introduced to help patient survivability than if no pharmaeuticals were introduced.
+Likewise, Rivers et al. appears to leave open the possibility that more cases of Ebola could occur in a country if pharmaceuticals were introduced to help patient survivability than if no pharmaeuticals were introduced \cite{rivers-et-al:2014}.
 % Potentially find one more example.
 These effects will be exacerbated if the processes being modeled are complex or we are simultaneously sampling over parameter uncertainty.
 
@@ -266,7 +266,7 @@ As stated, these assumptions are too strong, and prevent many standard intervent
 We \emph{only} use these assumptions to say events deterministically cannot happen, and so we only require that 
 Adding a transition to a state that a person never leaves, or a state that was otherwise among their potential states does not cause any new events to be deterministically impossible.
 
-To construct the realized epidemic graph from the epidemic potential graph, we prune the epidemic potential graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:acutalizing}).
+To construct the realized epidemic graph from the epidemic potential graph, we prune the epidemic potential graph by applying three steps at each time: we prune events that did not occur, we stochastically determine if the intervention removes any events; and we determine the actual state of each person (Figure \ref{fig:actualizing}).
 The intervention plays two roles here, both preventing some events from happening in step $2$, and altering the states of individuals directly in step $3$.
 Altering the states of individuals is equivalent to adding new events to the graph, and therefore restricted by our assumptions above.
 
