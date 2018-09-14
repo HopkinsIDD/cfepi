@@ -23,6 +23,13 @@ figure4.pdf:
 	$(TEX) ../tex/figure4.tex 
 figure5.pdf:
 	$(TEX) ../tex/figure5.tex 
+figure5-burst: figure7.pdf
+	$(PDFTK) figure5.pdf burst output figure5_pg_%01d.pdf
+figure5_pg_1.pdf: figure5-burst
+figure5_pg_2.pdf: figure5-burst
+figure5_pg_3.pdf: figure5-burst
+figure5_pg_4.pdf: figure5-burst
+figure5_pg_5.pdf: figure5-burst
 figure6-precrop.pdf: figure5.pdf
 	$(TEX) ../tex/figure6-precrop.tex 
 figure6.pdf: figure6-precrop.pdf
