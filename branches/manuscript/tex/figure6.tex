@@ -1,0 +1,109 @@
+% tikzpic.teP
+\documentclass[crop,tikz]{standalone}% 'crop' is the default for v1.0, before it was 'preview'
+
+%Packages
+\usepackage{xcolor}
+
+%tikz libraries}}
+\usetikzlibrary{shapes.geometric,positioning}
+
+%Colors
+\definecolor{susceptible}{RGB}{141,160,203}
+\definecolor{recovery}{RGB}{102,194,165}
+\definecolor{infection}{RGB}{252,141,98}
+% \definecolor{intervention}{RGB}{231,138,195}
+\definecolor{intervention}{RGB}{50, 102, 86}
+\definecolor{nothing}{RGB}{225,225,225}
+
+%New commands
+\newcommand{\Leftscissor}{\large  X}
+\newcommand{\Largescissor}{\Huge  X}
+
+% Formatting macros:
+\tikzstyle{node}=[minimum size= .5in,circle, draw]
+\tikzset{intervened node fill/.style  args={#1,#2}{node,potential,circle split part fill={#1,#2}}}
+
+\tikzset{potential/.style={opacity=.7}}
+\tikzset{actual/.style={opacity=1}}
+\tikzset{impossible/.style={opacity=.2}}
+
+\tikzstyle{edge}=[diamond, draw]
+\tikzstyle{intervention}=[fill = intervention]
+\tikzstyle{contact}=[fill = infection]
+\tikzstyle{recovery}=[fill = recovery]
+
+\makeatletter
+\tikzset{circle split part fill/.style  args={#1,#2}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:270:\insiderad-\pgflinewidth)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:450:\insiderad-\pgflinewidth)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother  
+ 
+ \makeatletter
+\tikzset{circle tri split part fill/.style  args={#1,#2,#3}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north)  arc
+          (90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (-90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother
+
+\begin{document}
+\begin{tikzpicture}
+\draw ( 5,-0 ) node (complete) {\includegraphics{../figures/figure5_pg_1.pdf}};
+\draw (35,-0 ) node (initial)  {\includegraphics{figure5_pg_2.pdf}};
+\draw ( 0,-15) node (t1s1)     {\includegraphics{figure5_pg_3.pdf}};
+\draw (20,-15) node (t1s2)     {\includegraphics{figure5_pg_4.pdf}};
+\draw (40,-15) node (t1s3)     {\includegraphics{figure5_pg_5.pdf}};
+\draw ( 0,-27) node (t2s1)     {\includegraphics{figure5_pg_6.pdf}};
+\draw (20,-27) node (t2s2)     {\includegraphics{figure5_pg_7.pdf}};
+\draw (40,-27) node (t2s3)     {\includegraphics{figure5_pg_8.pdf}};
+\draw ( 0,-39) node (t3s1)     {\includegraphics{figure5_pg_9.pdf}};
+\draw (20,-39) node (t3s2)     {\includegraphics{figure5_pg_10.pdf}};
+\draw (40,-39) node (t3s3)     {\includegraphics{figure5_pg_11.pdf}};
+
+\node[below=of t1s3] (t1t21) {};
+\node[below=of t1s1] (t1t22) {};
+\node[below=of t2s3] (t2t31) {};
+\node[below=of t2s1] (t2t32) {};
+
+\draw[-latex,line width=2mm, color=black!40!white] (complete) -- (initial);
+\draw[-latex,line width=2mm, color=black!40!white] (t1s1) -- (t1s2);
+\draw[-latex,line width=2mm, color=black!40!white] (t1s2) -- (t1s3);
+\draw[-latex,cap=round,line width=2mm, color=black!40!white] (t1s3) -- (t1t21.center) -- (t1t22.center) -- (t2s1);
+\draw[-latex,line width=2mm, color=black!40!white] (t2s1) -- (t2s2);
+\draw[-latex,line width=2mm, color=black!40!white] (t2s2) -- (t2s3);
+\draw[-latex,cap=round,line width=2mm, color=black!40!white] (t2s3) -- (t2t31.center) -- (t2t32.center) -- (t3s1);
+\draw[-latex,line width=2mm, color=black!40!white] (t3s1) -- (t3s2);
+\draw[-latex,line width=2mm, color=black!40!white] (t3s2) -- (t3s3);
+
+\draw(20,6) node[above] {\resizebox{2\width}{!}{\Huge \textbf{Initialization}}};
+\draw(20,-7.5) node[above] {\resizebox{2\width}{!}{\Huge \textbf{Pruning}}};
+% \draw(-1,-0) node[above,rotate=90] {\Huge Initialization}
+\draw(-10,-14) node[above,rotate=90] {\resizebox{1.6\width}{!}{\Huge \textbf{Prune $\mathbf{t_1}$}}};
+\draw(-10,-26) node[above,rotate=90] {\resizebox{1.6\width}{!}{\Huge \textbf{Prune $\mathbf{t_2}$}}};
+\draw(-10,-38) node[above,rotate=90] {\resizebox{1.6\width}{!}{\Huge \textbf{Prune $\mathbf{t_3}$}}};
+\end{tikzpicture}
+\end{document}
