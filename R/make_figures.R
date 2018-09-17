@@ -365,7 +365,7 @@ ci_string_1 = paste0(
   paste(
     single_world_ci$scenario,
     "$",
-    -single_world_ci$final_size_m,
+    -round(single_world_ci$final_size_m),
     "$ (CI $",
     -ceiling(single_world_ci$final_size_h),
     "$ \textemdash $",
@@ -374,11 +374,11 @@ ci_string_1 = paste0(
     collapse=', '
   ),".")
 ci_string_2 = paste0(
-  "For multiple-world inference, we found that every all but one non-null intervention had a significant ($p<0.05$) number of cases averted: ",
+  "For multiple-world inference, we found that all but one non-null intervention had a significant ($p<0.05$) number of cases averted: ",
   paste(
     multiple_world_ci$scenario,
     "$",
-    - multiple_world_ci$final_size_m,
+    - round(multiple_world_ci$final_size_m),
     "$ (CI $",
     - ceiling(multiple_world_ci$final_size_h),
     "$ \textemdash $",
