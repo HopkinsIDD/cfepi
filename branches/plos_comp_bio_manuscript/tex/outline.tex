@@ -1,0 +1,501 @@
+% Created 2018-08-06 Mon 17:55
+% Intended LaTeX compiler: pdflatex
+\documentclass{article}
+\newcommand\invisiblesubsection[1]{%
+  \refstepcounter{subsection}%
+  \addcontentsline{toc}{subsection}{\protect\numberline{\thesubsection}#1
+}%
+  \subsectionmark{#1}}
+\newcommand\invisiblesubsubsection[1]{%
+  \refstepcounter{subsubsection}%
+  \addcontentsline{toc}{subsubsection}{\protect\numberline{\thesubsubsection}#1}%
+  \subsubsectionmark{#1}}
+\newcommand\invisibleparagraph[1]{%
+}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Joshua Kaminsky}
+\date{\today}
+\title{}
+\hypersetup{
+ pdfauthor={Joshua Kaminsky},
+ pdftitle={},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 24.5.1 (Org mode 9.0.9)}, 
+ pdflang={English}}
+\begin{document}
+
+\tableofcontents
+
+\section{Issues with outline}
+
+\label{sec:org0ccfc4a}
+\invisiblesubsection{{\bfseries\sffamily DONE} Determine appropriate distribution for \(\beta SI\)}
+
+\label{sec:org67dfc23}
+We are removing this section
+CLOSED: \textit{[2018-07-26 Thu 12:59]}
+\invisiblesubsection{{\bfseries\sffamily DONE} Put something meaningful in something something population size}
+
+\label{sec:orgc6c7c67}
+\invisiblesubsection{{\bfseries\sffamily TODO} Ensure all citations are filled in}
+
+\label{sec:org438d2e0}
+\invisiblesubsection{{\bfseries\sffamily TODO} Say something about why we want to use agent based models other than 'because it works'}
+
+\label{sec:orgbbe8014}
+We are using individual based models.
+CLOSED: \textit{[2018-08-06 Mon 17:49]}
+\invisiblesubsection{{\bfseries\sffamily DONE} Take out stochastic vs deterministic part}
+
+\label{sec:org8c1423b}
+\invisiblesubsection{{\bfseries\sffamily TODO} Add motivation}
+
+\label{sec:orgac1aa08}
+\invisiblesubsection{{\bfseries\sffamily DONE} Combine with outline from meeting with justin (on laptop)}
+
+\label{sec:org2faa1a8}
+Leaving Methods out for now.  Want to commit current before making changes.
+\invisiblesubsection{{\bfseries\sffamily OPEN} Look up names in causal inference literature for simulating what would happen if we had intervened in this epidemic vs what would happen if we intervened in a similar epidemic.}
+
+\label{sec:orga5cc79d}
+\invisiblesubsection{{\bfseries\sffamily TODO} Read chapter 6.6 of Mathematics of Epidemics on Networks pg 251}
+
+\label{sec:org1c5aeae}
+\invisiblesubsection{{\bfseries\sffamily TODO} Add citations for various facts in introduction}
+
+\label{sec:orgd473cf6}
+\invisiblesubsection{{\bfseries\sffamily DONE} Figure out where to cite percolation}
+
+\label{sec:orgd6a95e1}
+We can site Joel Miller's book on it.
+Chapter 6.6 of Mathematics of Epidemics on Networks
+We can also cite Eben Kennah's paper with him on it (this may be better).
+CLOSED: \textit{[2018-08-06 Mon 17:48]}
+\invisiblesubsection{{\bfseries\sffamily TODO} Make sure all things in the introduction are true}
+
+\label{sec:org9c27ba8}
+\invisiblesubsection{{\bfseries\sffamily TODO} check assumptions hold in software package}
+
+\label{sec:org3bbd1fd}
+\section{Introduction}
+
+\label{sec:org10deec4}
+\invisiblesubsection{Introduce Problem}
+
+\label{sec:org010983e}
+\invisiblesubsubsection{Infectious Diseases are bad.  We want to control them.  Planning control is hard.}
+
+\label{sec:org788c301}
+Infectious diseases are a major global public health problem.
+Controlling their spread is challenging because planning and carrying out effective interventions is difficult \cite{}.
+Determining how and when to intervene is one of the major concerns of epidemiology.
+Sometimes we believe we know both how the disease spreads, and the mechanism by which the intervention affects that spread.
+In these cases, epidemiologists frequently employ dynamical models to assess the impact of interventions on the behaviour of the disease through simulation based approaches.
+These approaches generally take a naive approach in simulating transmission dynamics, and are therefore limited in their ability to analyze the impact of interventions by their low power.
+\invisiblesubsubsection{We want to know the effects of interventions, and this is a causal inference problem.}
+
+\label{sec:org0ea07e4}
+In order to accurately plan and evaluate the effect of an intervention on an epidemic, we want to compare the outcomes of if we perform the intervention with the outcomes of if we do not perform the intervention.
+However, it is not possible to both intervene and not-intervene upon a single population during a single epidemic. 
+This is known as the fundamental problem of causal inference.
+The effects of interventions at a population level are a difficult causal inference problem.
+The epidemiology of the disease confounds inference about the effects of interventions.
+On the other hand, the effects of the same interventions at an individual level are often well studied.
+Often, researchers attempt to leverage knowledge of the individual effect of the intervention, along with an understanding of the disease's epidemiology to estimate the effect of that intervention.
+\invisiblesubsubsection{People use modeling to make the causal inference problem tractable.}
+
+\label{sec:org59a2050}
+One way researchers attempt to circumvent the effects of epidemiological confounders is by modeling the epidemiology of the disease.
+They construct a model for the way the disease spreads in the population.
+Because the individual effects of the intervention are well known, the researcher can incorporate them into the model to obtain a model for the disease spread under the intervention.
+They then simulate many simulations with the intervention and without the intervention and extract values of interest.
+They then compare those values to determine the effect of the intervention.
+\invisiblesubsubsection{Multiple World Inference}
+
+\label{sec:org9012560}
+Although in reality we are unable to both intervene and not-intervene concurrently, this is not a desirable feature for resolving counterfactual questions.
+Most existing methods retain this feature, running separate simulations for interventions and non-interventions. 
+We refer to these types of methods as multiple world inference.
+We propose a way of running the intervention and non-intervention in the same simulation.
+We refer to our method as single world inference.
+\invisiblesubsubsection{Shortcomings of multiple world inference}
+
+\label{sec:org5c1cc74}
+One of the problems with multiple world inference is that outcomes of the intervention may be obfuscated by comparison across simulations. 
+Epidimiological models are stochastic, and therefore the way disease spreads varies across simulations.
+This can result in seemingly impossible outcomes occurring, such as comparing a low epidemic with intervention to a high epidemic without intervention making an effective intervention appear to cause cases.
+Likewise, one could imagine an ineffective intervention that appears to work.
+As a result of these problems, the statistical power of multiple world inference is low.
+\invisiblesubsubsection{Outline how ywe're fixing the problems in our method and set the stage for the methods (all background and information you need to understand the methods)}
+
+\label{sec:org8b6ed21}
+Here we outline a method that addresses these problems by performing the counterfactual in a single simulation: with and without the intervention.
+To do this we have to simulate all of the events that occur with the intervention and without the intervention, as there may be events that occur in the intervention case that do not occur in the non-intervention case, and vice versa.
+Then, the effects of the intervention can be measured within a single simulation.
+Running multiple simulations provides a measure to evaluate the impacts of a proposed intervention with higher statistical power. 
+\invisiblesubsection{Existing Work}
+
+\label{sec:orgd5154af}
+\invisiblesubsubsection{People currently use Multiple World causal inference for this.}
+
+\label{sec:org57b1e74}
+Elizabeth Halloran's work on flu uses multiple world causal inference \cite{}.
+\invisiblesubsubsection{Some people already use limited versions of this method.}
+
+\label{sec:orgbe8730a}
+While they do not make mention of this in their paper, Kenah and Miller have a single world inference method they use for determining the impact of vaccinating different individuals in a network \cite{}.
+\section{Methods}
+
+\label{sec:org9d8eb75}
+\invisiblesubsection{Motivation (Other similar methods)}
+
+\label{sec:org520488f}
+\invisiblesubsubsection{Compartmental Models}
+
+\label{sec:org63df789}
+Compartmental models are a standard in disease modeling \cite{}.
+In compartmental models, people belong to a compartment, and the model governs the transitions between different compartments.
+There are many variations on compartmental models, but current research focuses on methods where the transition is stochastic.
+There are also individual compartmental models.
+These are used in several contexts, but are important to us since we have descriptions of the intervention at the individual level.
+We should also note that agent based models and network models exist, and our methods could apply to them, but are beyond the scope of this paper.
+
+\invisiblesubsubsection{Percolation}
+
+\label{sec:org3d99071}
+Our method is an adaptation of a method called percolation used in network theory
+In fully immunizing disease, disease only has a limited window to transmit from a particular individual to another.
+That window lasts from when the first one gets the disease to when they recover from the disease.
+From this perspective, we only need to test whether or not each pair of individuals would infect the other if they get infected.
+Using this idea, we can turn the problem of figuring out who gets infected in an epidemic into a network problem.
+We start with the network (or complete graph), and for each edge test if the disease would transmit along that edge.
+Our method will use this idea of treating the epidemic as pruning a graph, and using the connected components of that graph to determine the outcome of the epidemic.
+
+\invisiblesubsection{Example (Influenza)}
+
+\label{sec:org3c76b56}
+\invisiblesubsubsection{SIR Model}
+
+\label{sec:org748f908}
+We use a standard short compartmental model for influenza \cite{}.
+There are compartments for susceptible, infected, and recovered.
+People move between these compartments at a rate determined by \(\beta\), the force of infection, and \(\gamma\) the recovery rate.
+This model is only valid for a short time scale, so we do not include births or deaths.
+\begin{figure}
+\caption{Figure: SIR Model diagram}\end{figure}
+
+\label{sec:org0c0724e}
+\invisiblesubsubsection{Individual Models}
+
+\label{sec:org2c83d10}
+\invisibleparagraph{Why we need stochasting models}
+
+\label{sec:orgbcc2a9e}
+Our goal is to eliminate process error to improve power, but so far the models described are deterministic (and therefore have no process error).
+One could say that given a deterministic model, and a deterministic intervention, the effect of the intervention falls out cleanly.
+However, deterministic models are not widely used in the field \cite{}.
+Additionally, deterministic models cannot address a main question of interest, "How well is this intervention working?"
+
+\invisibleparagraph{Viewing SIR model as an individual model}
+
+\label{sec:orgcad5018}
+Our SIR model makes implicit assumptions.
+\(\beta SI\) represents interactions between susceptible and infected individuals.
+\(\gamma I\) represents the probability of recovery.
+Our deterministic differential equation is actually the expectation of a stochastic process.
+Something something population size
+\(\beta SI\) is \ldots{}
+\(\gamma I\) is the expectation of a binomial distribution.
+
+\invisibleparagraph{Individual Version}
+
+\label{sec:orgb70797e}
+Instead of modeling the number of susceptibles, infected, and recovered, we want to switch and model the state of each person in our population.
+We do this, because it works.
+Instead of a vector of the number of people in each compartment, we use a vector of the state of each person.
+Each susceptible person has a \(\frac{\beta}{N}\) probability of becoming infected by each infected person at each time step.
+Each infected person has a \(\gamma\) probability of recovering at each time step.
+
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:orgb215f97}
+\begin{figure}
+\caption{Figure: Constructing the Complete Graph}\end{figure}
+
+\label{sec:org64f7ae4}
+That one figure I sent Lindsay should go here.
+\invisibleparagraph{Setting up the Complete Graph}
+
+\label{sec:org93585d4}
+We are going to build a network to represent the possible progression of disease through the population and time.
+We start by making a node for each person at each time.
+Each node will store the state of that person at that time.
+Figure \ref{fig:graph} explains the way we include infection and recovery on the graph.
+This graph is intractably large (for \(4000000\) people, \(3\) states, and \(365\) time points, it would take almost \(18\) pedabytes to store it).
+However, after we prune the graph, it will be small enough to use.
+
+\invisibleparagraph{Conditional Probabilities}
+
+\label{sec:org964ebbf}
+We know the probability that a person recovers given that they are infected is \(\gamma\).
+We know the probability that a person infects another person given that the first is susceptible and the second is infected is \(\frac{\beta}{N}\).
+These probabilities are exactly what is sampled by \(C^*_{i,j,t}\) and \(R^*_{i,j,t}\) in Figure \ref{fig:graph}
+We can simulate from these distributions without knowing if the conditionals are satisfied.
+This is helpful, since we won't know a priori what the intervention affects and doesn't.
+To simulate, we draw uniformly randomly from \([0,1]\), and compare that to the probability.
+If the random draw is less than the probability, it happens.
+Otherwise, it does not happen.
+Then starting from our initial conditions, we can trace through the paths that actually occur to see the epidemic.
+
+\invisibleparagraph{Pruning and Interventions}
+
+\label{sec:org8b99981}
+If we ignored the intervention, we would be able to prune the graph as we go, testing only infectious contacts and recoveries whose conditions can be traced back to the initial conditions.
+However, the intervention may cause events that would otherwise be pruned to happen.
+A person who was infected may instead be susceptible, allowing an otherwise prevented infected contact.
+By simulating the intervention simultaneously, we can still prune the graph as we go, there are just two ways to trace back to the initial conditions: intervention and non-intervention.
+We could also simulate for multiple possible interventions satisfying some assumption, and prune everything inconsistent with that assumption.
+
+\invisiblesubsubsection{Interventions}
+
+\label{sec:orge0c2d62}
+We include examples of several qualitatively different interventions to see the difference our method makes.
+We consider no intervention, vaccination, treatment, and hand washing interventions.
+We choose parameters from literature as described below.
+\invisibleparagraph{None}
+
+\label{sec:orge31a905}
+While a non-intervention is unexciting, it is a good starting place for the differences between our single and multiple world simulations.
+We also want to have something to compare our other more effective interventions to.
+In this case, the intervention makes no difference, and the epidemic plays out exactly how it would otherwise.
+
+\invisibleparagraph{Vaccination}
+
+\label{sec:orga0b2d6f}
+In a vaccination intervention, some portion of the population is vaccinated against the disease.
+Every year \%FIX ME percent of people get the flu shot, and those shots are \%FIX ME percent effective against \%FIX ME strain of flu.
+We randomly determine \%FIX ME percent of people to be successfully vaccinated at the start of the simulation.
+Vaccinated people do not get infected, or transmit the disease.
+
+\invisibleparagraph{Treatment}
+
+\label{sec:orgac507ff}
+Tamaflu (and other drugs? \%FIX ME) is a drug that causes the taker to recover from the flu more quickly.
+Tamaflu does a thing \%FIX ME, and causes the rate people recover to decrease by \%FIX ME.
+We randomly determine \%FIX ME percent of people to take Tamaflu when they first become infected.
+These people use \%FIX ME as their recovery rate instead of \(\gamma\).
+
+\invisibleparagraph{Hand Washing}
+
+\label{sec:orgae53d88}
+Hand washing and similar interventions reduce the transmissibility of the disease.
+We assume that everyone washes their hands, and that it reduces transmissibility by \%FIX ME.
+Our intervention then prevents \%FIX ME of otherwise occuring infections.
+\invisiblesubsection{General Framework}
+
+\label{sec:org7d239dd}
+\invisiblesubsubsection{General Compartmental Model and Individual Based conversion.}
+
+\label{sec:org46fd6db}
+Almost everything we did above extends to a general compartmental model.
+We define a general compartmental model as a system of difference equations with \(K\) compartments goverened by \(\Delta x_{j} = \sum_{i \neq j} alpha_{i,j}x_i + \sum_{i \neq j, k} \alpha_{i,j,k} x_ix_k\).
+In the same way as before, we can view \(\alpha_{i,j}\) as the probability of a person transitioning to state \(j\) from state \(i\) conditional on them being in state \(i\).
+Similarly we can view \(\alpha_{i,j,k}\) as a conditional probability of a contact between someone in state \(i\) and someone in state \(k\) moving the first person to state \(j\).
+In the same way as before, we can switch from modeling the number of people in each state to the state of each person.
+\invisibleparagraph{Tractability}
+
+\label{sec:org4bd117c}
+The more compartments we add, however, the larger the complete graph grows, and the harder it is for us to prune enough of it to make it manageable.
+There is a balance to strike between the simulated population, number of simulations, and number of compartments.
+This paragraph is too short something something someting \%FIX ME.
+
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:orgf0b2ef9}
+Once we have our complete graph, we can prune it in much the same way as before.
+Instead of going through the whole process again, we will focus on the things which are different.
+There is a technical detail that we should elaborate on, which arises from interactions between events.
+We discuss methods to apply the intervention after pruning, which allow for the comparison of different interventions.
+
+\invisibleparagraph{Multiple events which happen}
+
+\label{sec:org5c0b46a}
+In the case where there are more compartments with more complex interactions, we might encounter a situation where two events have their conditions satisfied.
+For example, a person might age into the next category, and also become infected simultaneously.
+In some cases, it makes sense to choose randomly one of the events to occur, and the other not to occur.
+In other cases, it makes sense to define a combined event (a person gets older and sick simultaneously).
+In our software package, we have currently implemented the former, but do not yet have an interface to the latter.
+\invisibleparagraph{Comparing to an unknown intervention}
+
+\label{sec:orgae5f3d4}
+In our previous discussion on simulations, we talked about simulating the intervention simultaneously to the pruning.
+There are circumstances under which this is not ideal.
+For example, you may wish to be able to take the new intervention you came up with, and see how well it does relative to your old attempts.
+In these cases, we can still prune a lot of the graph by making assumptions about the intervention.
+\invisibleparagraph{Intervention Assumptions}
+
+\label{sec:org6c82790}
+We have developed a fairly general set of assumptions in order to prune a wide variety of graphs.
+These assumptions are incorporated into our software package.
+We assume that our intervention does not directly move people to states they will need to leave.
+This assumption allows us to prune branches that are not connected to any of the possible states of a person.
+We assume that our intervention does not prevent recovery, and that it does not cause new infectious contacts.
+This means that anyone who hasn't had an infectious contact since the last time they recovered isn't infected.
+\invisiblesubsubsection{Individual Models}
+
+\label{sec:org2647868}
+\invisibleparagraph{Why we need stochasting models}
+
+\label{sec:org20f6c41}
+Our goal is to eliminate process error to improve power, but so far the models described are deterministic (and therefore have no process error).
+One could say that given a deterministic model, and a deterministic intervention, the effect of the intervention falls out cleanly.
+However, deterministic models are not widely used in the field \cite{}.
+Additionally, deterministic models cannot address a main question of interest, "How well is this intervention working?"
+
+\invisibleparagraph{Viewing SIR model as a stochastic model}
+
+\label{sec:org4342dba}
+Our SIR model makes implicit assumptions.
+\(\beta SI\) represents interactions between susceptible and infected individuals.
+\(\gamma I\) represents the probability of recovery.
+Our deterministic differential equation is actually the expectation of a stochastic process.
+Something something population size
+\(\beta SI\) is \ldots{}
+\(\gamma I\) is the expectation of a binomial distribution.
+
+\invisibleparagraph{Agent Based Versions}
+
+\label{sec:org13d5a55}
+Instead of modeling the number of susceptibles, infected, and recovered, we want to switch and model the state of each person in our population.
+We do this, because it works.
+Instead of a vector of the number of people in each compartment, we use a vector of the state of each person.
+Each susceptible person has a \(\frac{\beta}{N}\) probability of becoming infected by each infected person at each time step.
+Each infected person has a \(\gamma\) probability of recovering at each time step.
+
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:org7d3b331}
+\invisibleparagraph{Setting up the Complete Graph}
+
+\label{sec:org526de23}
+We are going to build a graph to represent the possible progression of disease through the population and time.
+We start by making a node for each person at each time.
+Each node will store the state of that person at that time.
+Since each person can transmit disease to each other person, we connect each person at each time to each other person at the next time.
+Since each person can also keep the disease over time (by not recovering), we connect each person to themselves at the next time.
+Each of these edges will 
+This graph is intractably large (for \(4000000\) people, \(3\) states, and \(365\) time points, it would take almost \(18\) pedabytes to store it).
+However, after we prune the graph, it will be small enough to use.
+
+\invisibleparagraph{Conditional Probabilities}
+
+\label{sec:org206c778}
+We know the probability that a person recovers given that they are infected is \(\gamma\).
+We know the probability that a person infects another person given that the first is susceptible and the second is infected is \(\frac{\beta}{N}\).
+We can simulate from these distributions without knowing if the conditionals are satisfied.
+This is helpful, since we won't know a priori what the intervention affects and doesn't.
+To simulate, we draw uniformly randomly from \([0,1]\), and compare that to the probability.
+If the random draw is less than the probability, it happens.
+Otherwise, it does not happen.
+
+\invisibleparagraph{Simulate all possible events}
+
+\label{sec:org6378921}
+We could account for every possible intervention by simulating every relevent conditional probability.
+Given a population size \(N\), and number of time steps \(T\), there are a finite number of things to simulate.
+For each time step, we need to simulate \(N\) recovery probabilities, and \(N^2\) infection probabilities.
+In total, we would need to simulate \(N(N+1)T\) numbers.
+For a population of \(4\) million, and daily time steps for a year, that would take almost \(6\) million gigabytes of storage. \%(4000000 * 4000001 * 365) * bytes = 5840001.46 gigabytes
+More complicated models with more compartments would take even more space.
+
+\invisibleparagraph{Pruning simulated events}
+
+\label{sec:orga8a8f96}
+For many interventions, not all simulations are necessary.
+By making some assumptions about the interventions, we can reduce the amount we need to store.
+We assume that the intervention can only increase the probability of infection.
+
+\invisiblesubsubsection{Intervention}
+
+\label{sec:org479cae4}
+\invisiblesubsection{General Framework}
+
+\label{sec:org91602c9}
+\invisiblesubsubsection{General Compartmental Model}
+
+\label{sec:org556f441}
+\invisiblesubsubsection{Agent Based Conversion}
+
+\label{sec:org184fe05}
+\invisiblesubsubsection{Simulating and Pruning}
+
+\label{sec:org519e116}
+\invisibleparagraph{Assumptions}
+
+\label{sec:orgcecac7d}
+\invisiblesubsubsection{Interventions}
+
+\label{sec:org157b2af}
+\invisibleparagraph{None}
+
+\label{sec:org5aeb8b9}
+\invisibleparagraph{Vaccination}
+
+\label{sec:org4035a4c}
+\invisibleparagraph{Treatment}
+
+\label{sec:orgf3f40b5}
+\invisibleparagraph{Social Distancing}
+
+\label{sec:org0aeb8ad}
+\section{Results}
+
+\label{sec:orgb926d79}
+\invisiblesubsection{Illustritave Simulations}
+
+\label{sec:org4165d1d}
+\invisiblesubsubsection{SIR Model}
+
+\label{sec:orgf6b6b61}
+\invisiblesubsubsection{SIS Model (maybe)}
+
+\label{sec:orgefc9d10}
+\invisiblesubsection{Computational Concerns (Time/Space Complexity)}
+
+\label{sec:orgbd429cd}
+\invisiblesubsubsection{Current Implementation}
+
+\label{sec:org79dceb5}
+\invisiblesubsubsection{Tradeoffs}
+
+\label{sec:org726e486}
+\invisiblesubsection{Mathematical Reduction in error (derived)}
+
+\label{sec:org97ee1f5}
+\section{Discussion}
+
+\label{sec:org84bc9b2}
+\invisiblesubsection{Philosohpical Discussion of Question Answered}
+
+\label{sec:org453393c}
+\invisiblesubsubsection{We often ask the question of what would happen if we had intervened in a previous epidemic.}
+
+\label{sec:org78f7dfe}
+\invisiblesubsubsection{We often answer the question of what would happen if we intervene in a epidemic similar to the previous one.}
+
+\label{sec:org45710d6}
+\end{document}

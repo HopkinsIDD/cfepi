@@ -1,0 +1,373 @@
+%No intervention graph actualization
+
+% tikzpic.teP
+\documentclass[crop,tikz]{standalone}% 'crop' is the default for v1.0, before it was 'preview'
+
+%Packages
+\usepackage{xcolor}
+
+%tikz libraries}}
+\usetikzlibrary{shapes.geometric}
+
+%Colors
+\definecolor{susceptible}{RGB}{141,160,203}
+\definecolor{recovery}{RGB}{102,194,165}
+\definecolor{infection}{RGB}{252,141,98}
+% \definecolor{intervention}{RGB}{231,138,195}
+\definecolor{intervention}{RGB}{160, 120, 120}
+\definecolor{nothing}{RGB}{225,225,225}
+
+%New commands
+\newcommand{\Leftscissor}{\large  X}
+\newcommand{\Largescissor}{\Huge  X}
+
+% Formatting macros:
+\tikzstyle{node}=[minimum size= .5in,circle, draw]
+\tikzset{intervened node fill/.style  args={#1,#2}{node,potential,circle split part fill={#1,#2}}}
+
+\tikzset{potential/.style={opacity=.7}}
+\tikzset{actual/.style={opacity=1}}
+\tikzset{impossible/.style={opacity=.2}}
+\tikzset{y=-1cm}
+\tikzset{x=1cm}
+
+\tikzstyle{edge}=[diamond, draw]
+\tikzstyle{intervention}=[fill = intervention]
+\tikzstyle{contact}=[fill = infection]
+\tikzstyle{recovery}=[fill = recovery]
+
+\makeatletter
+%% Modifiecd from stack exchange https://tex.stackexchange.com/questions/55594/tikz-two-colored-circle-split
+\tikzset{circle split part fill/.style  args={#1,#2}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:270:\insiderad-\pgflinewidth)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:450:\insiderad-\pgflinewidth)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother  
+ 
+ \makeatletter
+%% Modifiecd from stack exchange https://tex.stackexchange.com/questions/55594/tikz-two-colored-circle-split
+\tikzset{circle tri split part fill/.style  args={#1,#2,#3}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north)  arc
+          (90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (-90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother
+
+\begin{document}
+
+\begin{tikzpicture}
+  \draw (-3.5,0) node {\Huge \textbf{a)}};
+  \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
+  \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
+  \draw (0,3) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P31) {};
+  \draw (0,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P41) {};
+
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
+  \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
+  \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
+  \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
+
+  \draw (8,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P13) {};
+  \draw (8,1.5) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P23) {};
+  \draw (8,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P33) {};
+  \draw (8,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P43) {};
+
+  \draw (12,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P14) {};
+  \draw (12,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,recovery}] (P24) {};
+  \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
+  \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P22);
+  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P32);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
+  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+
+  %% Extends on
+  \draw (14,0) node{\Huge \dots};
+  \draw (14,1.5) node{\Huge \dots};
+  \draw (14,3) node{\Huge \dots};
+  \draw (14,4.5) node{\Huge \dots};
+
+  \draw (0,6) node[rotate=90]{\Huge \dots};
+  \draw (4,6) node[rotate=90]{\Huge \dots};
+  \draw (8,6) node[rotate=90]{\Huge \dots};
+  \draw (12,6) node[rotate=90]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
+  %% Legend things
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \draw (-3.5,0) node {\Huge \textbf{c)}};
+  \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
+  \draw (0,1.5) node[node,actual,circle,fill=intervention] (P21) {};
+  \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
+  \draw (0,4.5) node[node,actual,circle,fill=susceptible] (P41) {};
+
+  \draw (4,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P12) {};
+  \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
+  \draw (4,3) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P32) {};
+  \draw (4,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P42) {};
+
+  \draw (8,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P13) {};
+  \draw (8,1.5) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P23) {};
+  \draw (8,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P33) {};
+  \draw (8,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P43) {};
+
+  \draw (12,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P14) {};
+  \draw (12,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,recovery}] (P24) {};
+  \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
+  \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P22);
+  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P32);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
+  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+
+  %% Extends on
+  \draw (14,0) node{\Huge \dots};
+  \draw (14,1.5) node{\Huge \dots};
+  \draw (14,3) node{\Huge \dots};
+  \draw (14,4.5) node{\Huge \dots};
+
+  \draw (0,6) node[rotate=90]{\Huge \dots};
+  \draw (4,6) node[rotate=90]{\Huge \dots};
+  \draw (8,6) node[rotate=90]{\Huge \dots};
+  \draw (12,6) node[rotate=90]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
+  %% Legend things
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \draw (-3.5,0) node {\Huge \textbf{e)}};
+  \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
+  \draw (0,1.5) node[node,actual,circle,fill=intervention] (P21) {};
+  \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
+  \draw (0,4.5) node[node,actual,circle,fill=susceptible] (P41) {};
+
+  \draw (4,0) node[node,actual,circle,fill=infection] (P12) {};
+  \draw (4,1.5) node[node,actual,circle,fill=intervention] (P22) {};
+  \draw (4,3) node[node,actual,circle,fill=infection] (P32) {};
+  \draw (4,4.5) node[node,actual,circle,fill=susceptible] (P42) {};
+
+  \draw (8,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P13) {};
+  \draw (8,1.5) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P23) {};
+  \draw (8,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P33) {};
+  \draw (8,4.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P43) {};
+
+  \draw (12,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P14) {};
+  \draw (12,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,recovery}] (P24) {};
+  \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
+  \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
+
+  \draw[-latex,impossible,line width=1mm, color=infection] (P11) -- (P22);
+  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
+  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
+  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+
+  %% Extends on
+  \draw (14,0) node{\Huge \dots};
+  \draw (14,1.5) node{\Huge \dots};
+  \draw (14,3) node{\Huge \dots};
+  \draw (14,4.5) node{\Huge \dots};
+
+  \draw (0,6) node[rotate=90]{\Huge \dots};
+  \draw (4,6) node[rotate=90]{\Huge \dots};
+  \draw (8,6) node[rotate=90]{\Huge \dots};
+  \draw (12,6) node[rotate=90]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
+  %% Legend things
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \draw (-3.5,0) node {\Huge \textbf{g)}};
+  \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
+  \draw (0,1.5) node[node,actual,circle,fill=intervention] (P21) {};
+  \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
+  \draw (0,4.5) node[node,actual,circle,fill=susceptible] (P41) {};
+
+  \draw (4,0) node[node,actual,circle,fill=infection] (P12) {};
+  \draw (4,1.5) node[node,actual,circle,fill=intervention] (P22) {};
+  \draw (4,3) node[node,actual,circle,fill=infection] (P32) {};
+  \draw (4,4.5) node[node,actual,circle,fill=susceptible] (P42) {};
+
+  \draw (8,0) node[node,actual,circle,fill=recovery] (P13) {};
+  \draw (8,1.5) node[node,actual,circle,fill=intervention] (P23) {};
+  \draw (8,3) node[node,actual,circle,fill=recovery] (P33) {};
+  \draw (8,4.5) node[node,actual,circle,fill=susceptible] (P43) {};
+
+  \draw (12,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P14) {};
+  \draw (12,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,recovery}] (P24) {};
+  \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
+  \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
+
+  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
+
+  \draw[-latex,impossible,line width=1mm, color=infection] (P12) -- (P33);
+  \draw[-latex,impossible,line width=1mm, color=infection] (P22) -- (P33);
+  \draw[-latex,impossible,line width=1mm, color=infection] (P32) -- (P23);
+  
+  \draw[-latex,actual,line width=1mm, color=recovery] (P12) -- (P13);
+  \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
+
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
+  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  
+  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+
+  %% Extends on
+  \draw (14,0) node{\Huge \dots};
+  \draw (14,1.5) node{\Huge \dots};
+  \draw (14,3) node{\Huge \dots};
+  \draw (14,4.5) node{\Huge \dots};
+
+  \draw (0,6) node[rotate=90]{\Huge \dots};
+  \draw (4,6) node[rotate=90]{\Huge \dots};
+  \draw (8,6) node[rotate=90]{\Huge \dots};
+  \draw (12,6) node[rotate=90]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
+  %% Legend things
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
+\end{tikzpicture}
+
+\begin{tikzpicture}
+  \draw (-3.5,0) node {\Huge \textbf{i)}};
+  \draw (0,0) node[node,actual,circle,fill=infection] (P11) {};
+  \draw (0,1.5) node[node,actual,circle,fill=intervention] (P21) {};
+  \draw (0,3) node[node,actual,circle,fill=susceptible] (P31) {};
+  \draw (0,4.5) node[node,actual,circle,fill=susceptible] (P41) {};
+
+  \draw (4,0) node[node,actual,circle,fill=infection] (P12) {};
+  \draw (4,1.5) node[node,actual,circle,fill=intervention] (P22) {};
+  \draw (4,3) node[node,actual,circle,fill=infection] (P32) {};
+  \draw (4,4.5) node[node,actual,circle,fill=susceptible] (P42) {};
+
+  \draw (8,0) node[node,actual,circle,fill=recovery] (P13) {};
+  \draw (8,1.5) node[node,actual,circle,fill=intervention] (P23) {};
+  \draw (8,3) node[node,actual,circle,fill=recovery] (P33) {};
+  \draw (8,4.5) node[node,actual,circle,fill=susceptible] (P43) {};
+
+  \draw (12,0) node[node,actual,circle,fill=recovery] (P14) {};
+  \draw (12,1.5) node[node,actual,circle,fill=intervention] (P24) {};
+  \draw (12,3) node[node,actual,circle,fill=recovery] (P34) {};
+  \draw (12,4.5) node[node,actual,circle,fill=susceptible] (P44) {};
+
+  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
+
+  \draw[-latex,actual,line width=1mm, color=recovery] (P12) -- (P13);
+  \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
+
+  \draw[-latex,impossible,line width=1mm, color=infection] (P23) -- (P44);
+  
+  \draw[-latex,impossible,line width=1mm, color=recovery] (P23) -- (P24);
+
+  %% Extends on
+  \draw (14,0) node{\Huge \dots};
+  \draw (14,1.5) node{\Huge \dots};
+  \draw (14,3) node{\Huge \dots};
+  \draw (14,4.5) node{\Huge \dots};
+
+  \draw (0,6) node[rotate=90]{\Huge \dots};
+  \draw (4,6) node[rotate=90]{\Huge \dots};
+  \draw (8,6) node[rotate=90]{\Huge \dots};
+  \draw (12,6) node[rotate=90]{\Huge \dots};
+  \draw (14,6) node[rotate=150]{\Huge \dots};
+  %% Legend things
+  \draw[-latex,line width=1mm,white!60!black] (4,7.5) -- (8,7.5) node[midway, below,text=black] {\Huge \textbf{Time}};
+  \draw (0 ,6.5) node[below,text=black] {\Huge $t_0$};
+  \draw (4 ,6.5) node[below,text=black] {\Huge $t_1$};
+  \draw (8 ,6.5) node[below,text=black] {\Huge $t_2$};
+  \draw (12,6.5) node[below,text=black] {\Huge $t_3$};
+  \draw (-1.25,0  ) node[text=black] {\Huge $p_1$};
+  \draw (-1.25,1.5) node[text=black] {\Huge $p_2$};
+  \draw (-1.25,3  ) node[text=black] {\Huge $p_3$};
+  \draw (-1.25,4.5) node[text=black] {\Huge $p_4$};
+\end{tikzpicture}
+\end{document}
