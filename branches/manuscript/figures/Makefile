@@ -85,6 +85,10 @@ intervention-effects-time-series-susceptible.pdf:
 	$(R) ../R/make_figures.R
 intervention-effects-time-series-susceptible-switched.pdf:
 	$(R) ../R/make_figures.R
+intervention-effects-time-series-cases-averted.pdf:
+	$(R) ../R/make_figures.R
+intervention-effects-time-series-cases-averted-switched.pdf:
+	$(R) ../R/make_figures.R
 
 intervention-effects-combined-boxplots-cropped.pdf: intervention-effects-combined-boxplots.pdf
 	$(CROP) intervention-effects-combined-boxplots.pdf intervention-effects-combined-boxplots-cropped.pdf
@@ -104,10 +108,14 @@ intervention-effects-time-series-susceptible-cropped.pdf: intervention-effects-t
 	$(CROP) intervention-effects-time-series-susceptible.pdf intervention-effects-time-series-susceptible-cropped.pdf
 intervention-effects-time-series-susceptible-switched-cropped.pdf: intervention-effects-time-series-susceptible-switched.pdf
 	$(CROP) intervention-effects-time-series-susceptible-switched.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf
+intervention-effects-time-series-cases-averted-cropped.pdf: intervention-effects-time-series-cases-averted.pdf
+	$(CROP) intervention-effects-time-series-cases-averted.pdf intervention-effects-time-series-cases-averted-cropped.pdf
+intervention-effects-time-series-cases-averted-switched-cropped.pdf: intervention-effects-time-series-cases-averted-switched.pdf
+	$(CROP) intervention-effects-time-series-cases-averted-switched.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf
 
 figures: tikz-figures r-figures
 tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure8.pdf figure11.pdf
-r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf
+r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf intervention-effects-time-series-cases-averted-cropped.pdf
 
 clean:
 	rm -f *.aux *.log *.pdf intervention-effects-time-series-susceptible *.txt
