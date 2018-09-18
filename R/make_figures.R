@@ -29,6 +29,12 @@ scenario_changer = as.factor(c(
 ))
 scenario_changer = relevel(scenario_changer,2,1,3,4)
 
+type_changer = as.factor(c(
+  'Multi_World' = 'Traditional',
+  'Single_World' = 'Single-World'
+))
+type_changer = relevel(type_changer,2,1)
+
 ## Figure 1 - Illustration of the Problem
 ### Simulated Epidemic Curves with and without intervention
     # color intervention
@@ -243,6 +249,31 @@ plt_inf_t = time_series_summary %>%
   theme_bw() + 
   theme(legend.position="none",aspect.ratio=1)
 
+plt_neg_rec = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=type_changer[type]) %>%
+  mutate(`Cases Averted`=-`Change in Cases`) %>%
+  ggplot() +
+  geom_ribbon(aes(x=`Time (days)`,ymin=-lq,ymax=-uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Cases Averted`,color=variable)) +
+  geom_abline(slope=0,intercept=0,linetype=2) +
+  facet_grid(scenario~type) +
+  theme_bw() + 
+  theme(legend.position="none",aspect.ratio=1)
+
+plt_neg_rec_t = time_series_summary %>%
+  filter(variable == 'V3') %>%
+  ungroup() %>%
+  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=type_changer[type]) %>%
+  mutate(`Cases Averted`=-`Change in Cases`) %>%
+  ggplot() +
+  geom_ribbon(aes(x=`Time (days)`,ymin=-lq,ymax=-uq,fill=variable),alpha=.5) +
+  geom_line(aes(x=`Time (days)`,y=`Cases Averted`,color=variable)) +
+  facet_grid(type~scenario) +
+  theme_bw() + 
+  theme(legend.position="none",aspect.ratio=1)
+
 plt_rec = time_series_summary %>%
   filter(variable == 'V3') %>%
   ungroup() %>%
@@ -340,11 +371,17 @@ dev.off()
 pdf('figures/intervention-effects-relative-risk.pdf')
 print(plot_inference(final_size,'Log_Relative_Risk'))
 dev.off()
+pdf('figures/intervention-effects-time-series-cases-averted-switched.pdf')
+print(plt_neg_rec_t)
+dev.off()
+pdf('figures/intervention-effects-time-series-cases-averted.pdf')
+print(plt_neg_rec)
+dev.off()
 pdf('figures/intervention-effects-time-series-recovered-switched.pdf')
 print(plt_rec_t)
 dev.off()
 pdf('figures/intervention-effects-time-series-recovered.pdf')
-print(plt_rec_t)
+print(plt_rec)
 dev.off()
 pdf('figures/intervention-effects-time-series-susceptible-switched.pdf')
 print(plt_sus_t)
