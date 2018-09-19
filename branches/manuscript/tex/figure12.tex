@@ -72,28 +72,17 @@
 
 \begin{document}
 \begin{tikzpicture}
-\draw (  0,  4) node             {\resizebox{1.6\width}{!}{\Huge \textbf{Potential Epidemic Graph}}};
-\draw (  0,-2 ) node (potential) {\includegraphics{figure9_pg_1}};
-\draw (-10,- 9) node (prei0)     {\resizebox{1.6\width}{!}{\Huge \textbf{Uncontrolled}}};
-\draw (-10,-14) node (t0i0)      {\includegraphics{figure9_pg_2}};
-\draw (-10,-25) node (t1i0)      {\includegraphics{figure9_pg_3}};
-\draw (-10,-36) node (t2i0)      {\includegraphics{figure9_pg_4}};
-\draw (-10,-47) node (t3i0)      {\includegraphics{figure9_pg_5}};
-\draw ( 10,- 9) node (prei1)     {\resizebox{1.6\width}{!}{\Huge \textbf{Controlled}}};
-\draw ( 10,-14) node (t0i1)      {\includegraphics{figure10_pg_2}};
-\draw ( 10,-25) node (t1i1)      {\includegraphics{figure10_pg_3}};
-\draw ( 10,-36) node (t2i1)      {\includegraphics{figure10_pg_4}};
-\draw ( 10,-47) node (t3i1)      {\includegraphics{figure10_pg_5}};
 
-\draw[-latex,line width=2mm, color=black!40!white] (potential) -- (prei0);
-\draw[-latex,line width=2mm, color=black!40!white] (t0i0) -- (t1i0);
-\draw[-latex,line width=2mm, color=black!40!white] (t1i0) -- (t2i0);
-\draw[-latex,line width=2mm, color=black!40!white] (t2i0) -- (t3i0);
+\draw (-.85,.5) node {\textbf{a)}};
+\draw (0,0) node[draw, rectangle] (Xi) {\Huge $X_i$};
+\draw (4,0) node[draw, rectangle] (Xj) {\Huge $X_j$};
 
-\draw[-latex,line width=2mm, color=black!40!white] (potential) -- (prei1);
-\draw[-latex,line width=2mm, color=black!40!white] (t0i1) -- (t1i1);
-\draw[-latex,line width=2mm, color=black!40!white] (t1i1) -- (t2i1);
-\draw[-latex,line width=2mm, color=black!40!white] (t2i1) -- (t3i1);
+\draw[-latex,line width=.5mm, color=black!40!white] (Xi) -- node[midway,above,text=black] {$\alpha_{i,j}$} (Xj);
 
+\draw (5.15,.5) node {\textbf{b)}};
+\draw (6,0) node[draw, rectangle] (Xi) {\Huge $X_i$};
+\draw (10,0) node[draw, rectangle] (Xj) {\Huge $X_j$};
+
+\draw[-latex,line width=.5mm, color=black!40!white] (Xi) -- node[midway,above,text=black] {$\beta_{i,j,k}\left[\left[X_k\right]\right]$} (Xj);
 \end{tikzpicture}
 \end{document}
