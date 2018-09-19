@@ -73,16 +73,16 @@
 \begin{document}
 \begin{tikzpicture}
 
-\draw (-.85,.5) node {\textbf{a)}};
-\draw (0,0) node[draw, rectangle] (Xi) {\Huge $X_i$};
-\draw (4,0) node[draw, rectangle] (Xj) {\Huge $X_j$};
+\draw (-.85,2.5) node {\textbf{a)}};
+\draw (0,2) node[draw, rectangle] (Xi) {\Huge $X_i$};
+\draw (4,2) node[draw, rectangle] (Xj) {\Huge $X_j$};
 
 \draw[-latex,line width=.5mm, color=black!40!white] (Xi) -- node[midway,above,text=black] {$\alpha_{i,j}$} (Xj);
 
-\draw (5.15,.5) node {\textbf{b)}};
-\draw (6,0) node[draw, rectangle] (Xi) {\Huge $X_i$};
-\draw (10,0) node[draw, rectangle] (Xj) {\Huge $X_j$};
+\draw (-.85,0.5) node {\textbf{b)}};
+\draw (0,0) node[draw, rectangle] (Xi) {\Huge $X_i$};
+\draw (4,0) node[draw, rectangle] (Xj) {\Huge $X_j$};
 
-\draw[-latex,line width=.5mm, color=black!40!white] (Xi) -- node[midway,above,text=black] {$\beta_{i,j,k}\left[\left[X_k\right]\right]$} (Xj);
+\draw[-latex,line width=.5mm, color=black!40!white] (Xi) -- node[midway,above,text=black] {$\beta_{i,j,k}X_k$} (Xj);
 \end{tikzpicture}
 \end{document}
