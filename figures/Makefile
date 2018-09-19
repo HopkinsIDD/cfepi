@@ -66,6 +66,8 @@ figure10_pg_4.pdf: figure10-burst
 figure10_pg_5.pdf: figure10-burst
 figure11.pdf: figure9-burst figure10-burst
 	$(TEX) ../tex/figure11.tex 
+figure12.pdf:
+	$(TEX) ../tex/figure12.tex 
 
 intervention-effects-combined-boxplots.pdf:
 	$(R) ../R/make_figures.R
@@ -114,7 +116,7 @@ intervention-effects-time-series-cases-averted-switched-cropped.pdf: interventio
 	$(CROP) intervention-effects-time-series-cases-averted-switched.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf
 
 figures: tikz-figures r-figures
-tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure8.pdf figure11.pdf
+tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure8.pdf figure11.pdf figure12.pdf
 r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf intervention-effects-time-series-cases-averted-cropped.pdf
 
 clean:
