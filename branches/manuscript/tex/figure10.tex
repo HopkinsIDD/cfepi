@@ -7,7 +7,7 @@
 \usepackage{xcolor}
 
 %tikz libraries}}
-\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{shapes.geometric,decorations.markings,positioning,calc}
 
 %Colors
 \definecolor{susceptible}{RGB}{141,160,203}
@@ -20,6 +20,24 @@
 %New commands
 \newcommand{\Leftscissor}{\large  X}
 \newcommand{\Largescissor}{\Huge  X}
+
+\newcommand{\independentedge}[5]{
+%  \draw[-latex,potential,line width=1mm, color=#5] (#1) -- (#2);
+  \draw[#3, color=#5] (#1) -- ($(#1)!.5!(#2)$);
+  \draw[-latex,#3, color=#5] ($(#1)!.5!(#2)$) -- (#2);
+}
+\newcommand{\contactedge}[9]{
+  \pgfmathsetmacro{\s}{1-#7}
+  \pgfmathsetmacro{\outangle}{.5*(#8 + #9)};
+  \pgfmathsetmacro{\inangle}{180+.5*(#8 + #9)};
+  \pgfmathsetmacro{\inangleend}{180+(#9)};
+
+  \node (sum) at  ($(#1)!.6!(#3)$) (E121) {};
+  \node (sum) at ($(#2)!.6!(#3)$) (E122) {};
+  \node (sum) at ($(E121)!\s!(E122)$) (E12) {};
+  \draw[-latex,#4,color=#6,tangent=.8] (#2) to[out=#8,in=\inangle] (E12.center) to[out=\outangle,in=\inangleend] (#3);
+  \draw[-latex,#4,color=#6,use tangent=1] (#1) to[out=#9,in=\inangle] (E12.center) to[out=\outangle,in=\inangleend] (#3);
+}
 
 % Formatting macros:
 \tikzstyle{node}=[minimum size= .5in,circle, draw]
@@ -35,6 +53,32 @@
 \tikzstyle{intervention}=[fill = intervention]
 \tikzstyle{contact}=[fill = infection]
 \tikzstyle{recovery}=[fill = recovery]
+
+ \makeatletter
+\tikzset{%
+  tangent/.style={
+    decoration={
+      markings,% switch on markings
+      mark=
+        at position #1
+        with
+        {
+          \coordinate (tangent point-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (0pt,0pt);
+          \coordinate (tangent unit vector-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (1,0pt);
+          \coordinate (tangent orthogonal unit vector-\pgfkeysvalueof{/pgf/decoration/mark info/sequence number}) at (0pt,1);
+        }
+    },
+    postaction=decorate
+  },
+  use tangent/.style={
+    shift=(tangent point-#1),
+    x=(tangent unit vector-#1),
+    y=(tangent orthogonal unit vector-#1)
+  },
+  use tangent/.default=1
+]}
+\makeatother
+
 
 \makeatletter
 %% Modifiecd from stack exchange https://tex.stackexchange.com/questions/55594/tikz-two-colored-circle-split
@@ -100,20 +144,20 @@
   \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
   \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
 
-  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P22);
-  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P32);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  \contactedge{P11}{P21}{P22}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P11}{P31}{P32}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
-  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  \contactedge{P12}{P32}{P33}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+  \contactedge{P22}{P32}{P33}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P32}{P22}{P23}{potential,line width=1mm}{susceptible}{infection}{.6}{-10}{20}
+ 
+  \independentedge{P12}{P13}{potential,line width=1mm}{infection}{recovery};
+  \independentedge{P32}{P33}{potential,line width=1mm}{infection}{recovery};
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+  \contactedge{P23}{P33}{P34}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P23}{P43}{P44}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+ 
+  \independentedge{P23}{P24}{potential,line width=1mm}{infection}{recovery};
 
   %% Extends on
   \draw (14,0) node{\Huge \dots};
@@ -160,20 +204,20 @@
   \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
   \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
 
-  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P22);
-  \draw[-latex,potential,line width=1mm, color=infection] (P11) -- (P32);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  \contactedge{P11}{P21}{P22}{impossible,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P11}{P31}{P32}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
-  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  \contactedge{P12}{P32}{P33}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+  \contactedge{P22}{P32}{P33}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P32}{P22}{P23}{potential,line width=1mm}{susceptible}{infection}{.6}{-10}{20}
+ 
+  \independentedge{P12}{P13}{potential,line width=1mm}{infection}{recovery};
+  \independentedge{P32}{P33}{potential,line width=1mm}{infection}{recovery};
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+  \contactedge{P23}{P33}{P34}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P23}{P43}{P44}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+ 
+  \independentedge{P23}{P24}{potential,line width=1mm}{infection}{recovery};
 
   %% Extends on
   \draw (14,0) node{\Huge \dots};
@@ -220,20 +264,19 @@
   \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
   \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
 
-  \draw[-latex,impossible,line width=1mm, color=infection] (P11) -- (P22);
-  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P12) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P22) -- (P33);
-  \draw[-latex,potential,line width=1mm, color=infection] (P32) -- (P23);
+  \contactedge{P11}{P31}{P32}{actual,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P12) -- (P13);
-  \draw[-latex,potential,line width=1mm, color=recovery] (P32) -- (P33);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  \contactedge{P12}{P32}{P33}{impossible,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+  \contactedge{P22}{P32}{P33}{impossible,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P32}{P22}{P23}{impossible,line width=1mm}{susceptible}{infection}{.6}{-10}{20}
+ 
+  \independentedge{P12}{P13}{actual,line width=1mm}{infection}{recovery};
+  \independentedge{P32}{P33}{actual,line width=1mm}{infection}{recovery};
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+  \contactedge{P23}{P33}{P34}{potential,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P23}{P43}{P44}{potential,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+ 
+  \independentedge{P23}{P24}{potential,line width=1mm}{infection}{recovery};
 
   %% Extends on
   \draw (14,0) node{\Huge \dots};
@@ -280,19 +323,15 @@
   \draw (12,3) node[node,potential,circle tri split part fill={susceptible,infection,recovery}] (P34) {};
   \draw (12,4.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P44) {};
 
-  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
-
-  \draw[-latex,impossible,line width=1mm, color=infection] (P12) -- (P33);
-  \draw[-latex,impossible,line width=1mm, color=infection] (P22) -- (P33);
-  \draw[-latex,impossible,line width=1mm, color=infection] (P32) -- (P23);
+  \contactedge{P11}{P31}{P32}{actual,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
   
-  \draw[-latex,actual,line width=1mm, color=recovery] (P12) -- (P13);
-  \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
-
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P34);
-  \draw[-latex,potential,line width=1mm, color=infection] (P23) -- (P44);
+  \independentedge{P12}{P13}{actual,line width=1mm}{infection}{recovery};
+  \independentedge{P32}{P33}{actual,line width=1mm}{infection}{recovery};
   
-  \draw[-latex,potential,line width=1mm, color=recovery] (P23) -- (P24);
+  \contactedge{P23}{P33}{P34}{impossible,line width=1mm}{susceptible}{infection}{.6}{10}{-20}
+  \contactedge{P23}{P43}{P44}{impossible,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
+ 
+  \independentedge{P23}{P24}{impossible,line width=1mm}{infection}{recovery};
 
   %% Extends on
   \draw (14,0) node{\Huge \dots};
@@ -339,14 +378,12 @@
   \draw (12,3) node[node,actual,circle,fill=recovery] (P34) {};
   \draw (12,4.5) node[node,actual,circle,fill=susceptible] (P44) {};
 
-  \draw[-latex,actual,line width=1mm, color=infection] (P11) -- (P32);
-
-  \draw[-latex,actual,line width=1mm, color=recovery] (P12) -- (P13);
-  \draw[-latex,actual,line width=1mm, color=recovery] (P32) -- (P33);
-
-  \draw[-latex,impossible,line width=1mm, color=infection] (P23) -- (P44);
+  \contactedge{P11}{P31}{P32}{actual,line width=1mm}{susceptible}{infection}{.7}{28}{-35}
   
-  \draw[-latex,impossible,line width=1mm, color=recovery] (P23) -- (P24);
+  \independentedge{P12}{P13}{actual,line width=1mm}{infection}{recovery};
+  \independentedge{P32}{P33}{actual,line width=1mm}{infection}{recovery};
+  
+ 
 
   %% Extends on
   \draw (14,0) node{\Huge \dots};
