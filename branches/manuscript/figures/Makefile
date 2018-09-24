@@ -3,7 +3,7 @@ R=Rscript
 BIB=bibtex
 CROP=pdfcrop
 PDFTK=pdftk
-.PHONY: all clean figures tikz-figures r-figures figure7-burst figure5-burst figure9-burst figure10-burst
+.PHONY: all clean figures tikz-figures r-figures figure7-burst peg_steps-burst epidemic_uncontrolled-burst epidemic_controlled-burst
 
 all: figures
 
@@ -21,20 +21,18 @@ figure3.pdf:
 	$(TEX) ../tex/figure3.tex 
 figure4.pdf:
 	$(TEX) ../tex/figure4.tex 
-figure5.pdf:
-	$(TEX) ../tex/figure5.tex 
-figure5-burst: figure5.pdf
-	$(PDFTK) figure5.pdf burst output figure5_pg_%01d.pdf
-figure5_pg_1.pdf: figure5-burst
-figure5_pg_2.pdf: figure5-burst
-figure5_pg_3.pdf: figure5-burst
-figure5_pg_4.pdf: figure5-burst
-figure5_pg_5.pdf: figure5-burst
-figure6-precrop.pdf: figure5.pdf
-	$(TEX) ../tex/figure6-precrop.tex 
-figure6.pdf: figure6-precrop.pdf figure5-burst
-	$(TEX) ../tex/figure6.tex
-#	$(TEX) figure6-precrop.pdf figure6.pdf
+peg_steps.pdf:
+	$(TEX) ../tex/peg_steps.tex 
+peg_steps-burst: peg_steps.pdf
+	$(PDFTK) peg_steps.pdf burst output peg_steps_pg_%01d.pdf
+peg_steps_pg_1.pdf: peg_steps-burst
+peg_steps_pg_2.pdf: peg_steps-burst
+peg_steps_pg_3.pdf: peg_steps-burst
+peg_steps_pg_4.pdf: peg_steps-burst
+peg_steps_pg_5.pdf: peg_steps-burst
+peg_create.pdf: peg_steps-burst
+	$(TEX) ../tex/peg_create.tex
+#	$(TEX) peg_create-precrop.pdf peg_create.pdf
 figure7.pdf:
 	$(TEX) ../tex/figure7.tex 
 figure7-burst: figure7.pdf
@@ -46,30 +44,32 @@ figure7_pg_4.pdf: figure7-burst
 figure7_pg_5.pdf: figure7-burst
 figure8.pdf: figure7_pg_1.pdf figure7_pg_2.pdf figure7_pg_3.pdf figure7_pg_4.pdf figure7_pg_5.pdf
 	$(TEX) ../tex/figure8.tex 
-figure9.pdf:
-	$(TEX) ../tex/figure9.tex 
-figure9-burst: figure9.pdf
-	$(PDFTK) figure9.pdf burst output figure9_pg_%01d.pdf
-figure9_pg_1.pdf: figure9-burst
-figure9_pg_2.pdf: figure9-burst
-figure9_pg_3.pdf: figure9-burst
-figure9_pg_4.pdf: figure9-burst
-figure9_pg_5.pdf: figure9-burst
-figure10.pdf:
-	$(TEX) ../tex/figure10.tex 
-figure10-burst: figure10.pdf
-	$(PDFTK) figure10.pdf burst output figure10_pg_%01d.pdf
-figure10_pg_1.pdf: figure10-burst
-figure10_pg_2.pdf: figure10-burst
-figure10_pg_3.pdf: figure10-burst
-figure10_pg_4.pdf: figure10-burst
-figure10_pg_5.pdf: figure10-burst
-figure11.pdf: figure9-burst figure10-burst
-	$(TEX) ../tex/figure11.tex 
+epidemic_uncontrolled.pdf:
+	$(TEX) ../tex/epidemic_uncontrolled.tex 
+epidemic_uncontrolled-burst: epidemic_uncontrolled.pdf
+	$(PDFTK) epidemic_uncontrolled.pdf burst output epidemic_uncontrolled_pg_%01d.pdf
+epidemic_uncontrolled_pg_1.pdf: epidemic_uncontrolled-burst
+epidemic_uncontrolled_pg_2.pdf: epidemic_uncontrolled-burst
+epidemic_uncontrolled_pg_3.pdf: epidemic_uncontrolled-burst
+epidemic_uncontrolled_pg_4.pdf: epidemic_uncontrolled-burst
+epidemic_uncontrolled_pg_5.pdf: epidemic_uncontrolled-burst
+epidemic_controlled.pdf:
+	$(TEX) ../tex/epidemic_controlled.tex 
+epidemic_controlled-burst: epidemic_controlled.pdf
+	$(PDFTK) epidemic_controlled.pdf burst output epidemic_controlled_pg_%01d.pdf
+epidemic_controlled_pg_1.pdf: epidemic_controlled-burst
+epidemic_controlled_pg_2.pdf: epidemic_controlled-burst
+epidemic_controlled_pg_3.pdf: epidemic_controlled-burst
+epidemic_controlled_pg_4.pdf: epidemic_controlled-burst
+epidemic_controlled_pg_5.pdf: epidemic_controlled-burst
+epidemic_both.pdf: epidemic_uncontrolled-burst epidemic_controlled-burst
+	$(TEX) ../tex/epidemic_both.tex 
 figure12.pdf:
 	$(TEX) ../tex/figure12.tex 
 event-anatomy.pdf:
 	$(TEX) ../tex/event-anatomy.tex 
+event-anatomy-simplified.pdf:
+	$(TEX) ../tex/event-anatomy-simplified.tex 
 
 intervention-effects-combined-boxplots.pdf:
 	$(R) ../R/make_figures.R
@@ -118,8 +118,8 @@ intervention-effects-time-series-cases-averted-switched-cropped.pdf: interventio
 	$(CROP) intervention-effects-time-series-cases-averted-switched.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf
 
 figures: tikz-figures r-figures
-tikz-figures: figure1.pdf figure2.pdf figure3.pdf figure4.pdf figure6.pdf figure8.pdf figure11.pdf figure12.pdf
-r-figures: intervention-effects-combined-boxplots-cropped.pdf intervention-effects-final-size-cropped.pdf intervention-effects-peak-time-cropped.pdf intervention-effects-raw-boxplots-cropped.pdf intervention-effects-relative-risk-cropped.pdf intervention-effects-time-series-recovered-cropped.pdf intervention-effects-time-series-recovered-switched-cropped.pdf intervention-effects-time-series-susceptible-cropped.pdf intervention-effects-time-series-susceptible-switched-cropped.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf intervention-effects-time-series-cases-averted-cropped.pdf
+tikz-figures: event-anatomy.pdf peg_create.pdf epidemic_both.pdf event-anatomy-simplified.pdf
+r-figures: intervention-effects-time-series-cases-averted-switched.pdf
 
 clean:
 	rm -f *.aux *.log *.pdf intervention-effects-time-series-susceptible *.txt
