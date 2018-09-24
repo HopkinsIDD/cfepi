@@ -68,6 +68,8 @@ figure11.pdf: figure9-burst figure10-burst
 	$(TEX) ../tex/figure11.tex 
 figure12.pdf:
 	$(TEX) ../tex/figure12.tex 
+event-anatomy.pdf:
+	$(TEX) ../tex/event-anatomy.tex 
 
 intervention-effects-combined-boxplots.pdf:
 	$(R) ../R/make_figures.R
