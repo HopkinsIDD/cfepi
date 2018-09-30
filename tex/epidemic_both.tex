@@ -1,0 +1,99 @@
+% tikzpic.teP
+\documentclass[crop,tikz]{standalone}% 'crop' is the default for v1.0, before it was 'preview'
+
+%Packages
+\usepackage{xcolor}
+
+%tikz libraries}}
+\usetikzlibrary{shapes.geometric,positioning}
+
+%Colors
+\definecolor{susceptible}{RGB}{141,160,203}
+\definecolor{recovery}{RGB}{102,194,165}
+\definecolor{infection}{RGB}{252,141,98}
+% \definecolor{intervention}{RGB}{231,138,195}
+\definecolor{intervention}{RGB}{50, 102, 86}
+\definecolor{nothing}{RGB}{225,225,225}
+
+%New commands
+\newcommand{\Leftscissor}{\large  X}
+\newcommand{\Largescissor}{\Huge  X}
+
+% Formatting macros:
+\tikzstyle{node}=[minimum size= .5in,circle, draw]
+\tikzset{intervened node fill/.style  args={#1,#2}{node,potential,circle split part fill={#1,#2}}}
+
+\tikzset{potential/.style={opacity=.7}}
+\tikzset{actual/.style={opacity=1}}
+\tikzset{impossible/.style={opacity=.2}}
+
+\tikzstyle{edge}=[diamond, draw]
+\tikzstyle{intervention}=[fill = intervention]
+\tikzstyle{contact}=[fill = infection]
+\tikzstyle{recovery}=[fill = recovery]
+
+\makeatletter
+\tikzset{circle split part fill/.style  args={#1,#2}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:270:\insiderad-\pgflinewidth)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:450:\insiderad-\pgflinewidth)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother  
+ 
+ \makeatletter
+\tikzset{circle tri split part fill/.style  args={#1,#2,#3}{%
+    alias=tmp@name, % Jake's idea !!
+    postaction={%
+      insert path={
+        \pgfextra{%
+          \pgfpointdiff{\pgfpointanchor{\pgf@node@name}{center}}%
+          {\pgfpointanchor{\pgf@node@name}{north}}%
+          \pgfmathsetmacro\scale{1}
+          \pgfmathsetmacro\insiderad{\pgf@y*\scale}
+          \fill[#1] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north) arc
+          (90:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;
+          \fill[#2] (\pgf@node@name.base) ([yshift=-\pgflinewidth]\pgf@node@name.north)  arc
+          (90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (-90:-30:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle; 
+          \fill[#3] (\pgf@node@name.base) ([yshift=\pgflinewidth]\pgf@node@name.south)  arc
+          (270:210:\insiderad-\pgflinewidth)--(\pgf@node@name.center)--cycle;            %  \end{scope}
+        }}}}}
+ \makeatother
+
+\begin{document}
+\begin{tikzpicture}
+\draw (  0,  4) node             {\resizebox{1.6\width}{!}{\Huge \textbf{Potential Epidemic Graph}}};
+\draw (  0,-2 ) node (potential) {\includegraphics{epidemic_uncontrolled_pg_1}};
+\draw (-10,- 9) node (prei0)     {\resizebox{1.6\width}{!}{\Huge \textbf{Uncontrolled}}};
+\draw (-10,-14) node (t0i0)      {\includegraphics{epidemic_uncontrolled_pg_2}};
+\draw (-10,-25) node (t1i0)      {\includegraphics{epidemic_uncontrolled_pg_3}};
+\draw (-10,-36) node (t2i0)      {\includegraphics{epidemic_uncontrolled_pg_4}};
+\draw (-10,-47) node (t3i0)      {\includegraphics{epidemic_uncontrolled_pg_5}};
+\draw ( 10,- 9) node (prei1)     {\resizebox{1.6\width}{!}{\Huge \textbf{Controlled}}};
+\draw ( 10,-14) node (t0i1)      {\includegraphics{epidemic_controlled_pg_2}};
+\draw ( 10,-25) node (t1i1)      {\includegraphics{epidemic_controlled_pg_3}};
+\draw ( 10,-36) node (t2i1)      {\includegraphics{epidemic_controlled_pg_4}};
+\draw ( 10,-47) node (t3i1)      {\includegraphics{epidemic_controlled_pg_5}};
+
+\draw[-latex,line width=2mm, color=black!40!white] (potential) -- (prei0);
+\draw[-latex,line width=2mm, color=black!40!white] (t0i0) -- (t1i0);
+\draw[-latex,line width=2mm, color=black!40!white] (t1i0) -- (t2i0);
+\draw[-latex,line width=2mm, color=black!40!white] (t2i0) -- (t3i0);
+
+\draw[-latex,line width=2mm, color=black!40!white] (potential) -- (prei1);
+\draw[-latex,line width=2mm, color=black!40!white] (t0i1) -- (t1i1);
+\draw[-latex,line width=2mm, color=black!40!white] (t1i1) -- (t2i1);
+\draw[-latex,line width=2mm, color=black!40!white] (t2i1) -- (t3i1);
+
+\end{tikzpicture}
+\end{document}
