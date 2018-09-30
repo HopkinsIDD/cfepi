@@ -118,8 +118,8 @@ intervention-effects-time-series-cases-averted-switched-cropped.pdf: interventio
 	$(CROP) intervention-effects-time-series-cases-averted-switched.pdf intervention-effects-time-series-cases-averted-switched-cropped.pdf
 
 figures: tikz-figures r-figures
-tikz-figures: event-anatomy.pdf peg_create.pdf epidemic_both.pdf event-anatomy-simplified.pdf
-r-figures: intervention-effects-time-series-cases-averted-switched.pdf
+tikz-figures: event-anatomy.pdf peg_create.pdf epidemic_both.pdf event-anatomy-simplified.pdf figure12.pdf
+r-figures: intervention-effects-time-series-cases-averted-switched-cropped.pdf
 
 clean:
 	rm -f *.aux *.log *.pdf intervention-effects-time-series-susceptible *.txt
