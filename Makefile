@@ -8,4 +8,10 @@ pdfs: figures
 figures:
 	$(MAKE) -C figures $(MAKECMDGOALS)
 
-.PHONY: $(TOPTARGETS) $(SUBDIRS)
+run_interventions: 
+	Rscript R/setup_all_interventions.R
+
+clean_interventions:
+	rm output/*.csv
+
+.PHONY: $(TOPTARGETS) $(SUBDIRS) run_interventions clean_interventions
