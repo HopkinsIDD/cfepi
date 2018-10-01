@@ -12,7 +12,7 @@ if(!require(counterfactual)){
   source("package/R/read.R")
 }
 # library(counterfactual)
-library(cowplot)
+# library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -398,20 +398,20 @@ while(dev.off() != 1){}
 single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Single_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
 multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Multi_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
 ci_string_1 = paste0(
-  "For single-world inference, we found that every non-null intervention had a significant ($p<0.05$) number of cases averted: ",
+  "For single-world inference, we found that every non-null intervention had a significant  number of cases averted: ",
   paste(
     single_world_ci$scenario,
     "$",
     -round(single_world_ci$final_size_m),
     "$ (CI $",
     -ceiling(single_world_ci$final_size_h),
-    "$ \textemdash $",
+    "$ \textendash $",
     -floor(single_world_ci$final_size_l),
     "$)",
     collapse=', '
   ),".")
 ci_string_2 = paste0(
-  "For multiple-world inference, we found that all but one non-null intervention had a significant ($p<0.05$) number of cases averted: ",
+  "For multiple-world inference, we found that all but one non-null intervention had a significant number of cases averted: ",
   paste(
     multiple_world_ci$scenario,
     "$",
@@ -423,6 +423,29 @@ ci_string_2 = paste0(
     "$)",
     collapse=', '
   ),".")
+ci_string_3 = paste0(
+  "The single-world approach estimated",
+  single_world_ci$scenario,
+  "to prevent an average of",
+  paste(
+    -round(single_world_ci$final_size_m),
+    "$ (95\\%: $",
+    -ceiling(single_world_ci$final_size_h),
+    "$\textendash$",
+    -floor(single_world_ci$final_size_l),
+    "$)",
+  ),
+  "versus",
+  paste(
+    -round(multiple_world_ci$final_size_m),
+    "$ (95\%: $",
+    -ceiling(multiple_world_ci$final_size_h),
+    "$\textendash$",
+    -floor(multiple_world_ci$final_size_l),
+    "$)",
+  ),
+  c("in the standard approach.",".",".")
+)
 ci_string_1 = gsub(' -',' \neg',ci_string_1)
 ci_string_2 = gsub(' -',' \neg',ci_string_2)
 print(ci_string_1)
