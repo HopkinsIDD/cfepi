@@ -141,11 +141,17 @@
 \begin{document}
 
 \begin{tikzpicture}
-  \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
-  \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
+  % \draw (0,0) node[node,potential,circle tri split part fill={nothing,infection,nothing}] (P11) {};
+  % \draw (0,1.5) node[node,potential,circle tri split part fill={susceptible,nothing,nothing}] (P21) {};
 
-  \draw (4,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P12) {};
-  \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
+  % \draw (4,0) node[node,potential,circle tri split part fill={nothing,nothing,recovery}] (P12) {};
+  % \draw (4,1.5) node[node,potential,circle tri split part fill={susceptible,infection,nothing}] (P22) {};
+
+  \draw (0,0) node[node,potential,circle,fill=infection] (P11) {};
+  \draw (0,1.5) node[node,potential,circle,fill=susceptible] (P21) {};
+
+  \draw (4,0) node[node,potential,circle,fill=recovery] (P12) {};
+  \draw (4,1.5) node[node,potential,circle,fill=infection] (P22) {};
 
 %   %P11
 %   \draw (-.2,-.2) node {?}; %S 
