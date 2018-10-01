@@ -23,37 +23,40 @@
 
 \newcommand{\independentedge}[5]{
   % \draw[-latex,potential,line width=1mm, color=#5] (#1) -- (#2);
-  \draw[#3] (#1) -- ($(#1)!.5!(#2)$);
-  \draw[-latex,#4] ($(#1)!.5!(#2)$) -- (#2);
-  \draw ($(#1)!.5!(#2)$) node[draw=black,#5,line width=.1mm,diamond] {};
+  \draw[-latex,#4] (#1) -- (#2);
+  % \draw[#4] (#1) -- ($(#1)!.5!(#2)$);
+  % \draw[-latex,#4] ($(#1)!.5!(#2)$) -- (#2);
+  % \draw ($(#1)!.5!(#2)$) node[draw=black,#5,line width=.1mm,diamond] {};
 }
 \newcommand{\contactedge}[9]{
-  \pgfmathsetmacro{\s}{1-#7}
-  \pgfmathsetmacro{\outangle}{.5*(#8 + #9)};
-  \pgfmathsetmacro{\inangle}{180+.5*(#8 + #9)};
-  \pgfmathsetmacro{\inangleend}{180+(#9)};
-  \pgfmathsetmacro{\eventangle}{\outangle};
+  % \pgfmathsetmacro{\s}{1-#7}
+  % \pgfmathsetmacro{\outangle}{.5*(#8 + #9)};
+  % \pgfmathsetmacro{\inangle}{180+.5*(#8 + #9)};
+  % \pgfmathsetmacro{\inangleend}{180+(#9)};
+  % \pgfmathsetmacro{\eventangle}{\outangle};
 
-  \node (sum) at  ($(#1)!.6!(#3)$) (E121) {};
-  \node (sum) at ($(#2)!.6!(#3)$) (E122) {};
-  \node (sum) at ($(E121)!\s!(E122)$) (E12) {};
-  \draw[-latex,#5,tangent=.5] (#1) to[out=#9,in=\inangle] (E12.center) to[out=\outangle,in=\inangleend] (#3);
-  \draw (tangent point-1) node (tp1) {};
-  \draw (tangent unit vector-1) node (tv1) {};
-  \draw (tangent orthogonal unit vector-1) node (to1) {};
-  \draw[-,#4,tangent=.5] (#2) to[out=#8,in=\inangle] (E12.center);
-  \draw (tangent point-1) node (tp2) {};
-  \draw (tangent unit vector-1) node (tv2) {};
-  \draw (tangent orthogonal unit vector-1) node (to2) {};
-  \draw ($(tp1)!.5!(tp2)$) node (tp3) {};
-  \draw ($(tv1)!.5!(tv2)$) node (tv3) {};
-  \draw ($(tv3.center) - (tp3.center)$) node (tv4) {};
-  \newdimen\myxcoord
-  \newdimen\myycoord
-  \pgfextractx{\myxcoord}{(tv4)};
-  \pgfextracty{\myycoord}{(tv4)};
-  \pgfmathsetmacro{\diamondangle}{atan2(\myycoord,\myxcoord)};
-  \draw (E12.center) node[diamond,draw=black,#6,line width=.1mm,rotate=\diamondangle] {};
+  % \node (sum) at  ($(#1)!.6!(#3)$) (E121) {};
+  % \node (sum) at ($(#2)!.6!(#3)$) (E122) {};
+  % \node (sum) at ($(E121)!\s!(E122)$) (E12) {};
+  % \draw[-latex,#5,tangent=.5] (#1) to[out=#9,in=\inangle] (E12.center) to[out=\outangle,in=\inangleend] (#3);
+  % \draw (tangent point-1) node (tp1) {};
+  % \draw (tangent unit vector-1) node (tv1) {};
+  % \draw (tangent orthogonal unit vector-1) node (to1) {};
+  % \draw[-,#4,tangent=.5] (#2) to[out=#8,in=\inangle] (E12.center);
+  % \draw (tangent point-1) node (tp2) {};
+  % \draw (tangent unit vector-1) node (tv2) {};
+  % \draw (tangent orthogonal unit vector-1) node (to2) {};
+  % \draw ($(tp1)!.5!(tp2)$) node (tp3) {};
+  % \draw ($(tv1)!.5!(tv2)$) node (tv3) {};
+  % \draw ($(tv3.center) - (tp3.center)$) node (tv4) {};
+  % \newdimen\myxcoord
+  % \newdimen\myycoord
+  % \pgfextractx{\myxcoord}{(tv4)};
+  % \pgfextracty{\myycoord}{(tv4)};
+  % \pgfmathsetmacro{\diamondangle}{atan2(\myycoord,\myxcoord)};
+  % \draw (E12.center) node[diamond,draw=black,#6,line width=.1mm,rotate=\diamondangle] {};
+
+  \draw[-latex,#5] (#1) -- (#3);
 }
 
 % Formatting macros:
