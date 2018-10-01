@@ -22,9 +22,9 @@ output = read_scenario('output/figures0')
 multiworld_output = read_scenario('output/figures1')
 
 scenario_changer = as.factor(c(
-  'None_None' = 'Null',
+  'None_None' = 'No Intervention',
   'None_Constant' = 'Antivirals',
-  'Flat_None' = 'Social Distancing',
+  'Flat_None' = 'Hand Washing',
   'None_Single' = 'Vaccination'
 ))
 scenario_changer = relevel(scenario_changer,2,1,3,4)
