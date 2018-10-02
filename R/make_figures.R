@@ -336,7 +336,7 @@ plt_box_intervene = final_size(output) %>%
   mutate(`Cases Averted` = -final_size,Intervention=scenario_changer[scenario]) %>%
   ggplot() +
   geom_boxplot(aes(x=Intervention, y=`Cases Averted`)) +
-  ylim(c(-100,1000)) +
+  # ylim(c(-100,1000)) +
   theme_bw() + 
   geom_abline(slope=0)
 
@@ -345,8 +345,8 @@ plt_box_no_intervene = final_size(output) %>%
   mutate(`Final Size` = final_size,Intervention=scenario_changer[scenario]) %>%
   ggplot() +
   geom_boxplot(aes(x=Intervention, y=`Final Size`)) +
-  theme_bw() + 
-  ylim(c(2000,3200))
+  # ylim(c(2000,3200)) + 
+  theme_bw()
   
 
 ## Figure 2 - Cartoon/Diagram illustrating method.
