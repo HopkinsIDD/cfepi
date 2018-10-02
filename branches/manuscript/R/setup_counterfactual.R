@@ -15,7 +15,7 @@ trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)
 trans[3,2] <- gamma
 inter[2,1] <- beta
-init <- c(npop - 1,1,0)
+init <- c(npop - 5,5,0)
 inter <- inter/npop
 # This code is commented out as it takes a long time to run, and need only run a single time
 setup_counterfactual(
