@@ -11,6 +11,11 @@ context('Setup')
 
 rm(list =ls())
 
+test_that('Creating output directory for testing',{
+  if(!dir.exists('output')){
+    dir.create('output')
+  }
+})
 ##test of initialization method.
 setup_counterfactual_working = test_that('setup_counterfactual works',{
   trans <- matrix(0,3,3)
@@ -170,8 +175,7 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one col for each variable.\n")
 })
 
-expect_warning({
-    file.remove(paste('output',list.files('output'),sep='/'))
+test_that("Files were removed",{
     expect_equal({length(list.files('output'))},0)
 })
 
