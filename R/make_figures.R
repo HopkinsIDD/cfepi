@@ -12,7 +12,7 @@ if(!require(counterfactual)){
   source("package/R/read.R")
 }
 # library(counterfactual)
-# library(cowplot)
+library(cowplot)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -27,7 +27,8 @@ scenario_changer = as.factor(c(
   'Flat_None' = 'Hand Washing',
   'None_Single' = 'Vaccination'
 ))
-scenario_changer = relevel(scenario_changer,2,1,3,4)
+
+scenario_changer = relevel(scenario_changer,3,1,2,4)
 
 type_changer = as.factor(c(
   'Multi_World' = 'Traditional',
@@ -405,7 +406,7 @@ ci_string_1 = paste0(
     -round(single_world_ci$final_size_m),
     "$ (CI $",
     -ceiling(single_world_ci$final_size_h),
-    "$ \textendash $",
+    "$ \\textendash $",
     -floor(single_world_ci$final_size_l),
     "$)",
     collapse=', '
@@ -418,35 +419,43 @@ ci_string_2 = paste0(
     - round(multiple_world_ci$final_size_m),
     "$ (CI $",
     - ceiling(multiple_world_ci$final_size_h),
-    "$ \textemdash $",
+    "$ \\textemdash $",
     -floor(multiple_world_ci$final_size_l),
     "$)",
     collapse=', '
   ),".")
 ci_string_3 = paste0(
-  "The single-world approach estimated",
-  single_world_ci$scenario,
-  "to prevent an average of",
+  "The single-world approach estimated ",
+  tolower(single_world_ci$scenario),
+  " to prevent an average of ",
   paste(
+    "$",
     -round(single_world_ci$final_size_m),
-    "$ (95\\%: $",
+    "$ (95\\% CI: $",
     -ceiling(single_world_ci$final_size_h),
-    "$\textendash$",
+    "$\\textendash$",
     -floor(single_world_ci$final_size_l),
-    "$)",
+    "$)"
   ),
-  "versus",
+  " cases, versus ",
   paste(
+    "$",
     -round(multiple_world_ci$final_size_m),
-    "$ (95\%: $",
+    "$ (95\\% CI: $",
     -ceiling(multiple_world_ci$final_size_h),
-    "$\textendash$",
+    "$\\textendash$",
     -floor(multiple_world_ci$final_size_l),
-    "$)",
+    "$)"
   ),
-  c("in the standard approach.",".",".")
+  # c(" in the standard approach.",".",".",".") # For including no intervention
+  c("."," in the standard approach.",".",".") # For not including no intervention
 )
-ci_string_1 = gsub(' -',' \neg',ci_string_1)
-ci_string_2 = gsub(' -',' \neg',ci_string_2)
-print(ci_string_1)
-print(ci_string_2)
+ci_string_1 = gsub(' -',' \\neg',ci_string_1)
+ci_string_2 = gsub(' -',' \\neg',ci_string_2)
+ci_string_3 = gsub(' -',' \\neg',ci_string_3)
+print(levels(scenario_changer))
+# print(ci_string_1)
+# print(ci_string_2)
+cat(paste(paste(ci_string_3[c(2,3,4)],collapse='\n'),"\n"))
+
+
