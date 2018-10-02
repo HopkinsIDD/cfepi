@@ -25,12 +25,12 @@ trans <- matrix(0,3,3)
 inter <- matrix(0,3,3)
 trans[3,2] <- gamma
 inter[2,1] <- beta
-init <- c(npop - 10,10,0)
+init <- c(npop - 5,5,0)
 inter <- inter/npop
 # This code is commented out as it takes a long time to run, and need only run a single time
 
 ## cross intervention parameters
-prop = .15 # 25% adoption rate for intervention
+prop = .10 # 25% adoption rate for intervention
 tstar = 1 #start on day 1
 
 ## Default intervention parameters
