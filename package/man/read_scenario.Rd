@@ -4,7 +4,7 @@
 \alias{read_scenario}
 \title{read_scenario}
 \usage{
-read_scenario(filename)
+read_scenario(filename, ntrial = NULL)
 }
 \arguments{
 \item{filename}{The file stub used in setup_counterfactual and run_scenario}

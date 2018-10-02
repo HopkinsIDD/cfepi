@@ -4,9 +4,9 @@ Version: 0.3.0
 Author: Joshua Kaminsky [aut, cre]
 Maintainer: Joshua Kaminsky <jkaminsky@jhu.edu>
 Description: Run counterfactual Analyses on SIR-like models.
-Depends: R,methods
+Depends: R,methods,tidyr,dplyr
 Encoding: UTF-8
 License: GPL (>= 2)
 Suggests:
-    testthat,dplyr,tidyr
+    testthat
 RoxygenNote: 6.0.1
