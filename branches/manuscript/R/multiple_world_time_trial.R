@@ -1,6 +1,7 @@
-times = 1:100 * NA
+times = 1:365 * NA
 for(trial in 1:100){
   initial = c(3999990,10,0)
+  N = sum(initial)
   current = initial
   R0 = 1.75 #
   mu = 2.25 #days
@@ -11,18 +12,12 @@ for(trial in 1:100){
   for(i in 1:365){
     total[,i] = current
     # Infections
-    if(current[2] > 0){
-      ninfected = 0
-      for(j in 1:current[2]){
-        ninfected = ninfected + rbinom(n=1,size=current[1]-ninfected,prob=beta)
-      }
-      nrecovered = rbinom(n=1,size=current[2],prob=gamma)
-      current[1] = current[1] - ninfected
-      current[2] = current[2] + ninfected - nrecovered
-      current[3] = current[3] + nrecovered
-      
-    }
-    
+    effective_beta = 1 - (1- beta)^(current[2])
+    ninfected = rbinom(n=1,size=current[1],prob=effective_beta)
+    nrecovered = rbinom(n=1,size=current[2],prob=gamma)
+    current[1] = current[1] - ninfected
+    current[2] = current[2] + ninfected - nrecovered
+    current[3] = current[3] + nrecovered
   }
   Rprof(NULL)
   tmp = summaryRprof()
