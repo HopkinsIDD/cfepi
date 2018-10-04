@@ -1,8 +1,10 @@
 #' @export
 #' @name read_scenario
 #' @title read_scenario
-#' @description Reads the results of a scenario into R.
+#' @description Reads the results of a counterfactual scenario into R.
 #' @param filename The file stub used in setup_counterfactual and run_scenario
+#' @param ntrial optional parameter for number of trials to read (up to the maximum run)
+#' @import methods
 read_scenario <- function(filename,ntrial=NULL){
   stub = basename(filename)
   path = dirname(filename)
@@ -24,6 +26,7 @@ read_scenario <- function(filename,ntrial=NULL){
     1,
     function(fields){
       filename = paste(path,paste(fields,collapse='.'),sep='/')
+      #' @importFrom utils read.csv
       y = read.csv(filename,header=FALSE)
       t = 1:nrow(y)
       y$beta_name = fields['beta_name']
@@ -33,5 +36,7 @@ read_scenario <- function(filename,ntrial=NULL){
       return(y)
     }
   ))
+  all_data = unite(all_data,scenario,beta_name,susceptible_name)
+  all_data = gather(all_data,variable,value,starts_with('V'))
   return(all_data)
 }

@@ -7,6 +7,10 @@ install.packages('package',type='source',repos=NULL)
 # try({remove.packages('counterfactual')},silent=T)
 # install.packages('package',type='source',repos=NULL)
 
+## Some parameters:
+ci_width = .9
+alpha = 1-ci_width
+
 
 if(!require(counterfactual)){
   source("package/R/read.R")
@@ -19,7 +23,8 @@ library(tidyr)
 library(grid)
 
 output = read_scenario('output/figures0')
-multiworld_output = read_scenario('output/figures1')
+output = as_data_frame(output)
+residuals = calculate_residual(output)
 
 scenario_changer = as.factor(c(
   'None_None' = 'No Intervention',
@@ -36,426 +41,118 @@ type_changer = as.factor(c(
 ))
 type_changer = relevel(type_changer,2,1)
 
-## Figure 1 - Illustration of the Problem
-### Simulated Epidemic Curves with and without intervention
-    # color intervention
+variable_changer = as.factor(c(
+  'V1' = 'S',
+  'V2' = 'I',
+  'V3' = 'R',
+  'V4' = 'V'
+))
+variable_changer = relevel(variable_changer,3,1,2,4)
 
-npop = 4000
+output$scenario = scenario_changer[output$scenario]
+output$variable = variable_changer[output$variable]
+output$type = 'Single-World'
+residuals$scenario = scenario_changer[residuals$scenario]
+residuals$variable = variable_changer[residuals$variable]
+residuals$type = 'Single-World'
 
-plt = output %>%
-  unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = npop - V1 - V2 - V3) %>%
-  gather(Variable,Value,V1,V2,V3,V4) %>% 
-  rename(People = Value,Time = t) %>%
-  mutate(scenario = scenario_changer[scenario]) %>%
-  group_by(scenario,Time,Variable) %>%
-  summarize(People_L = quantile(People,.025), People_H = quantile(People,.975), People = mean(People)) %>% 
+#This provides mw_output and mw_residuals
+source("R/multiple_world_time_trial.R")
+mw_output = mw_output[names(output)]
+mw_residuals = mw_residuals[names(residuals)]
+all_world_residuals = rbind(residuals,mw_residuals)
+all_world_output = rbind(output,mw_output)
+
+all_world_output_summary = all_world_output %>%
+  group_by(scenario,t,variable,type) %>%
+  summarize(
+    lq = quantile(value,alpha/2,na.rm=T),
+    mean = mean(value,na.rm=T),
+    hq = quantile(value,1-alpha/2,na.rm=T)
+  )
+all_world_residuals_summary = all_world_residuals %>%
+  group_by(scenario,t,variable,type) %>%
+  summarize(
+    lq = quantile(value,alpha/2,na.rm=T),
+    mean = mean(value,na.rm=T),
+    hq = quantile(value,1-alpha/2,na.rm=T)
+  )
+
+confidence_intervals = all_world_residuals_summary %>%
+  filter(t==100,variable=='R') %>%
+  mutate(final_size_l = -hq, final_size_m = -mean, final_size_h = -lq) %>%
+  ungroup %>%
+  select(scenario,type,starts_with('final_size'))
+
+type_to_opacity = c("Single-World" = .5, "Traditional" = .25)
+plt_neg_rec_t = all_world_residuals_summary %>%
+  filter(variable == 'R', t <= 100) %>%
   ungroup() %>%
-  filter(Variable == "V2") %>%
-  mutate(Variable = "Number Infected") %>%
+  mutate(`Time (days)` = t, `Cases Averted` = -mean) %>% 
   ggplot() +
-  geom_line(aes(
-    x=Time,
-    y=People,
-    color=Variable,
-    group=Variable
-  )) +
-  geom_ribbon(aes(
-    x=Time,
-    ymin=People_L,
-    ymax=People_H,
-    fill=Variable,
-    group=Variable
-  ),alpha=.7) +
-  xlab("Time (Days)") +
-  theme_bw() + 
-  theme(aspect.ratio= 1) +
-  facet_wrap(~scenario)
-
-#### Final Size
-final_size = function(x){
-x %>%
-  filter(t == max(t))  %>%
-  unite(scenario,beta_name,susceptible_name) %>%
-  select(scenario,trial,final_size=V3) %>%
-  return()
-}
-
-time_series = function(x){
-x %>%
-  unite(scenario,beta_name,susceptible_name) %>%
-  mutate(V4 = npop -V1-V2-V3) %>% 
-  gather(variable,value,V1,V2,V3,V4) %>%
-  select(scenario,trial,final_size=value,t,variable) %>%
-  return()
-}
-
-peak_time = function(x){
-x %>%
-  unite(scenario,beta_name,susceptible_name) %>%
-  group_by(scenario,trial) %>%
-  do({
-    tmp = .
-    tmp$max_V2 = max(.$V2)
-    tmp
-  }) %>%
-  ungroup() %>%
-  filter(V2 == max_V2)  %>%
-  select(scenario,trial,peak_time = t) %>%
-  group_by(scenario,trial) %>%
-  summarize(peak_time = median(peak_time)) %>%
-  ungroup() %>%
-  return()
-}
-
-all_world_inference <- function(fun,name){
-  rr = FALSE
-  if(name == 'Log_Relative_Risk'){
-    rr = TRUE
-  }
-  lhs = fun(output)
-  names(lhs)[3] = name
-  lhs = spread_(lhs,"scenario",name)
-  rhs = fun(multiworld_output)
-  names(rhs)[3] = name
-  rhs = dplyr::select(rhs,-scenario)
-  
-  join_names = intersect(names(lhs),names(rhs))
-  all_inference = inner_join(lhs,rhs,by=join_names) %>%
-    rename_(.dots = setNames(name,'Multi_World')) %>%
-    mutate(Single_World = None_None) %>%
-    gather(type,null,Single_World,Multi_World)
-  # var_names = names(all_inference)[-c(1,length(all_inference) - 0:1)]
-  var_names = names(all_inference)[grepl('_',names(all_inference))]
-  if(rr){
-    all_inference = all_inference %>%
-      mutate_(.dots = setNames(paste('log(',var_names,' / null)'),var_names)) %>%
-      gather_('scenario',name,var_names)
-  } else {
-    all_inference = all_inference %>%
-      mutate_(.dots = setNames(paste(var_names,' - null'),var_names)) %>%
-      gather_('scenario',name,var_names)
-  }
-  return(all_inference)
-}
-
-
-plot_cross_world <- function(fun,name){
-  all_inference = all_world_inference(fun,name)
-  if(
-  ((max(all_inference[[name]]) - quantile(all_inference[[name]],.95)) > quantile(all_inference[[name]],.95)) ||
-    ((quantile(all_inference[[name]],.05) - min(all_inference[[name]])) < min(all_inference[[name]],.95))
-  ){
-    rcin <- all_inference %>%
-      mutate(scenario = scenario_changer[scenario]) %>%
-      ggplot() +
-      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
-      scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=1) +
-      xlab("Scenario") +
-      ylim(quantile(all_inference[[name]],c(.05,.95))) +
-      theme_bw() + 
-      background_grid(major = "y", minor = "none") + 
-      ylab(gsub('_',' ',name))
-    rcout <- all_inference %>%
-      mutate(scenario = scenario_changer[scenario]) %>%
-      ggplot() +
-      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
-      scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=0.1) +
-      xlab("Scenario") +
-      background_grid(major = "y", minor = "none") + 
-      theme_bw() + 
-      ylab(gsub('_',' ',name))
-
-    print(rcout)
-    # inset = viewport(height=.5,width=1)
-    # print(rcin,vp=inset)
-    rc <- recordPlot()
-  } else {
-    rc <- all_inference %>%
-      mutate(scenario = scenario_changer[scenario]) %>%
-      ggplot() +
-      geom_boxplot(aes(x = scenario,y=all_inference[[name]],color = type)) +
-      scale_colour_brewer(type='qual',palette='Paired') +
-      theme(legend.position="none", aspect.ratio=0.1) +
-      xlab("Scenario") +
-      background_grid(major = "y", minor = "none") + 
-      theme_bw() + 
-      ylab(gsub('_',' ',name))
-  }
-}
-  
-
-confidence_intervals = function(fun,name){
-  tmp = all_world_inference(fun,name)
-  tmp %>%
-    group_by(type,scenario) %>%
-    summarize_(.dots = setNames(c(paste0('quantile(',name,',.025)'), paste0('quantile(',name,',.975)'), paste0('mean(',name,')')),paste(name,c('l','h','m'),sep='_'))) %>%
-    mutate_(.dots = setNames(paste0(name,'_h - ', name,'_l'),'width')) %>%
-    ungroup() %>%
-    return()
-  
-}
-
-plot_inference = plot_cross_world
-
-#### Peak Estimation
-time_series_inference =all_world_inference(time_series,'Change_in_Cases')
-time_series_summary = time_series_inference %>%
-  group_by(t,variable,scenario,type) %>%
-  summarize(`Change in Cases` = mean(Change_in_Cases),lq = quantile(Change_in_Cases,.025),uq = quantile(Change_in_Cases,.975))
-
-plt_sus = time_series_summary %>%
-  filter(variable == 'V1') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  facet_grid(scenario~type) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_sus_t = time_series_summary %>%
-  filter(variable == 'V1') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  facet_grid(type~scenario) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_inf = time_series_summary %>%
-  filter(variable == 'V2') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  facet_grid(scenario~type) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_inf_t = time_series_summary %>%
-  filter(variable == 'V2') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  facet_grid(type~scenario) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_neg_rec = time_series_summary %>%
-  filter(variable == 'V3') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=type_changer[type]) %>%
-  mutate(`Cases Averted`=-`Change in Cases`) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=-lq,ymax=-uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Cases Averted`,color=variable)) +
+  geom_ribbon(aes(x=`Time (days)`,ymin=-lq,ymax=-hq,fill=type,alpha=type)) +
+  geom_line(aes(x=`Time (days)`,y=`Cases Averted`,color=type,linetype=type,size=type)) +
   geom_abline(slope=0,intercept=0,linetype=2) +
-  facet_grid(scenario~type) +
+  facet_grid(.~scenario) +
   theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
+  # scale_alpha_discrete(limits=c(.5,.25)) +
+  scale_size_discrete(range=c(1,.7)) +  
+  scale_alpha_ordinal(range=c(.5,.26)) + 
+  theme(aspect.ratio=1)
 
-plt_neg_rec_t = time_series_summary %>%
-  filter(variable == 'V3') %>%
+plt_box_output = output %>%
+  filter(variable == 'R', t == 100) %>%
   ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=type_changer[type]) %>%
-  mutate(`Cases Averted`=-`Change in Cases`) %>%
+  mutate(`Cases` = value) %>% 
   ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=-lq,ymax=-uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Cases Averted`,color=variable)) +
-  facet_grid(type~scenario) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
+  geom_boxplot(aes(x=scenario,y=`Cases`)) +
+  ylim(range=c(2250,3250))
 
-plt_rec = time_series_summary %>%
-  filter(variable == 'V3') %>%
+plt_box_residuals = all_world_residuals %>%
+  filter(variable == 'R', t == 100) %>%
   ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
+  mutate(`Cases Averted` = -value) %>% 
   ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  geom_abline(slope=0,intercept=0,linetype=2) +
-  facet_grid(scenario~type) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
+  geom_boxplot(aes(x=scenario,y=`Cases Averted`,color=type)) +
+  ylim(range=c(-500,600))
 
-plt_rec_t = time_series_summary %>%
-  filter(variable == 'V3') %>%
-  ungroup() %>%
-  mutate(`Time (days)` = t, scenario = scenario_changer[scenario],type=gsub('_','-',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=`Time (days)`,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=`Time (days)`,y=`Change in Cases`,color=variable)) +
-  facet_grid(type~scenario) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-pdf('figures/intervention-effects-final-size.pdf')
-print(plot_inference(final_size,'Final_Size'))
-dev.off()
-pdf('figures/intervention-effects-peak-time.pdf')
-print(plot_inference(peak_time,'Peak_Time'))
-dev.off()
-pdf('figures/intervention-effects-relative-risk.pdf')
-print(plot_inference(final_size,'Log_Relative_Risk'))
-dev.off()
 
-plt_rec = time_series_summary %>%
-  filter(variable == 'V3') %>%
-  ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
-  facet_grid(scenario~type) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_rec_t = time_series_summary %>%
-  filter(variable == 'V3') %>%
-  ungroup() %>%
-  mutate(scenario = scenario_changer[scenario],type=gsub('_',' ',type)) %>%
-  ggplot() +
-  geom_ribbon(aes(x=t,ymin=lq,ymax=uq,fill=variable),alpha=.5) +
-  geom_line(aes(x=t,y=`Change in Cases`,color=variable)) +
-  facet_grid(type~scenario) +
-  theme_bw() + 
-  theme(legend.position="none",aspect.ratio=1)
-
-plt_box_intervene = final_size(output) %>%
-  group_by(trial) %>%
-  do({tmp = . ; tmp$final_size = .$final_size - .[.$scenario=='None_None',]$final_size; tmp}) %>%
-  filter(scenario != 'None_None') %>%
-  mutate(`Cases Averted` = -final_size,Intervention=scenario_changer[scenario]) %>%
-  ggplot() +
-  geom_boxplot(aes(x=Intervention, y=`Cases Averted`)) +
-  # ylim(c(-100,1000)) +
-  theme_bw() + 
-  geom_abline(slope=0)
-
-plt_box_no_intervene = final_size(output) %>%
-  group_by(trial) %>%
-  mutate(`Final Size` = final_size,Intervention=scenario_changer[scenario]) %>%
-  ggplot() +
-  geom_boxplot(aes(x=Intervention, y=`Final Size`)) +
-  # ylim(c(2000,3200)) + 
-  theme_bw()
-  
-
-## Figure 2 - Cartoon/Diagram illustrating method.
-### SIR diagram
-#### Done in Latex
-### Tree diagram of how intervention works.
-#### Done in Latex
-## Figure 3 - True Counterfactual vs Fake Counterfactual
-### Relative Risk
-    # x all interventions
-    # y relative risk
-    # color true counterfactual vs our methods
-### Table 1 - Computational Resource Thresholds + Time
-pdf('figures/epicurve.pdf')
-print(plt)
-dev.off()
-pdf('figures/intervention-effects-final-size.pdf')
-print(plot_inference(final_size,'Final_Size'))
-dev.off()
-pdf('figures/intervention-effects-peak-time.pdf')
-print(plot_inference(peak_time,'Peak_Time'))
-dev.off()
-pdf('figures/intervention-effects-relative-risk.pdf')
-print(plot_inference(final_size,'Log_Relative_Risk'))
-dev.off()
 pdf('figures/intervention-effects-time-series-cases-averted-switched.pdf')
 print(plt_neg_rec_t)
 dev.off()
-pdf('figures/intervention-effects-time-series-cases-averted.pdf')
-print(plt_neg_rec)
-dev.off()
-pdf('figures/intervention-effects-time-series-recovered-switched.pdf')
-print(plt_rec_t)
-dev.off()
-pdf('figures/intervention-effects-time-series-recovered.pdf')
-print(plt_rec)
-dev.off()
-pdf('figures/intervention-effects-time-series-susceptible-switched.pdf')
-print(plt_sus_t)
-dev.off()
-pdf('figures/intervention-effects-time-series-susceptible.pdf')
-print(plt_sus)
-dev.off()
 pdf('figures/intervention-effects-raw-boxplots.pdf')
-print(plt_box_no_intervene)
+print(plt_box_output)
 dev.off()
 pdf('figures/intervention-effects-combined-boxplots.pdf')
-print(plt_box_intervene)
+print(plt_box_residuals)
+single_world_ci = confidence_intervals %>% filter(type=='Single-World')
+multiple_world_ci = confidence_intervals %>% filter(type!='Single-World')
 while(dev.off() != 1){}
-single_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Single_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
-multiple_world_ci = confidence_intervals(final_size,'final_size') %>% filter(type=='Multi_World') %>% mutate(scenario = scenario_changer[scenario]) %>% arrange(scenario)
-ci_string_1 = paste0(
-  "For single-world inference, we found that every non-null intervention had a significant  number of cases averted: ",
-  paste(
-    single_world_ci$scenario,
-    "$",
-    -round(single_world_ci$final_size_m),
-    "$ (CI $",
-    -ceiling(single_world_ci$final_size_h),
-    "$ \\textendash $",
-    -floor(single_world_ci$final_size_l),
-    "$)",
-    collapse=', '
-  ),".")
-ci_string_2 = paste0(
-  "For multiple-world inference, we found that all but one non-null intervention had a significant number of cases averted: ",
-  paste(
-    multiple_world_ci$scenario,
-    "$",
-    - round(multiple_world_ci$final_size_m),
-    "$ (CI $",
-    - ceiling(multiple_world_ci$final_size_h),
-    "$ \\textemdash $",
-    -floor(multiple_world_ci$final_size_l),
-    "$)",
-    collapse=', '
-  ),".")
 ci_string_3 = paste0(
   "The single-world approach estimated ",
   tolower(single_world_ci$scenario),
   " to prevent an average of ",
   paste(
     "$",
-    -round(single_world_ci$final_size_m),
-    "$ (95\\% CI: $",
-    -ceiling(single_world_ci$final_size_h),
+    round(single_world_ci$final_size_m),
+    "$ (",ci_width * 100,"\\% CI: $",
+    ceiling(single_world_ci$final_size_l),
     "$\\textendash$",
-    -floor(single_world_ci$final_size_l),
+    floor(single_world_ci$final_size_h),
     "$)"
   ),
   " cases, versus ",
   paste(
     "$",
-    -round(multiple_world_ci$final_size_m),
-    "$ (95\\% CI: $",
-    -ceiling(multiple_world_ci$final_size_h),
+    round(multiple_world_ci$final_size_m),
+    "$ (",ci_width * 100,"\\% CI: $",
+    ceiling(multiple_world_ci$final_size_l),
     "$\\textendash$",
-    -floor(multiple_world_ci$final_size_l),
+    floor(multiple_world_ci$final_size_h),
     "$)"
   ),
   # c(" in the standard approach.",".",".",".") # For including no intervention
   c("."," in the standard approach.",".",".") # For not including no intervention
 )
-ci_string_1 = gsub(' -',' \\neg',ci_string_1)
-ci_string_2 = gsub(' -',' \\neg',ci_string_2)
-ci_string_3 = gsub(' -',' \\neg',ci_string_3)
-print(levels(scenario_changer))
-# print(ci_string_1)
-# print(ci_string_2)
+ci_string_3 = gsub(' -',' \\\\neg',ci_string_3)
 cat(paste(paste(ci_string_3[c(2,3,4)],collapse='\n'),"\n"))
-
-
