@@ -1,7 +1,9 @@
-Package: counterfactual
+Package: cfepi
 Title: Counterfactual Analysis without within Model Variance
 Version: 0.3.0
-Author: Joshua Kaminsky [aut, cre]
+Authors@R: c(
+  person("Joshua", "Kaminsky", email = "jkaminsky@jhu.edu", role = c("aut", "cre")),
+  person("Justin", "Lessler", email = "justin@jhu.edu", role = c("aut")))
 Maintainer: Joshua Kaminsky <jkaminsky@jhu.edu>
 Description: Run counterfactual Analyses on SIR-like models.
 Depends: R,methods,tidyr,dplyr
