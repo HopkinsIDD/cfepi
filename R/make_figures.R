@@ -340,3 +340,283 @@ ci_string_3 = paste0(
 )
 ci_string_3 = gsub(' -',' \\\\neg',ci_string_3)
 cat(paste(paste(ci_string_3[c(2,1,4)],collapse='\n'),"\n"))
+
+
+library(crop)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+# output = readRDS('all_world_output_summary.rds')
+# residuals = readRDS('all_world_residuals_summary.rds')
+
+residuals %>%
+  ungroup() %>% 
+  filter(t == 100, variable == 'R') %>%
+  mutate(
+    scenario = paste(population,ntrial,ninf,as.numeric(R0)/100),
+    intervention_params = paste(intervention,tstart,as.numeric(coverage),as.numeric(rate)),
+    significance = hq < 0
+  ) %>%
+  select(scenario,intervention_params,type,significance) %>% 
+  spread(type,significance) -> tmp
+scenario_numberer = setNames(factor(paste("Scenario",1:length(unique(tmp$scenario))),levels = paste("Scenario",1:length(unique(tmp$scenario))))
+                             ,sort(unique(tmp$scenario)))
+intervention_numberer = setNames(factor(paste("Intervention",1:length(unique(tmp$intervention_params))),levels = paste("Intervention",1:length(unique(tmp$intervention_params))))
+                                 ,sort(unique(tmp$intervention_params)))
+plt = tmp%>%
+  mutate(
+    scenario = scenario_numberer[scenario],
+    intervention_params = intervention_numberer[intervention_params],
+    value = ifelse(
+      `Single-World`,
+      ifelse(Traditional,
+             'Both',
+             'Just Single World'),
+      ifelse(Traditional,
+             'Just Traditional',
+             'Neither'
+      )
+    )
+  ) %>%
+  ggplot(aes(y=scenario,x=intervention_params,fill=value)) + 
+  geom_tile(color='black') +
+  labs(fill="Models with Significant Results",x='Intervention',y='Scenario') + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# theme_bw()
+
+pdf('figures/stability-significance-all.pdf')
+print(plt)
+dev.off()
+
+residuals %>%
+  ungroup() %>% 
+  filter(t == 100, variable == 'R') %>%
+  mutate(
+    scenario = paste(population,ntrial,ninf,as.numeric(R0)/100),
+    intervention_params = paste(intervention,tstart,as.numeric(coverage),as.numeric(rate)),
+    significance = hq > 0
+  ) %>%
+  select(scenario,intervention_params,type,significance) %>% 
+  spread(type,significance) -> tmp
+scenario_numberer = setNames(factor(paste("Scenario",1:length(unique(tmp$scenario))),levels = paste("Scenario",1:length(unique(tmp$scenario))))
+                             ,sort(unique(tmp$scenario)))
+intervention_numberer = setNames(factor(paste("Intervention",1:length(unique(tmp$intervention_params))),levels = paste("Intervention",1:length(unique(tmp$intervention_params))))
+                                 ,sort(unique(tmp$intervention_params)))
+plt = tmp%>%
+  mutate(
+    scenario = scenario_numberer[scenario],
+    intervention_params = intervention_numberer[intervention_params],
+    value = ifelse(
+      `Single-World`,
+      ifelse(Traditional,
+             'Both',
+             'Just Single World'),
+      ifelse(Traditional,
+             'Just Traditional',
+             'Neither'
+      )
+    )
+  ) %>%
+  ggplot(aes(y=scenario,x=intervention_params,fill=value)) + 
+  geom_tile(color='black') +
+  labs(fill="Models with Negative Results",x='Intervention',y='Scenario') + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# theme_bw()
+
+pdf('figures/stability-weirdness-all.pdf')
+print(plt)
+dev.off()
+
+tmp = output %>% filter(variable =='I')
+counter=0
+pdf('~/tmp.pdf')
+while(T){
+  counter = counter + 1
+  plt = tmp %>%
+    ungroup %>%
+    # filter(intervention == "No Intervention",population == 4000,ntime == 100,ntrial == 1000,R0==125,ninf==10) %>% 
+    ggplot(aes(x=t,color=type,fill=type)) +
+    geom_line(aes(linetype=type,y=mean,size=type)) +
+    # geom_ribbon(aes(ymin=lq,ymax=hq,alpha=type)) +
+    ggforce::facet_grid_paginate(paste(population,ntime,ntrial,R0,ninf) ~ paste(intervention,tstart,coverage,rate,to,from),nrow=3,ncol=3,page=counter,scales = 'free') +
+    # theme_bw() +
+    # scale_alpha_discrete(limits=c(.5,.25)) +
+    scale_size_discrete(range=c(1,1.7)) +
+    scale_alpha_ordinal(range=c(.25,.126)) +
+    theme(aspect.ratio=1)
+  print(plt)
+}
+dev.off()
+
+tmp = residuals %>% filter(variable =='R')
+signedlog_10 = function(x){
+  return(sign(x) * log(abs(x) + 1)/log(10))
+}
+counter=0
+pdf('figures/residual_curves.pdf')
+while(T){
+  counter = counter + 1
+  plt = tmp %>%
+    ungroup %>%
+    # filter(intervention == "No Intervention",population == 4000,ntime == 100,ntrial == 1000,R0==125,ninf==10) %>% 
+    ggplot(aes(x=t,color=type,fill=type)) +
+    geom_line(aes(linetype=type,y=signedlog_10(-mean),size=type)) +
+    geom_ribbon(aes(ymin=signedlog_10(-hq),ymax=signedlog_10(-lq),alpha=type)) +
+    ggforce::facet_grid_paginate(paste(population,ntime,ntrial,R0,ninf) ~ paste(intervention,tstart,coverage,rate,to,from),nrow=2,ncol=2,page=counter,scales = 'free') +
+    geom_hline(aes(yintercept=0,linetype = 'zero')) + 
+    theme_bw() +
+    # scale_alpha_discrete(limits=c(.5,.25)) +
+    scale_size_discrete(range=c(1,1.7)) +
+    scale_alpha_ordinal(range=c(.25,.126)) +
+    theme(aspect.ratio=1)
+  print(plt)
+}
+dev.off()
+
+
+for(variable )
+residuals %>% 
+  ungroup %>%
+  filter(t==100,variable=='R') %>%
+  mutate(significance = hq > 0) %>%
+  select(-lq,-mean,-median,-hq) %>%
+  spread(type,significance) %>%
+  mutate(
+    value = ifelse(
+      `Single-World`,
+      ifelse(Traditional,
+             'Both',
+             'Just Single World'),
+      ifelse(Traditional,
+             'Just Traditional',
+             'Neither'
+      )
+    )
+  ) %>%
+  ggplot(aes(x=R0,y=value,fill=value)) +
+  geom_bar() + 
+  scale_y_continuous(labels = scales::percent)
+
+for(variable in c('population','R0','ninf','tstart','coverage')){
+  plt = residuals %>% 
+    ungroup %>%
+    filter(t==100,variable=='R') %>%
+    mutate(significance = hq > 0) %>%
+    select(-lq,-mean,-median,-hq) %>%
+    spread(type,significance) %>%
+    mutate(
+      value = ifelse(
+        `Single-World`,
+        ifelse(Traditional,
+               'Both',
+               'Just Single World'),
+        ifelse(Traditional,
+               'Just Traditional',
+               'Neither'
+        )
+      )
+    ) %>% 
+    group_by_(variable,'value') %>%
+    tally() %>%
+    ungroup() %>%
+    group_by_(variable) %>%
+    mutate(weight = n / sum(n)) %>%
+    ggplot(aes(x=population,weight=weight,fill=value)) +
+    geom_bar() +
+    theme(legend.title = element_text("Hello")) +
+    labs(fill="Models with Significant Results",x=tools::toTitleCase(variable),y='Percent across other variables')
+  print(plt)
+}
+
+variable_changer = setNames(c('Population','R0','Initial Infected','Start Time','Coverage','Number of Trials'),c('population','R0','ninf','tstart','coverage','ntrial'))
+for(var in names(variable_changer)){
+  filename = paste('figures/stability',var,'significance.pdf',sep='-')
+  pdf(filename)
+  plt = residuals %>% 
+    ungroup %>%
+    filter(t==100,variable=='R') %>%
+    mutate(significance = hq < 0) %>%
+    select(-lq,-mean,-median,-hq) %>%
+    spread(type,significance) %>%
+    mutate(
+      R0 = as.numeric(R0) / 100,
+      ninf = as.numeric(ninf)
+    ) %>%
+    mutate_(.dots=setNames(var,'variable')) %>%
+    mutate(
+      value = factor(
+        ifelse(
+          `Single-World`,
+          ifelse(Traditional,
+                 'Both',
+                 'Just Single World'),
+          ifelse(Traditional,
+                 'Just Traditional',
+                 'Neither'
+          )
+        ),
+        levels = c('Neither','Just Traditional','Both','Just Single World')
+      )
+    ) %>%
+    group_by(variable,value) %>%
+    tally() %>%
+    ungroup() %>%
+    group_by(variable) %>%
+    mutate(weight = n / sum(n)) %>%
+    ggplot(aes(x=factor(variable,levels=as.character(sort(as.numeric(unique(variable))))),weight=weight,fill=value)) +
+    geom_bar() +
+    # theme(legend.title = element_text("Hello")) +
+    labs(fill="Models with Significant Results",x=variable_changer[var],y='Percent across other variables') + 
+    theme_bw() + 
+    theme(aspect.ratio=1)
+  print(plt)
+  dev.off.crop()
+}
+
+
+for(var in names(variable_changer)){
+  filename = paste('figures/stability',var,'weirdness.pdf',sep='-')
+  pdf(filename)
+  plt = residuals %>% 
+    ungroup %>%
+    filter(t==100,variable=='R') %>%
+    mutate(significance = hq > 0) %>%
+    select(-lq,-mean,-median,-hq) %>%
+    spread(type,significance) %>%
+    mutate(
+      R0 = as.numeric(R0) / 100,
+      ninf = as.numeric(ninf)
+    ) %>%
+    mutate_(.dots=setNames(var,'variable')) %>%
+    mutate(
+      value = factor(
+        ifelse(
+          `Single-World`,
+          ifelse(Traditional,
+                 'Both',
+                 'Just Single World'),
+          ifelse(Traditional,
+                 'Just Traditional',
+                 'Neither'
+          )
+        ),
+        levels = c('Neither','Just Traditional','Both','Just Single World')
+      )
+    ) %>%
+    group_by(variable,value) %>%
+    tally() %>%
+    ungroup() %>%
+    group_by(variable) %>%
+    mutate(weight = n / sum(n)) %>%
+    ggplot(aes(x=factor(variable,levels=as.character(sort(as.numeric(unique(variable))))),weight=weight,fill=value)) +
+    geom_bar() +
+    # theme(legend.title = element_text("Hello")) +
+    labs(fill="Models with Negative Results",x=variable_changer[var],y='Percent across other variables') + 
+    theme_bw() + 
+    theme(aspect.ratio=1)
+  print(plt)
+  dev.off.crop()
+}
