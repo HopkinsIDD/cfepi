@@ -1,2 +1,2 @@
 library(testthat)
-test_check("counterfactual")
+test_check("cfepi")

@@ -11,6 +11,7 @@ int R2cint(SEXP);
 void R2cstring(SEXP, char**);
 void c2Rdataframe(double*,int,int,SEXP*);
 SEXP setupCounterfactualAnalysis(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-SEXP runIntervention(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+SEXP runIntervention(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+SEXP readDirectory(SEXP,SEXP);
 
 #endif //RINTERFACE_H_

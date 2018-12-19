@@ -14,7 +14,7 @@ param_beta_t param_flat_beta(step_t start_time, float rate){
   (* ( (data_beta_flat_t*) rc.data) ).start_time = start_time;
   (* ( (data_beta_flat_t*) rc.data) ).rate = rate;
   return(rc);
-};
+}
 
 // 1 success 0 failure
 bool_t free_param_flat_beta(param_beta_t rc){
@@ -24,7 +24,7 @@ bool_t free_param_flat_beta(param_beta_t rc){
   }
   free(rc.data);
   return(0);
-};
+}
 
 // Finish writing these
 bool_t flat_beta(step_t time, person_t person1, person_t person2, var_t var1, var_t var2,param_beta_t pars){
@@ -36,25 +36,3 @@ bool_t flat_beta(step_t time, person_t person1, person_t person2, var_t var1, va
   }
   return(1);
 }
-
-param_susceptible_t param_flat_susceptible(){
-  param_susceptible_t rc;
-  strcpy(rc.type,"flat");
-  rc.data = malloc(1 * sizeof(data_susceptible_flat_t));
-  return(rc);
-};
-
-bool_t free_param_flat_susceptible(param_susceptible_t rc){
-  if(strcmp(rc.type,"flat")!=0){
-    Rf_error("Attempting to free a param_susceptible_t with the wrong destructor\n");
-    return(1);
-  }
-  free(rc.data);
-  return(0);
-};
-
-// Finish writing these
-void flat_susceptible(var_t** states, step_t time, step_t ntime, person_t npop, param_susceptible_t pars){
-  return;
-}
-

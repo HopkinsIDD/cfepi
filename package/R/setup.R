@@ -27,7 +27,7 @@
 #'   making it agent based, and so multiple trials are recommended.
 #' @return This function generates \code{2*ntrial} files where
 #'   determined by \code{filename}
-#' @useDynLib counterfactual setupCounterfactualAnalysis
+#' @useDynLib cfepi setupCounterfactualAnalysis
 setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
   .Call('setupCounterfactualAnalysis',
     filename,
@@ -36,7 +36,7 @@ setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
     trans,
     ntime,
     ntrial,
-    PACKAGE='counterfactual'
+    PACKAGE='cfepi'
   )
 }
 
@@ -48,6 +48,10 @@ setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
 #' @param filename A string containing the desired output stub.
 #'   Should be the same argument that was passed to
 #'   \code{setup_counterfactual}.
+#' @param intervention_name A string containing a unique name for the
+#'   intervention.  Any interventions with the same name will use the 
+#'   same files, so take care not to overwrite an intervention by
+#'   mistake
 #' @param init A numeric vector of the initial conditions for the
 #'   model.  It should length equal to the number of variables in the
 #'   differential equations model, and each value should be the
@@ -80,10 +84,11 @@ setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
 #'   state and one column for the simulation number.  It has one row
 #'   for each time step, and the values are the number of people in
 #'   that state at that time.
-#' @useDynLib counterfactual runIntervention
-run_scenario <- function(filename,init,beta_type,susceptible_type,beta_pars,susceptible_pars,ntime,ntrial = 1000){
+#' @useDynLib cfepi runIntervention
+run_scenario <- function(filename,intervention_name,init,beta_type,susceptible_type,beta_pars,susceptible_pars,ntime,ntrial = 1000){
   .Call('runIntervention',
     filename,
+    intervention_name,
     init,
     beta_type,
     susceptible_type,
@@ -91,7 +96,7 @@ run_scenario <- function(filename,init,beta_type,susceptible_type,beta_pars,susc
     susceptible_pars,
     ntime, 
     ntrial,
-    PACKAGE='counterfactual'
+    PACKAGE='cfepi'
   )
 }
 

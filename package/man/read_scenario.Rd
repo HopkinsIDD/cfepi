@@ -4,11 +4,18 @@
 \alias{read_scenario}
 \title{read_scenario}
 \usage{
-read_scenario(filename)
+read_scenario(scenario, intervention, ntrial, path = ".")
 }
 \arguments{
-\item{filename}{The file stub used in setup_counterfactual and run_scenario}
+\item{ntrial}{optional parameter for number of trials to read (up to the maximum run)}
+
+\item{filename}{The file stub used in setup_counterfactual and run_scenario.  If a}
+
+\item{folder}{is provided, this will read any scenario in the folder.}
 }
 \description{
-Reads the results of a scenario into R.
+Reads the results of a counterfactual scenario into R.
+}
+\examples{
+
 }

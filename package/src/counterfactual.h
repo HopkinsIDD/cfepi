@@ -17,8 +17,5 @@
 void runCounterfactualAnalysis(char*,person_t*,var_t,step_t, double*, double*,char*,char*);
 void runFastCounterfactualAnalysis(person_t*,var_t,step_t, double*, double*,char*,char*);
 void constructTimeSeries(person_t* ,var_t, step_t,saved_beta_t reduceBeta,saved_susceptible_t eliminateSusceptibles,char*,char*,char*);
-//Fake R functions
-void sample(person_t**, person_t,person_t);
-void swap(person_t*,person_t*);
 
 #endif //COUNTERFACTUAL_H_

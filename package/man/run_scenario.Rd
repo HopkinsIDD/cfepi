@@ -4,13 +4,18 @@
 \alias{run_scenario}
 \title{run_scenario}
 \usage{
-run_scenario(filename, init, beta_type, susceptible_type, beta_pars,
-  susceptible_pars, ntime, ntrial = 1000)
+run_scenario(filename, intervention_name, init, beta_type,
+  susceptible_type, beta_pars, susceptible_pars, ntime, ntrial = 1000)
 }
 \arguments{
 \item{filename}{A string containing the desired output stub.
 Should be the same argument that was passed to
 \code{setup_counterfactual}.}
+
+\item{intervention_name}{A string containing a unique name for the
+intervention.  Any interventions with the same name will use the 
+same files, so take care not to overwrite an intervention by
+mistake}
 
 \item{init}{A numeric vector of the initial conditions for the
 model.  It should length equal to the number of variables in the

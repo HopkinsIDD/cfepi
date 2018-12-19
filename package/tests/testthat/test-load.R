@@ -6,11 +6,17 @@
 ################################################################################
 ####Setup Test Functions
 ################################################################################
-context('Setup')
+# context('Setup')
 
 
 rm(list =ls())
+options(warn=2)
 
+output_directory = tempdir()
+
+test_that('Creating output directory for testing',{
+  expect_true(dir.exists(output_directory))
+})
 ##test of initialization method.
 setup_counterfactual_working = test_that('setup_counterfactual works',{
   trans <- matrix(0,3,3)
@@ -24,16 +30,16 @@ setup_counterfactual_working = test_that('setup_counterfactual works',{
   ntime <- 365
   ntrial <- 2
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
     ntime,
     ntrial
   ),NA)
-  expect_equal({length(list.files('output'))},4)
-  file.remove(paste('output',list.files('output'),sep='/'))
-  expect_equal({length(list.files('output'))},0)
+  expect_equal({length(list.files(output_directory))},4)
+  file.remove(paste(output_directory,list.files(output_directory),sep='/'))
+  expect_equal({length(list.files(output_directory))},0)
 })
 
 test_that('setup_counterfactual works in boundary cases',{
@@ -47,16 +53,16 @@ test_that('setup_counterfactual works in boundary cases',{
   ntime <- 365
   ntrial <- 1
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
     ntime,
     ntrial
   ),NA)
-  expect_equal({length(list.files('output'))},2)
-  file.remove(paste('output',list.files('output'),sep='/'))
-  expect_equal({length(list.files('output'))},0)
+  expect_equal({length(list.files(output_directory))},2)
+  file.remove(paste(output_directory,list.files(output_directory),sep='/'))
+  expect_equal({length(list.files(output_directory))},0)
 
   trans <- matrix(0,3,3)
   inter <- matrix(0,3,3)
@@ -68,16 +74,16 @@ test_that('setup_counterfactual works in boundary cases',{
   ntime <- 365
   ntrial <- 1
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
     ntime,
     ntrial
   ),NA)
-  expect_equal({length(list.files('output'))},2)
-  file.remove(paste('output',list.files('output'),sep='/'))
-  expect_equal({length(list.files('output'))},0)
+  expect_equal({length(list.files(output_directory))},2)
+  file.remove(paste(output_directory,list.files(output_directory),sep='/'))
+  expect_equal({length(list.files(output_directory))},0)
 
   trans <- matrix(0,3,3)
   inter <- matrix(0,3,3)
@@ -90,16 +96,16 @@ test_that('setup_counterfactual works in boundary cases',{
   ntime <- 365
   ntrial <- 1
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
     ntime,
     ntrial
   ),NA)
-  expect_equal({length(list.files('output'))},2)
-  file.remove(paste('output',list.files('output'),sep='/'))
-  expect_equal({length(list.files('output'))},0)
+  expect_equal({length(list.files(output_directory))},2)
+  file.remove(paste(output_directory,list.files(output_directory),sep='/'))
+  expect_equal({length(list.files(output_directory))},0)
 })
 
 test_that('setup_counterfactual throws errors if directory doesn\'t exist',{
@@ -134,7 +140,7 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ntrial <- 1
   trans <- matrix(0,3,2)
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
@@ -143,7 +149,7 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one col for each variable.\n")
   trans <- matrix(0,2,3)
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
@@ -152,7 +158,7 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one row for each variable.\n")
   trans <- matrix(0,4,3)
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
@@ -161,7 +167,7 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one row for each variable.\n")
   trans <- matrix(0,3,4)
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
@@ -170,9 +176,8 @@ test_that('setup_counterfactual throws errors if transition matrix is wrong size
   ),"Dimension mismatch.  The transition matrix should have one col for each variable.\n")
 })
 
-expect_warning({
-    file.remove(paste('output',list.files('output'),sep='/'))
-    expect_equal({length(list.files('output'))},0)
+test_that("Files were removed",{
+  expect_equal({length(list.files(output_directory))},0)
 })
 
 context('run: general')
@@ -181,19 +186,19 @@ test_that('run_scenario works',{
     skip("run_scenario relies on setup counterfactual.")
   }
   expect_error(setup_counterfactual(
-    'output/test_counterfactual',
+    paste(output_directory,'test_counterfactual',sep='/'),
     init,
     inter,
     trans,
     ntime,
     ntrial
   ),NA)
-  expect_equal({length(list.files('output'))},2*ntrial)
+  expect_equal({length(list.files(output_directory))},2*ntrial)
   expect_error({
-      run_scenario("output/test_counterfactual",init,"None","None",list(),list(),ntime,ntrial)
+      run_scenario(paste(output_directory,'test_counterfactual',sep='/'),'test-intervention',init,"None","None",list(),list(),ntime,ntrial)
     },NA
   )
-  expect_equal({length(list.files('output'))},3*ntrial)
-  file.remove(paste('output',list.files('output'),sep='/'))
-  expect_equal({length(list.files('output'))},0)
+  expect_equal({length(list.files(output_directory))},3*ntrial)
+  file.remove(paste(output_directory,list.files(output_directory),sep='/'))
+  expect_equal({length(list.files(output_directory))},0)
 })

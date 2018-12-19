@@ -91,20 +91,30 @@ SEXP setupCounterfactualAnalysis(SEXP Rfilename, SEXP RinitialConditions, SEXP R
   return(R_NilValue);
 }
 
-SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptibles, SEXP RbetaPars, SEXP RsusceptiblePars, SEXP Rntime, SEXP Rntrial){
+SEXP runIntervention(SEXP Rfilename, SEXP Rintervention_name, SEXP RinitialConditions, SEXP RreduceBeta, SEXP ReliminateSusceptibles, SEXP RbetaPars, SEXP RsusceptiblePars, SEXP Rntime, SEXP Rntrial){
   double* output;
   SEXP Routput;
   int* init;
   int nvar,nvar1,nvar2,ntime,trial,ntrial;
   char* filename;
+  char* intervention_name;
   char* reduceBeta_name;
   char* eliminateSusceptibles_name;
   char ifn[1000];
   char tfn[1000];
   char fn[1000];
   int var,var2;
+  int i;
+  person_t npop;
+
+  // Parameters for (some) interventions:
+  int* param_vector1;
+  int param_vector_size1;
+  var_t* param_vector2;
+  var_t param_vector_size2;
 
   PROTECT(Rfilename);
+  PROTECT(Rintervention_name);
   PROTECT(RinitialConditions);
   PROTECT(RreduceBeta);
   PROTECT(ReliminateSusceptibles);
@@ -130,11 +140,19 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   if(RUN_DEBUG==1){
     Rf_warning("Output stub is %s\n",filename);
   }
+  R2cstring(Rintervention_name,&intervention_name);
+  if(RUN_DEBUG==1){
+    Rf_warning("Output stub is %s\n",intervention_name);
+  }
   R2cvecint(RinitialConditions,&init,&nvar);
   ntime = R2cint(Rntime);
   ntrial = R2cint(Rntrial);
+  npop = 0;
+  for(i=0;i<nvar;++i){
+    npop = npop + init[i];
+  }
   if(RUN_DEBUG == 1){
-    Rf_warning("Simulating %d simulations over %d times.",ntime,ntrial);
+    Rf_warning("Simulating %d simulations over %d times.",ntrial,ntime);
   }
   //These may change later
   R2cstring(RreduceBeta,&reduceBeta_name);
@@ -159,11 +177,32 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   if(strcmp(eliminateSusceptibles_name,"None")==0){
     intervention_unparametrized_eliminateSusceptibles = &no_susceptible;
     param_susceptible = param_no_susceptible();
+  } else if (strcmp(eliminateSusceptibles_name,"Constant")==0){
+    intervention_unparametrized_eliminateSusceptibles = &constant_susceptible;
+    // R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    // param_vector_size2 = param_vector_size2 *1;
+    // param_vector2 = malloc(param_vector_size2 * sizeof(*param_vector2));
+    param_susceptible = param_constant_susceptible(
+      R2cint(VECTOR_ELT(RsusceptiblePars,0)),
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
+      npop,
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,2)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,3)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,4)),
+      1
+    );
   } else if (strcmp(eliminateSusceptibles_name,"Single")==0){
-    Rf_error( "This code is not yet written\n");
-    return(R_NilValue);
-    intervention_unparametrized_eliminateSusceptibles = &flat_susceptible;
-    param_susceptible = param_no_susceptible();
+    intervention_unparametrized_eliminateSusceptibles = &single_susceptible;
+    // R2cvecint(VECTOR_ELT(RsusceptiblePars,3),&param_vector1,&param_vector_size1),
+    // param_vector_size2 = param_vector_size2 *1;
+    // param_vector2 = malloc(param_vector_size2 * sizeof(*param_vector2));
+    param_susceptible = param_single_susceptible(
+      R2cint(VECTOR_ELT(RsusceptiblePars,0)),
+      R2cdouble(VECTOR_ELT(RsusceptiblePars,1)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,2)),
+      R2cint(VECTOR_ELT(RsusceptiblePars,3)),
+      1
+    );
   } else {
     Rf_error("Could not recognize the susceptibles specification %s\n",eliminateSusceptibles_name);
     return(R_NilValue);
@@ -183,7 +222,7 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   for(trial = 0; trial < ntrial; ++trial){
     sprintf(ifn,"%s.i.0.%d.dat",filename,trial);
     sprintf(tfn,"%s.t.0.%d.dat",filename,trial);
-    sprintf(fn,"%s.%s.%s.%d.csv",filename,reduceBeta_name,eliminateSusceptibles_name,trial);
+    sprintf(fn,"%s.%s.%d.csv",filename,intervention_name,trial);
     if(RUN_DEBUG == 1){
       Rf_warning("init:");
       for(var = 0; var < nvar; ++var){
@@ -210,7 +249,7 @@ SEXP runIntervention(SEXP Rfilename, SEXP RinitialConditions, SEXP RreduceBeta, 
   //Cleanup starts here
 
   PutRNGstate();
-  UNPROTECT(8);
+  UNPROTECT(9);
   return(R_NilValue);
 }
 

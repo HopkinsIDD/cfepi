@@ -12,29 +12,18 @@
 //#include <R_ext/Rdynload.h>
 //#include <Rdefines.h>
 
-// see header file for type definitions.  All custom types are integers of a particular size.
-// A utility function to swap to people
-void swap (person_t *a, person_t *b){
-  person_t temp = *a;
-  *a = *b;
-  *b = temp;
-}
 /*
- * person_t* (*output) an integer vector to return with the sampes in it
- * person_t          n The original number to sample from
- * person_t          k The number of samples to draw
-*/
-void sample(person_t* *output, person_t n, person_t k){
-  person_t i,j;
-  for (i = 0; i < k; i++){
-    // Pick a random index from 0 to i
-    j = runif(i,n);
-    if(j >= n){j = i;}
-    // Swap arr[i] with the element at random index
-    swap(&(*output)[i], &(*output)[j]);
-  }
-}
-
+ * runCounterfacutalAnalysis
+ *   Description
+ *     Set up a counterfactual simulation.  This produces two files containing the set of possible spontaneous state transitions (transitions), and state transitions caused by interactions (interactions)
+ *     See constructTimeSeries for how to use these files.
+ *   Parameters
+ *     string type Which type of counterfactual to run.  Current options are "Fast".  In the future, this option is reserved for different modeling assumptions.
+ *     person_t vector init starting population in each state.
+ *     time_t ntime The number of time steps to run the model over.
+ *     transitions Matrix describing the probability of transitioning spontaneously between compartments
+ *   
+ */
 void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname, char* ifname){
   if(strcmp(type,"Fast")==0){
     runFastCounterfactualAnalysis(init,nvar,ntime,transitions,interactions,tfname,ifname);
@@ -44,6 +33,16 @@ void runCounterfactualAnalysis(char* type, person_t * init,var_t nvar, step_t nt
   return;
 }
 
+/*
+ * runFastCounterfactualAnalysis
+ *   Description
+ *     See runCounterfactualAnalysis for full description
+ *     This makes the following assumptions - 
+ *       No intervention increases the probability of an interaction occurring
+ *       No intervention transitions people to states other than removed from the model.
+ *       No intervention 
+ *       
+ */
 void runFastCounterfactualAnalysis(person_t* init,var_t nvar, step_t ntime, double* transitions, double* interactions,char* tfname,char* ifname){
   var_t var1,var2;
   person_t person1, npop,interaction,counter;
@@ -257,9 +256,10 @@ void constructTimeSeries(
     npop = npop + init[var];
   }
   if(RUN_DEBUG == 1){
-    Rf_warning("npop is %d\n",npop);
+    sprintf(ofn2,"%s.dat",outputfilename);
+    ofp2 = fopen(ofn2,"w");
+    fprintf(ofp2,"npop is %d\n",npop);
   }
-  sprintf(ofn2,"%s.dat",outputfilename);
   state_counts = malloc(nvar*sizeof(person_t));
   states = malloc((1+ntime)*sizeof(var_t*));
   if(states == NULL){Rf_error("Malloc error for states\n");}
@@ -283,8 +283,14 @@ void constructTimeSeries(
     Rf_error("Could not open file %s.",outputfilename);
   }
   tfp = fopen(tfname,"rb");
+  if(tfp == NULL){
+    Rf_error("Could not open file %s.",tfname);
+  }
   reading_tfp = tfp == NULL ? 0 : 1;
   ifp = fopen(ifname,"rb");
+  if(ifp == NULL){
+    Rf_error("Could not open file %s.",ifname);
+  }
   reading_ifp = tfp == NULL ? 0 : 1;
 
   reading= MAX(reading_tfp,reading_ifp);
@@ -295,8 +301,9 @@ void constructTimeSeries(
   ttime = 0;
   mtime = 0;
   while(reading == 1){
+    //Check to see if files are ended
     if(RUN_DEBUG==1){
-      Rf_warning("Loop\n");
+      fprintf(ofp2,"Loop\n");
     }
     // Rf_warning("transition reading %p - %d\n",tfp,reading_tfp);
     if((reading_tfp) && (feof(tfp))){
@@ -318,8 +325,10 @@ void constructTimeSeries(
       return;
     }
     if(RUN_DEBUG==1){
-      Rf_warning("1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+      fprintf(ofp2,"1: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
     }
+    // Read transitions and edges from files that we are currently reading
+
     if(reading_file_1){
       err = fread(&ttime,sizeof(step_t),1,tfp);
       err += fread(&tperson,sizeof(person_t),1,tfp);
@@ -338,7 +347,7 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          Rf_warning("%d:%d-%d->%d\n",ttime,tperson,tvar1,tvar2);
+          fprintf(ofp2,"%d:%d:%d->%d\n",ttime,tperson,tvar1,tvar2);
         }
       }
     }
@@ -364,36 +373,45 @@ void constructTimeSeries(
         }
       } else {
         if(RUN_DEBUG==1){
-          Rf_warning("%d:%d-%d->%d\n",itime,iperson1,ivar1,ivar2);
+          fprintf(ofp2,"%d:%d-%d:%d->%d\n",itime,iperson1,iperson2,ivar1,ivar2);
         }
       }
     }
+
+    // Check to see if we should read the next line of each file
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
     mtime = ((itime >= ttime) || feof(ifp)) ? ttime : itime;
-    // Rf_warning("2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    if(RUN_DEBUG==1){
+      fprintf(ofp2,"2: r1 %d,r2 %d, t1 %d, t2 %d, t %d,tmax %d\n",reading_file_1,reading_file_2,ttime,itime,ctime,mtime);
+    }
+    // Advance time if there is nothing left to read
     if((reading_file_1 == 0) && (reading_file_2 == 0)){
-      while(ctime < mtime){
         if(RUN_DEBUG == 1){
-          Rf_warning("time %d\n",ctime);
+          fprintf(ofp2,"time %d\n",ctime);
         }
 	++ctime;
         for(person=0;person<npop;++person){
 	  states[ctime][person] = cur_states[person];
-          if(RUN_DEBUG==1){
-            Rf_warning("%d,",cur_states[person]);
-          }
-        }
-        if(RUN_DEBUG==1){
-          Rf_warning("\n");
         }
         // Printf("\t\t\t%d\n",ctime);
         // Beginning of time ctime
         invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
+        for(person=0;person<npop;++person){
+          cur_states[person] = states[ctime][person];
+          if(RUN_DEBUG==1){
+            fprintf(ofp2,"%d,",cur_states[person]);
+          }
+        }
+        if(RUN_DEBUG==1){
+          fprintf(ofp2,"\n");
       }
     }
+
+    // check to see if we should keep reading now that time has advanced
     reading_file_1 = ttime <= ctime ? reading_tfp : 0 ;
     reading_file_2 = itime <= ctime ? reading_ifp : 0 ;
+    // Check that we aren't in a bad place
     assert(ttime < ntime);
     assert(tperson < npop);
     assert(tvar1 < nvar);
@@ -403,6 +421,8 @@ void constructTimeSeries(
     assert(iperson2 < npop);
     assert(ivar1 < nvar);
     assert(ivar2 < nvar);
+    assert(ttime >= ctime);
+    assert(itime >= ctime);
 
     //Figure out how to take into account precedence for these...
     //Order of operations may matter if transitions and/or interactions can move the same person to multiple categories...
@@ -418,7 +438,7 @@ void constructTimeSeries(
     // Rf_warning("reduceBeta: %p\nitime %d\niperson1 %d\niperson2 %d\nivar1 %d\nivar2 %d\n\n", &reduceBeta,itime,iperson1,iperson2,ivar1,ivar2);
     if(
       (states[itime][iperson1] == ivar1) &&
-      (states[itime][iperson1] == states[itime+1][iperson1]) &&
+      // (states[itime][iperson1] == states[itime+1][iperson1]) &&
       (states[itime][iperson2] == ivar2) &&
       (invoke_beta_t(reduceBeta,itime,iperson1,iperson2,ivar1,ivar2) != 0) &&
       reading_file_2
@@ -433,6 +453,9 @@ void constructTimeSeries(
       states[ctime][person] = cur_states[person];
     }
     invoke_susceptible_t(eliminateSusceptibles,states,ctime,ntime,npop);
+    for(person=0;person<npop;++person){
+      cur_states[person] = states[ctime][person];
+    }
   }
 ///   for(person = 0; person < npop; ++person){
 ///     for(time = 0; time < (1+ntime); ++time){
@@ -459,6 +482,9 @@ void constructTimeSeries(
   free(states);
   free(cur_states);
   free(state_counts);
+  if(RUN_DEBUG == 1){
+    fclose(ofp2);
+  }
   fclose(ofp);
   if(reading_tfp){
     fclose(tfp);
