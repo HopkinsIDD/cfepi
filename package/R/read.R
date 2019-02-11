@@ -15,7 +15,7 @@ read_scenario <- function(scenario,intervention,ntrial,path='.'){
   
   #' @importFrom tidyr crossing
   split_files = crossing(scenario = scenario,intervention = intervention,trial = 0:(ntrial-1),extension='csv')
-  #' @importFrom dplyr mutate[
+  #' @importFrom dplyr mutate
   split_files = mutate(split_files,filename = paste(path,paste(scenario,intervention,trial,extension,sep='.'),sep='/'))
 
   files_to_check = split_files$filename[which(split_files$trial == (ntrial-1))]
