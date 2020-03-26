@@ -16,6 +16,11 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fsanitiz
 # Release flags
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-add_executable(simuation
+add_executable(simulation
 	src/main.cpp
+)
+
+target_include_directories(simulation
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/include
 )
