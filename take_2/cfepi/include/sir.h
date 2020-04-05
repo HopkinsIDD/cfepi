@@ -10,6 +10,7 @@
 #include <generators.h>
 #include <vector>
 #include <variant>
+#include <queue>
 
 #ifndef __SIR_H_
 #define __SIR_H_
@@ -73,16 +74,87 @@ struct recovery_event : public sir_event<1> {
   }
 };
 
+
+auto time_compare = [](auto& x, auto&y){
+  return(
+	 std::visit(
+		    [](auto &new_x, auto&new_y){
+		      return(new_x.time > new_y.time);
+		    },
+		    x,
+		    y
+		    )
+	 );
+ };
+
 typedef std::variant < recovery_event, infection_event > any_sir_event;
 // using any_sir_event = sir_event<2>;
 // using any_sir_event = sir_event;
 /*
  * Sample emitting generator.  Emits numbers 1 through 1000
  */
+struct gillespie_generator : generator<any_sir_event> {
+  using generator<any_sir_event >::running;
+  int popsize = 1000;
+  epidemic_time_t tmax = 400;
+  void generate(){
+    running = false;
+    epidemic_time_t current_time = 0;
+    std::priority_queue<
+      any_sir_event,
+      std::vector<any_sir_event>,
+      decltype(time_compare)
+      > upcoming_events(time_compare);
+    epidemic_time_t delta_time;
+    for (person p1 = 0; p1 < popsize; ++p1) {
+      for (person p2 = 0; p2 < popsize; ++p2) {
+	delta_time = p1 + p2+1;
+	upcoming_events.push(infection_event(p1,p2,current_time + delta_time));
+      }
+      delta_time = p1+1;
+      upcoming_events.push(recovery_event(p1,current_time + delta_time));
+    }
+    current_value_mutex.lock();
+    current_value = upcoming_events.top();
+    delta_time = std::visit([](auto& x){return(x.affected_people[0]+1);},upcoming_events.top());
+    auto tmp_val = upcoming_events.top();
+    upcoming_events.pop();
+    std::visit([delta_time](auto &x){x.time = x.time + delta_time;return;},tmp_val);
+    upcoming_events.push(tmp_val);
+    current_time = std::visit([](auto& x){return(x.time);},current_value);
+    current_value_mutex.unlock();
+    bool skip_next = true;
+    event_counter = 0;
+    running = true;
+    ++event_counter;
+
+    while (current_time < tmax) {
+      std::cout << "time " << current_time << std::endl;
+      while(!is_ready()){
+	std::this_thread::yield();
+	// std::this_thread::sleep_for(std::chrono::microseconds(1));
+      }
+      current_value_mutex.lock();
+      current_value = upcoming_events.top();
+      delta_time = std::visit([](auto& x){return(x.affected_people[0]+1);},upcoming_events.top());
+      auto tmp_val = upcoming_events.top();
+      upcoming_events.pop();
+      std::visit([delta_time](auto &x){x.time = x.time + delta_time;return;},tmp_val);
+      upcoming_events.push(tmp_val);
+      current_time = std::visit([](auto& x){return(x.time);},current_value);
+      current_value_mutex.unlock();
+      ++event_counter;
+    }
+    while(!is_ready()){
+      std::this_thread::yield();
+    }
+    running = false;
+  };
+};
 struct stupid_generator : generator<any_sir_event> {
   using generator<any_sir_event >::running;
-  int popsize = 10000;
-  epidemic_time_t tmax = 365;
+  int popsize = 1000;
+  epidemic_time_t tmax = 10;
   void generate(){
     running = false;
     current_value_mutex.lock();

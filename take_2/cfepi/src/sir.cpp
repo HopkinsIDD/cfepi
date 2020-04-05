@@ -29,8 +29,8 @@ std::function<bool(any_sir_event&, const print_state&, print_state&)> printing_f
     }
     std::cout << std::endl;
   },x);
-  printing_mutex.unlock();
   */
+  printing_mutex.unlock();
   return(true);
 };
 
@@ -42,7 +42,7 @@ struct printing_generator : filtered_generator<print_state, any_sir_event> {
 };
 
 int main () {
-  stupid_generator g;
+  gillespie_generator g;
   printing_generator out(&g,"initial");
 
   std::thread th1 = std::thread(&generator<any_sir_event>::generate,&g);
