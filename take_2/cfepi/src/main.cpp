@@ -8,6 +8,7 @@
 #include <typeinfo>
 #include <mutex>
 #include <generators.h>
+#include <sir.h>
 
 using std::chrono::steady_clock;
 
@@ -73,10 +74,10 @@ std::function<bool(event&, const state&, state&)> printing_filter = [](event& x,
   return(true);
 };
 
-struct printing_generator : public filtered_generator<state, event> {
+struct printing_generator : filtered_generator<state, event> {
   printing_generator(generator<event>* _parent,std::string _prefix) : filtered_generator<state,event>(printing_filter, _parent){
-    pre_event_state.prefix = _prefix;
-    post_event_state.prefix = _prefix;
+    current_state.prefix = _prefix;
+    future_state.prefix = _prefix;
   };
 };
 

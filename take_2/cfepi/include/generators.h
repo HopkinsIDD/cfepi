@@ -1,3 +1,10 @@
+#include <mutex>
+#include <atomic>
+#include <functional>
+
+#ifndef __GENERATORS_H_
+#define __GENERATORS_H_
+
 /*
  * @name generator
  * @description An abstract class for generating events.  There are three generators defined in this file
@@ -11,7 +18,7 @@ template<typename Event>
 class generator {
  public:
   std::atomic<bool> running = ATOMIC_VAR_INIT(false);
-  std::atomic<Event> current_value;
+  Event current_value;
   std::atomic<int> downstream_dependents = ATOMIC_VAR_INIT(0);
   std::atomic<int> dependents_finished = ATOMIC_VAR_INIT(0);
   std::atomic<unsigned long long> event_counter = ATOMIC_VAR_INIT(0);
@@ -55,29 +62,29 @@ class generator {
 template<typename State, typename Event>
   class filtered_generator : public generator<Event> {
  public:
-  std::function<bool(Event&,const State&, State&)> filter;
+  std::function<bool(Event&,State&, State&)> filter;
   unsigned long long parent_event_counter;
   generator<Event> *parent;
-  State pre_event_state;
-  State post_event_state;
+  using generator<Event>::running;
+  State current_state;
+  State future_state;
   void generate(){
-    this->running = false;
+    running = false;
     this->event_counter = 0;
     while(!parent->running){
       std::this_thread::yield();
     }
     parent_event_counter = 0;
-    while((!this->running) & parent->running){
+    while((!running) & parent->running){
       while(parent->event_counter <= parent_event_counter){
         std::this_thread::yield();
       }
       ++parent_event_counter;
-      auto value = parent -> current_value.load();
-      if(filter(value,this->pre_event_state,this->post_event_state)){
+      auto value = parent -> current_value;
+      if(filter(value,current_state,future_state)){
         this->current_value = value;
         ++this->event_counter;
-        this->running = true;
-	this->pre_event_state = this->post_event_state;
+        running = true;
       }
       parent->downstream_ready();
     }
@@ -88,22 +95,21 @@ template<typename State, typename Event>
       }
       if(parent -> running){
 	parent_event_counter = parent->event_counter.load();
-	auto value = parent -> current_value.load();
-	if(filter(value,pre_event_state,post_event_state)){
+	auto value = parent -> current_value;
+	if(filter(value,current_state,future_state)){
 	  while(!this->is_ready()){
 	    std::this_thread::yield();
 	  }
 	  this->current_value = value;
 	  ++this->event_counter;
-	  this->pre_event_state = this->post_event_state;
 	}
       }
       parent->downstream_ready();
     }
 
-    this->running = false;
+    running = false;
   };
-  filtered_generator(std::function<bool(Event&,const State&, State&)> _filter, generator<Event>* _parent) {
+  filtered_generator(std::function<bool(Event&,State&, State&)> _filter, generator<Event>* _parent) {
     parent = _parent;
     parent -> register_dependent();
     filter = _filter;
@@ -112,3 +118,5 @@ template<typename State, typename Event>
     parent -> unregister_dependent();
   }
 };
+
+#endif
