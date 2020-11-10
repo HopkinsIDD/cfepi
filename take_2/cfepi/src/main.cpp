@@ -65,9 +65,11 @@ struct counting_generator : generator<event> {
 };
 
 
+auto do_nothing = [](auto&x, auto&y){return;};
+
 std::mutex printing_mutex;
 
-std::function<bool(event&, const state&, state&)> printing_filter = [](event& x, const state& this_state, state& next_state){
+auto printing_filter = [](const state& this_state, const event& x){
   printing_mutex.lock();
   std::cout << this_state.prefix << x.value << std::endl;
   printing_mutex.unlock();
@@ -75,26 +77,37 @@ std::function<bool(event&, const state&, state&)> printing_filter = [](event& x,
 };
 
 struct printing_generator : filtered_generator<state, event> {
-  printing_generator(generator<event>* _parent,std::string _prefix) : filtered_generator<state,event>(printing_filter, _parent){
-    current_state.prefix = _prefix;
-    future_state.prefix = _prefix;
-  };
+  printing_generator(generator<event>* _parent,std::string _prefix) :
+    filtered_generator<state,event>(
+				    state(),
+				    [](state&, const event &){return;},
+				    [](const state&, const event&){return(true);},
+				    printing_filter,
+				    do_nothing,
+				    _parent
+				    ){};
 };
 
-std::function<bool(event&, const state&, state&)> filter_1 = [](event& x,const state& pre, state& post){
+auto filter_1 = [](const state& pre, const event& x){
   return((x.value % 2) == 0);
 };
 
-std::function<bool(event&, const state&, state&)> filter_2 = [](event& x,const state& pre, state& post){
+auto filter_2 = [](const state& pre, const event& x){
   return((x.value % 3) == 0);
 };
+
+/*
+ * stupid defaults
+ */
+auto always_update = [](const state&, const event&){return(true);};
+auto empty_update = [](state&, const event&){return;};
 
 int main ()
 {
   counting_generator g;
-  filtered_generator<state,event> f2_of_g(filter_2,&g);
-  filtered_generator<state,event> f1_of_g(filter_1,&g);
-  filtered_generator<state,event> f2_of_f1_of_g(filter_2,&f1_of_g);
+  filtered_generator<state,event> f2_of_g(state(), empty_update, always_update, filter_2, do_nothing, &g);
+  filtered_generator<state,event> f1_of_g(state(), empty_update, always_update, filter_1, do_nothing, &g);
+  filtered_generator<state,event> f2_of_f1_of_g(state(), empty_update, always_update, filter_2, do_nothing, &f1_of_g);
   printing_generator out_1(&g,"unfiltered ");
   printing_generator out_2(&f1_of_g,"f1 ");
   printing_generator out_3(&f2_of_g,"f2 ");
