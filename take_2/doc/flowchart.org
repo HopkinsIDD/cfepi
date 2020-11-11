@@ -1,0 +1,108 @@
+#+startup:inlineimages
+* Generator flow
+#+begin_src plantuml :file generator.png
+participant Filter order 1
+participant Downstream order 2
+
+hnote over Filter
+  Set Running true
+endhnote
+
+loop while more events
+  Filter -> Filter : get next Event
+  group Wait for Downstream
+    loop over all Downstream
+      Downstream -> Filter : Ready
+    end
+  end
+  hnote over Filter
+    Set current Event to next Event
+    Increment Event Counter
+  endhnote
+end
+
+hnote over Filter
+  Set Running false
+endhnote
+
+#+end_src
+
+#+RESULTS:
+[[file:generator.png]]
+
+#+begin_src plantuml :file filtered_generator.png
+participant Upstream order 1
+participant Filter order 2
+participant Downstream order 3
+
+group On Construction
+  Filter->Upstream: Register
+end
+
+group Wait for Upstream
+  hnote over Upstream
+    Set Running true
+  endhnote
+end
+
+Filter -> Upstream : Ready
+loop while upstream is running
+  group Wait for Upstream
+    alt Upstream is still running
+      hnote over Upstream
+        increase event counter
+      endhnote
+    else Upstream Finished Running
+      break from while
+      end
+    end
+  end
+  Filter -> Upstream : Get Event
+  Filter -> Upstream : Ready
+  hnote over Filter
+    Update parent event counter
+  endhnote
+  alt Event Accepted by Filter
+    group Wait for Downstream
+      loop over all Downstream
+        Downstream -> Filter : Ready
+      end
+    end
+    hnote over Filter
+      Process Event
+      return Event
+    endhnote
+  else Event Rejected by Filter
+  end
+end
+
+alt Upstream counter > parent counter
+  Filter -> Upstream : Get Event
+  Filter -> Upstream : Ready
+  hnote over Filter
+    Update parent event counter
+  endhnote
+  alt Event Accepted by Filter
+    group Wait for Downstream
+      loop over all Downstream
+        Downstream -> Filter : Ready
+      end
+    end
+    hnote over Filter
+      Set current Event to Event
+      Increment Counter
+      Process Event
+    endhnote
+  else Event Rejected by Filter
+  end
+else
+end
+
+hnote over Filter
+  Set Running false
+endhnote
+
+#+end_src
+
+#+RESULTS:
+[[file:filtered_generator.png]]
