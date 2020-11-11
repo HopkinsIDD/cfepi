@@ -8,9 +8,11 @@
 #include <typeinfo>
 #include <mutex>
 #include <generators.h>
-#include <sir.h>
+// #include <sir.h>
 
 using std::chrono::steady_clock;
+
+auto do_nothing = [](auto&x, auto&y){return;};
 
 /*
  * @name State
@@ -20,6 +22,9 @@ struct state {
   std::string prefix;
 };
 
+void print(const state& s, std::string prefix = ""){
+  std::cout << prefix << s.prefix << std::endl;
+}
 /*
  * @name Event
  * @description An event that transitions the model between states
@@ -33,6 +38,10 @@ struct event {
     value = i;
   }
 };
+
+void print(event){
+
+}
 
 
 /*
@@ -64,10 +73,6 @@ struct counting_generator : generator<event> {
   };
 };
 
-
-auto do_nothing = [](auto&x, auto&y){return;};
-
-std::mutex printing_mutex;
 
 auto printing_filter = [](const state& this_state, const event& x){
   printing_mutex.lock();

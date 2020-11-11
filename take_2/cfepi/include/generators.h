@@ -4,7 +4,15 @@
 #include <mutex>
 #include <atomic>
 #include <functional>
+#include <iostream>
 
+#define DEBUG_PRINT true
+std::mutex printing_mutex;
+template<typename T>
+void print(const T&, std::string prefix);
+void print(const std::string& x, std::string prefix = ""){
+  std::cout << prefix << x << std::endl;
+}
 
 struct Exception {};
 
@@ -119,17 +127,28 @@ public:
   const std::function<void(State&, const State&)> update_state_from_dependent;
   void update_current_state(const Event& next_event){
     current_state_mutex.lock();
+    if(DEBUG_PRINT){print(current_state, "before current: ");}
+    if(DEBUG_PRINT){print(future_state, "before future:  ");}
     if(should_update_state(current_state,next_event)){
       current_state = future_state;
       downstream_dependents_mutex.lock();
+      bool any_downstream = false;
       for(auto dependent : downstream_dependents){
+	any_downstream = true;
 	generator_with_state<State, Event>* dependent_pointer = dynamic_cast<generator_with_state<State,Event>* >(&dependent.get());
 	if(dependent_pointer){
 	  update_state_from_dependent(current_state,dependent_pointer->current_state);
 	}
       }
+      if(DEBUG_PRINT && any_downstream){std::string test = "updated from downstream"; print(test, "middle: ");}
+      if(DEBUG_PRINT && (!any_downstream)){std::string test = "updated from future state"; print(test, "middle: ");}
+      if(!any_downstream){
+	current_state = future_state;
+      }
       downstream_dependents_mutex.unlock();
     }
+    if(DEBUG_PRINT){print(current_state, "after current: ");}
+    if(DEBUG_PRINT){print(future_state, "after future:  ");}
     current_state_mutex.unlock();
   };
   generator_with_polled_state(

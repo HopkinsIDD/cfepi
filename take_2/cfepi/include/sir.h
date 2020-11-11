@@ -16,6 +16,7 @@
 #ifndef __SIR_H_
 #define __SIR_H_
 
+
 enum epidemic_state {S, I, R, ncompartments};
 typedef float epidemic_time_t;
 typedef int person;
@@ -24,15 +25,18 @@ typedef int person;
  * @name State
  * @description The state of the model.
  */
+
 struct sir_state {
   int population_size = 0;
   std::vector<std::array<bool,ncompartments> > potential_states;
+  std::vector<bool> states_modified;
   epidemic_time_t time = -1;
   float beta = .2;
   float gamma = .1;
   std::string prefix;
   sir_state(int population_size = 10) : population_size(population_size){
     potential_states.resize(population_size);
+    states_modified.resize(population_size);
   };
 };
 
@@ -41,6 +45,7 @@ struct sir_state {
  * @name Event
  * @description An event that transitions the model between states
  */
+
 template<int size>
 struct sir_event {
   epidemic_time_t time;
@@ -78,6 +83,43 @@ struct recovery_event : public sir_event<1> {
   }
 };
 
+typedef std::variant < recovery_event, infection_event > any_sir_event;
+
+/*
+ * Printing helpers
+ */
+void print(const any_sir_event& event, std::string prefix = ""){
+  printing_mutex.lock();
+  std::cout << prefix;
+  std::visit([](auto& event){
+    std::cout << "time " << event.time << " ";
+    for(auto it : event.affected_people){
+      std::cout << it << ", ";
+    }
+    std::cout << std::endl;
+  },event);
+  printing_mutex.unlock();
+};
+
+void print(const sir_state& state, std::string prefix = ""){
+  printing_mutex.lock();
+  std::cout << prefix << "Possible states at time " << state.time << std::endl;
+  int person_counter = 0;
+  int state_count = ncompartments;
+  for(auto possible_states : state.potential_states){
+    std::cout << prefix << person_counter << "(";
+    state_count = 0;
+    for(auto state : possible_states){
+      if(state){
+	std::cout << " " << state_count;
+      }
+      ++state_count;
+    }
+    std::cout << " )" << std::endl;
+    ++person_counter;
+  }
+  printing_mutex.unlock();
+};
 
 auto time_compare = [](auto& x, auto&y){
   return(
@@ -91,9 +133,6 @@ auto time_compare = [](auto& x, auto&y){
 	 );
  };
 
-typedef std::variant < recovery_event, infection_event > any_sir_event;
-// using any_sir_event = sir_event<2>;
-// using any_sir_event = sir_event;
 auto should_update_current_state = [](const sir_state& state, const any_sir_event& event){
   epidemic_time_t event_time = std::visit([](auto x){return(x.time);},event);
   epidemic_time_t state_time = state.time;
@@ -103,6 +142,11 @@ auto should_update_current_state = [](const sir_state& state, const any_sir_even
 
 auto update_if_satisfied = [](sir_state& state, const any_sir_event& event){
   bool event_preconditions_satisfied = true;
+  // if(DEBUG_PRINT){std::string pf = "update: "; print(pf,"test");}
+  if(DEBUG_PRINT){
+    print(state, "update: ");
+  }
+  if(DEBUG_PRINT){print(event,"update: ");}
   auto check_preconditions = [&state](auto& x){
     bool rc;
     bool tmp;
@@ -111,7 +155,10 @@ auto update_if_satisfied = [](sir_state& state, const any_sir_event& event){
       tmp = false;
       for(size_t compartment = 0; compartment < ncompartments; ++compartment){
 	tmp = tmp || (x.preconditions[i][compartment] && state.potential_states[x.affected_people[i] ][compartment]);
-	if(x.preconditions[i][compartment]){
+	if(DEBUG_PRINT && (x.preconditions[i][compartment] && state.potential_states[x.affected_people[i] ][compartment])){
+	  printing_mutex.lock();
+	  std::cout << x.affected_people[i] << " is in state " << compartment << " satisfying precondition" << std::endl;
+	  printing_mutex.unlock();
 	}
       }
       rc = rc && tmp;
@@ -120,15 +167,39 @@ auto update_if_satisfied = [](sir_state& state, const any_sir_event& event){
   };
   bool preconditions_satisfied = std::visit(check_preconditions, event);
   if(preconditions_satisfied){
+    if(DEBUG_PRINT){
+      printing_mutex.lock();
+      std::cout << "all preconditions satisfied" << std::endl;
+      printing_mutex.unlock();
+    }
     auto apply_postconditions = [&state](auto& x){
       for(size_t i = 0; i < x.affected_people.size(); ++i){
 	if(x.postconditions[i]){
+	  if(DEBUG_PRINT){
+	    printing_mutex.lock();
+	    std::cout << "changing person " << x.affected_people[i] << " to state " << x.postconditions[i].value() << std::endl;
+	    printing_mutex.unlock();
+	  }
+	  if(!state.states_modified[x.affected_people[i]]){
+	    if(DEBUG_PRINT){
+	      printing_mutex.lock();
+	      std::cout << "first change of person " << x.affected_people[i] << " this time" << std::endl;
+	      printing_mutex.unlock();
+	    }
+	    for(auto previous_compartment = 0; previous_compartment < ncompartments; ++previous_compartment){
+	      state.potential_states[x.affected_people[i] ][previous_compartment] = x.preconditions[i][previous_compartment] ? false : state.potential_states[x.affected_people[i] ][previous_compartment];
+	    }
+	    state.states_modified[x.affected_people[i] ] = true;
+	  }
 	  state.potential_states[x.affected_people[i] ][x.postconditions[i].value() ] = true;
 	  state.time = x.time;
 	}
       }
     };
     std::visit(apply_postconditions, event);
+    if(DEBUG_PRINT){
+      print(state, "update: ");
+    }
   }
  };
 
@@ -182,8 +253,8 @@ public:
   void generate(){
     running = false;
     current_value_mutex.lock();
-    current_value_mutex.unlock();
     current_value = recovery_event(0,0);
+    current_value_mutex.unlock();
     bool skip_next = true;
     event_counter = 0;
     running = true;
@@ -193,7 +264,8 @@ public:
       std::vector<int> p2s;
       p1s.reserve(current_state.population_size);
       p2s.reserve(current_state.population_size);
-      for (int p = 0 ; p < current_state.population_size; ++p){
+      // for (int p = 0 ; p < current_state.population_size; ++p){
+      for (int p = current_state.population_size - 1; p > 1; --p){
 	if(current_state.potential_states[p][S]){
 	  p1s.push_back(p);
 	}
@@ -212,8 +284,8 @@ public:
 	  }
 	  current_value_mutex.lock();
 	  current_value = infection_event(p1,p2,t);
-	  current_value_mutex.unlock();
 	  generator_with_state<sir_state,any_sir_event>::update_state(future_state,current_value);
+	  current_value_mutex.unlock();
 	  ++event_counter;
 	}
 	if(skip_next){
@@ -225,8 +297,8 @@ public:
 	}
 	current_value_mutex.lock();
 	current_value = recovery_event(p1,t);
-	current_value_mutex.unlock();
 	generator_with_state<sir_state,any_sir_event>::update_state(future_state,current_value);
+	current_value_mutex.unlock();
 	++event_counter;
       }
       auto tmp = current_value;
@@ -253,6 +325,8 @@ public:
   };
 };
 
+auto do_nothing = [](auto&x, auto&y){return;};
+
 struct sir_filtered_generator : filtered_generator<sir_state, any_sir_event> {
 public:
   sir_filtered_generator(
@@ -264,7 +338,7 @@ public:
 						update_if_satisfied,
 						should_update_current_state,
 						_filter,
-						update_from_descendent,
+						do_nothing,
 						_parent
 						) {
   };
@@ -380,5 +454,7 @@ struct stupid_generator : generator<any_sir_event> {
     running = false;
   };
 };
+
+
 
 #endif
