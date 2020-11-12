@@ -46,7 +46,7 @@ group Wait for Upstream
 end
 
 Filter -> Upstream : Ready
-loop while upstream is running
+alt Upstream is running
   group Wait for Upstream
     alt Upstream is still running
       hnote over Upstream
@@ -68,35 +68,33 @@ loop while upstream is running
         Downstream -> Filter : Ready
       end
     end
-    hnote over Filter
-      Process Event
-      return Event
-    endhnote
+    Filter -> Filter : Process Event
+    Filter -> Filter : Return Event
   else Event Rejected by Filter
+  end
+else Upstream is not running
+  alt Upstream counter > parent counter
+    Filter -> Upstream : Get Event
+    Filter -> Upstream : Ready
+    hnote over Filter
+      Update parent event counter
+    endhnote
+    alt Event Accepted by Filter
+      group Wait for Downstream
+        loop over all Downstream
+          Downstream -> Filter : Ready
+        end
+      end
+      hnote over Filter
+        Process Event
+        Return Event
+      endhnote
+    else Event Rejected by Filter
+    end
+  else
   end
 end
 
-alt Upstream counter > parent counter
-  Filter -> Upstream : Get Event
-  Filter -> Upstream : Ready
-  hnote over Filter
-    Update parent event counter
-  endhnote
-  alt Event Accepted by Filter
-    group Wait for Downstream
-      loop over all Downstream
-        Downstream -> Filter : Ready
-      end
-    end
-    hnote over Filter
-      Set current Event to Event
-      Increment Counter
-      Process Event
-    endhnote
-  else Event Rejected by Filter
-  end
-else
-end
 
 hnote over Filter
   Set Running false
@@ -106,3 +104,20 @@ endhnote
 
 #+RESULTS:
 [[file:filtered_generator.png]]
+
+#+begin_src plantuml :file generator_with_state.png
+participant Filter order 1
+
+loop Process Event
+
+Filter -> Filter : Event
+alt Has Downstreams
+Filter -> Filter : Update Current State based on Downstream
+else Has no Downstreams
+Filter -> Filter : Update Current State based on Event
+end
+
+#+end_src
+
+#+RESULTS:
+[[file:generator_with_state.png]]
