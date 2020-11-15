@@ -23,7 +23,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -latomic")
 if (NOT APPLE)
   set(CMAKE_CXX_FLAGS_DEBUG "-g")
 endif()
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined -pg")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined -g")
 
 # Release flags
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")

@@ -46,17 +46,18 @@ group Wait for Upstream
 end
 
 Filter -> Upstream : Ready
-alt Upstream is running
-  group Wait for Upstream
-    alt Upstream is still running
-      hnote over Upstream
-        increase event counter
-      endhnote
-    else Upstream Finished Running
-      break from while
-      end
-    end
+group Wait for Upstream
+  alt Upstream is still running
+    hnote over Upstream
+      increase event counter
+    endhnote
+  else Upstream Finished Running
+    hnote over Upstream
+      Set Running false
+    endhnote
   end
+end
+alt Upstream is running
   Filter -> Upstream : Get Event
   Filter -> Upstream : Ready
   hnote over Filter

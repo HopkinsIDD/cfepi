@@ -12,7 +12,7 @@
 
 using std::chrono::steady_clock;
 
-auto do_nothing = [](auto&x, auto&y){return;};
+auto do_nothing = [](const auto&x){return;};
 
 /*
  * @name State
@@ -39,8 +39,8 @@ struct event {
   }
 };
 
-void print(event){
-
+void print(const event& x, std::string prefix = ""){
+  std::cout << prefix << x.value << std::endl;
 }
 
 
@@ -48,81 +48,57 @@ void print(event){
  * Sample emitting generator.  Emits numbers 1 through 1000
  */
 struct counting_generator : generator<event> {
-  void generate(){
-    running = false;
-    current_value_mutex.lock();
-    current_value = 0;
-    current_value_mutex.unlock();
-    event_counter = 0;
-    running = true;
-    ++event_counter;
-    for (int i=1; i < 100000; ++i){
-      while(!is_ready()){
-        std::this_thread::yield();
-        // std::this_thread::sleep_for(std::chrono::microseconds(1));
-      }
-      current_value_mutex.lock();
-      current_value = event(i);
-      current_value_mutex.unlock();
-      ++event_counter;
-    }
-    while(!is_ready()){
-      std::this_thread::yield();
-    }
-    running = false;
+  int max_count;
+  int current_count;
+  bool more_events(){
+    return(max_count > current_count);
+  }
+  event next_event(){
+    event rc(current_count++);
+    return(rc);
+  }
+  counting_generator(int max, int start = 0,std::string _name = "counting_generator : ") : generator<event>(_name), max_count(max), current_count(start) {
   };
 };
 
-
-auto printing_filter = [](const state& this_state, const event& x){
-  printing_mutex.lock();
-  std::cout << this_state.prefix << x.value << std::endl;
-  printing_mutex.unlock();
-  return(true);
+struct printing_generator : filtered_generator<event> {
+  using generator<event>::name;
+  bool filter(const event& value){
+    return true;
+  }
+  void process(const event& value){
+    print(value,name);
+    return;
+  }
+  printing_generator(generator<event>* _parent,std::string _name) : filtered_generator<event>(_parent,_name){
+  };
 };
 
-struct printing_generator : filtered_generator<state, event> {
-  printing_generator(generator<event>* _parent,std::string _prefix) :
-    filtered_generator<state,event>(
-				    state(),
-				    [](state&, const event &){return;},
-				    [](const state&, const event&){return(true);},
-				    printing_filter,
-				    do_nothing,
-				    _parent
-				    ){};
-};
-
-auto filter_1 = [](const state& pre, const event& x){
+auto filter_1 = [](const event& x){
   return((x.value % 2) == 0);
 };
 
-auto filter_2 = [](const state& pre, const event& x){
+auto filter_2 = [](const event& x){
   return((x.value % 3) == 0);
 };
 
-/*
- * stupid defaults
- */
-auto always_update = [](const state&, const event&){return(true);};
-auto empty_update = [](state&, const event&){return;};
 
 int main ()
 {
-  counting_generator g;
-  filtered_generator<state,event> f2_of_g(state(), empty_update, always_update, filter_2, do_nothing, &g);
-  filtered_generator<state,event> f1_of_g(state(), empty_update, always_update, filter_1, do_nothing, &g);
-  filtered_generator<state,event> f2_of_f1_of_g(state(), empty_update, always_update, filter_2, do_nothing, &f1_of_g);
+  counting_generator g(100,0,"g            : ");
+  basic_filtered_generator<event> f1_of_g(&g,filter_1,do_nothing,"f1_of_g       : ");
+  basic_filtered_generator<event> f2_of_g(&g,filter_2,do_nothing,"f2_of_g       : ");
+  basic_filtered_generator<event> f2_of_f1_of_g(&f1_of_g,filter_2, do_nothing, "f2_of_f1_of_g : ");
   printing_generator out_1(&g,"unfiltered ");
   printing_generator out_2(&f1_of_g,"f1 ");
   printing_generator out_3(&f2_of_g,"f2 ");
   printing_generator out_4(&f2_of_f1_of_g,"both ");
   std::cout << "HERE" << std::endl;
 
-  std::thread th8 = std::thread(&generator<event>::generate,&out_1);
-  std::thread th7 = std::thread(&generator<event>::generate,&out_2);
-  std::thread th6 = std::thread(&generator<event>::generate,&out_3);
-  std::thread th5 = std::thread(&generator<event>::generate,&out_4);
+  std::thread th8 = std::thread(&generator<event>::generate,&out_4);
+  std::thread th7 = std::thread(&generator<event>::generate,&out_3);
+  std::thread th6 = std::thread(&generator<event>::generate,&out_2);
+  std::thread th5 = std::thread(&generator<event>::generate,&out_1);
   std::thread th4 = std::thread(&generator<event>::generate,&f2_of_f1_of_g);
   std::thread th3 = std::thread(&generator<event>::generate,&f2_of_g);
   std::thread th2 = std::thread(&generator<event>::generate,&f1_of_g);
