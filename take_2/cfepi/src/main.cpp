@@ -70,7 +70,7 @@ struct printing_generator : filtered_generator<event> {
     print(value,name);
     return;
   }
-  printing_generator(generator<event>* _parent,std::string _name) : filtered_generator<event>(_parent,_name){
+  printing_generator(generator<event>* _parent,std::string _name) : generator<event>(_name), filtered_generator<event>(_parent,_name){
   };
 };
 

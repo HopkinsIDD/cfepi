@@ -9,9 +9,18 @@
 #include <mutex>
 #include <generators.h>
 #include <sir.h>
+#include <sir_generators.h>
+
+#include <random>
 
 using std::chrono::steady_clock;
 
+std::random_device rd;
+// std::default_random_engine random_source_1{rd()};
+// std::default_random_engine random_source_2{rd()};
+std::default_random_engine random_source_1{1};
+std::default_random_engine random_source_2{1};
+// std::default_random_engine random_source(rd());
 
 struct print_state : public sir_state {
   std::string prefix;
@@ -31,54 +40,81 @@ struct printing_generator : filtered_generator<any_sir_event> {
   void process(const any_sir_event& value){
     print(value,name);
   }
-  printing_generator(generator<any_sir_event>* _parent,std::string _name) : filtered_generator<any_sir_event>(_parent,_name){
+  printing_generator(generator<any_sir_event>* _parent,std::string _name) :
+    generator<any_sir_event>(_name),
+    filtered_generator<any_sir_event>(_parent,_name){
   };
 };
 
-std::function<bool(const sir_state&, const any_sir_event&)> tmpfun = [](const sir_state& state, const any_sir_event& event){
+std::function<bool(const sir_state&, const any_sir_event&)> filter_1 = [](const sir_state& state, const any_sir_event& event){
+  auto size = std::visit([](auto&x){return(x.affected_people.size());},event);
+  if(size <= 1){
+    return(true);
+  }
+
+  std::uniform_real_distribution<double> random_probability(0.0,1.0);
+
+  auto rval = random_probability(random_source_1);
+  if(rval > .0003){
+    return(false);
+  }
+  return(true);
+};
+
+std::function<bool(const sir_state&, const any_sir_event&)> filter_2 = [](const sir_state& state, const any_sir_event& event){
+  auto size = std::visit([](auto&x){return(x.affected_people.size());},event);
+  if(size <= 1){
+    return(true);
+  }
+
+  std::uniform_real_distribution<double> random_probability(0.0,1.0);
+
+  auto rval = random_probability(random_source_2);
+  if(rval > .2){
+    return(false);
+  }
   bool rc = std::visit([](auto&x){
-    for(auto p : x.affected_people){
-      if(p == 1){
-	// std::cout << "REJECTED" << std::endl;
-	return(false);
-      }
-      if(p == 3){
-	// std::cout << "REJECTED" << std::endl;
-	return(false);
-      }
+    for(auto p : x.affected_people) {
+      if(p==3){return(false);}
     }
     return(true);
-  },
-    event);
+    },event);
   return(rc);
- };
+};
 
 int main () {
-  epidemic_time_t epidemic_length = 5;
+  epidemic_time_t epidemic_length = 365;
+  auto initial_conditions = default_state(3000);
 
-  discrete_time_generator g(default_state(),epidemic_length,"Initial Generator : ");
-  sir_filtered_generator f1_of_g(&g,default_state(), tmpfun, "Second Generator  : ");
+  discrete_time_generator g(initial_conditions,epidemic_length,"Initial Generator : ");
+  sir_filtered_generator f1_of_g(&g,initial_conditions, filter_1, "Second Generator  : ");
+  sir_filtered_generator f2_of_g(&g,initial_conditions, filter_2, "Third Generator  : ");
   // printing_generator out1(&g,"initial : ");
   // printing_generator out2(&f1_of_g,"filtered : ");
 
   std::thread th1 = std::thread(&generator<any_sir_event>::generate,&g);
-  std::thread th2 = std::thread(&sir_filtered_generator::generate,&f1_of_g);
+  std::thread th2 = std::thread(&generator<any_sir_event>::generate,&f1_of_g);
+  std::thread th3 = std::thread(&sir_filtered_generator::generate,&f2_of_g);
   // std::thread th3 = std::thread(&generator<any_sir_event>::generate,&out1);
   // std::thread th4 = std::thread(&generator<any_sir_event>::generate,&out2);
 
   th1.join();
   th2.join();
-  // th3.join();
+  th3.join();
   // th4.join();
 
   std::cout << "Final results" << std::endl;
   std::cout << g.event_counter << std::endl;
-  // std::cout << f1_of_g.event_counter << std::endl;
+  std::cout << f1_of_g.event_counter << std::endl;
+  std::cout << f2_of_g.event_counter << std::endl;
   // std::cout << out1.event_counter << std::endl;
   // std::cout << out2.event_counter << std::endl;
 
-  print(g.current_state);
-  // print(f1_of_g.current_state);
+  // if(DEBUG_STATE_PRINT){
+  print(g.current_state,g.name);
+  print(f1_of_g.current_state,"filter_1 : ");
+  print(f2_of_g.current_state,"filter_2 : ");
   // print(out1.current_state);
   // print(out2.current_state);
+  //}
 }
