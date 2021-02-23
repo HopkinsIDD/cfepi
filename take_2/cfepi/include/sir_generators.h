@@ -141,6 +141,7 @@ public:
   epidemic_time_t t_max;
   size_t event_type_index;
   bool post_events_generated;
+  sir_event_constructor<number_of_event_types> event_constructor;
   any_sir_event next_event(){
     if(std::visit(any_sir_event_size{},current_value) == 0){
       // If last value was a event of length 0
@@ -150,7 +151,7 @@ public:
       update_iterators_for_new_event();
     }
     // Create and populate this event
-    any_sir_event rc = construct_sir_by_event_index(event_type_index);
+    any_sir_event rc = event_constructor.construct_sir_event(event_type_index);
 
 
     for(person_t precondition = 0; precondition < std::visit(any_sir_event_size{},rc); ++precondition){
@@ -227,7 +228,7 @@ public:
   };
   bool update_iterators_for_new_event(){
 
-    any_sir_event rc = construct_sir_by_event_index(event_type_index);
+    any_sir_event rc = event_constructor.construct_sir_event(event_type_index);
     auto number_of_iterators = std::visit([](auto& x){return(x.preconditions.size());},rc);
     iterator_by_precondition.resize(number_of_iterators);
     persons_by_precondition.resize(number_of_iterators);

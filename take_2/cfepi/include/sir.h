@@ -154,18 +154,6 @@ struct sir_event_true_preconditions<2,1> {
  * Helper functions for any_sir_event variant type                             *
  *******************************************************************************/
 
-constexpr any_sir_event construct_sir_by_event_index(size_t index){
-  switch(index){
-  case 1:
-    return(recovery_event());
-  case 0:
-    return(null_event());
-  case 2:
-    return(infection_event());
-  }
-  return any_sir_event();
-}
-
 template<size_t event_index>
 struct sir_event_by_index;
 
@@ -178,6 +166,23 @@ struct sir_event_by_index<1> : recovery_event{};
 template<>
 struct sir_event_by_index<2> : infection_event{};
 
+template<size_t N = number_of_event_types, typename = std::make_index_sequence<N> >
+struct sir_event_constructor;
+
+template<size_t N, size_t... indices>
+struct sir_event_constructor<N, std::index_sequence<indices...> > {
+  any_sir_event construct_sir_event(size_t event_index){
+    any_sir_event rc;
+    bool any_possible = (false | ... | (event_index == indices));
+    if (!any_possible) {
+      std::cerr << "Printing index was out of bounds" << std::endl;
+      return rc;
+    }
+    ((rc = (event_index == indices) ? sir_event_by_index<indices>() : rc), ...);
+    return rc;
+  };
+};
+
 template<size_t event_index>
 struct event_size_by_event_index{
   const static size_t value = sir_event_by_index<event_index>().affected_people.size();
@@ -189,15 +194,15 @@ struct any_sir_event_size {
     return(x.affected_people.size());
   }
   /*
-  size_t operator()(const sir_event<0>&x){
+    size_t operator()(const sir_event<0>&x){
     return(0);
-  }
-  size_t operator()(const sir_event<1>&x){
+    }
+    size_t operator()(const sir_event<1>&x){
     return(1);
-  }
-  size_t operator()(const sir_event<2>&x){
+    }
+    size_t operator()(const sir_event<2>&x){
     return(2);
-  }
+    }
   */
 };
 
