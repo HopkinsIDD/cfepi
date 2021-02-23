@@ -6,20 +6,29 @@
 #include <functional>
 #include <typeinfo>
 #include <mutex>
-#include <generators.h>
 #include <vector>
 #include <variant>
 #include <queue>
+
+#include <range/v3/all.hpp>
 // #include <stxxl/vector>
 
 #ifndef __SIR_H_
 #define __SIR_H_
 
+/*******************************************************************************
+ * SIR Helper Type Definitions                                                 *
+ *******************************************************************************/
 
-enum epidemic_state {S, I, R, ncompartments};
+enum epidemic_state {S, I, R, n_SIR_compartments};
+constexpr size_t ncompartments = n_SIR_compartments;
 typedef float epidemic_time_t;
 typedef size_t person_t;
 size_t global_event_counter = 0;
+
+/*******************************************************************************
+ * SIR State Definition                                                        *
+ *******************************************************************************/
 
 /*
  * @name State
@@ -41,6 +50,21 @@ struct sir_state {
   };
 };
 
+sir_state default_state(person_t popsize=10){
+  sir_state rc(popsize);
+  rc.potential_states[0][I] = true;
+  for(size_t i = 1 ; i < rc.potential_states.size(); ++i){
+    rc.potential_states[i][S] = true;
+  }
+  return(rc);
+}
+
+auto sample_sir_state = default_state();
+
+
+/*******************************************************************************
+ * SIR Event Definition                                                        *
+ *******************************************************************************/
 
 /*
  * @name SIR Event
@@ -49,9 +73,9 @@ struct sir_state {
 
 template<size_t size>
 struct sir_event {
-  epidemic_time_t time;
-  std::array<person_t,size> affected_people;
-  std::array<std::array<bool,ncompartments>,size> preconditions;
+  epidemic_time_t time = -1;
+  std::array<person_t,size> affected_people = {};
+  std::array<std::array<bool,ncompartments>,size> preconditions = {};
   std::array<std::optional<epidemic_state>,size> postconditions;
   sir_event() noexcept = default;
   sir_event(const sir_event&) = default;
@@ -62,16 +86,16 @@ struct infection_event : public sir_event<2> {
   using sir_event<2>::affected_people;
   using sir_event<2>::preconditions;
   using sir_event<2>::postconditions;
-  infection_event() noexcept {
+  constexpr infection_event() noexcept {
     preconditions = {std::array<bool,3>({true,false,false}),std::array<bool,3>({false,true,false})};
-    postconditions[0].emplace(I);
+    postconditions[0] = I;
   };
   infection_event(const infection_event&) = default;
   infection_event(person_t p1, person_t p2, epidemic_time_t _time) {
     time = _time;
     affected_people = {p1, p2};
     preconditions = {std::array<bool,3>({true,false,false}),std::array<bool,3>({false,true,false})};
-    postconditions[0].emplace(I);
+    postconditions[0] = I;
   }
 };
 
@@ -80,18 +104,16 @@ struct recovery_event : public sir_event<1> {
   using sir_event<1>::affected_people;
   using sir_event<1>::preconditions;
   using sir_event<1>::postconditions;
-  recovery_event() noexcept {
-    affected_people[0] = 0;
-    time = 0;
+  constexpr recovery_event() noexcept {
     preconditions = {std::array<bool,3>({false,true,false})};
-    postconditions[0].emplace(R);
+    postconditions[0] = R;
   };
   recovery_event(const recovery_event&) = default;
   recovery_event(person_t p1, epidemic_time_t _time) {
     time = _time;
     affected_people[0] = p1;
     preconditions = {std::array<bool,3>({false,true,false})};
-    postconditions[0].emplace(R);
+    postconditions[0] = R;
   }
 };
 
@@ -110,8 +132,59 @@ struct null_event : public sir_event<0> {
 typedef std::variant < recovery_event, infection_event, null_event > any_sir_event;
 constexpr size_t number_of_event_types = 3;
 
+template<size_t index, size_t permutation_index>
+struct sir_event_true_preconditions;
+
+template<>
+struct sir_event_true_preconditions<1,0> {
+  constexpr static auto value = {I};
+};
+
+template<>
+struct sir_event_true_preconditions<2,0> {
+  constexpr static auto value = {S};
+};
+
+template<>
+struct sir_event_true_preconditions<2,1> {
+  constexpr static auto value = {I};
+};
+
+/*******************************************************************************
+ * Helper functions for any_sir_event variant type                             *
+ *******************************************************************************/
+
+constexpr any_sir_event construct_sir_by_event_index(size_t index){
+  switch(index){
+  case 1:
+    return(recovery_event());
+  case 0:
+    return(null_event());
+  case 2:
+    return(infection_event());
+  }
+  return any_sir_event();
+}
+
+template<size_t event_index>
+struct sir_event_by_index;
+
+template<>
+struct sir_event_by_index<0> : null_event{};
+
+template<>
+struct sir_event_by_index<1> : recovery_event{};
+
+template<>
+struct sir_event_by_index<2> : infection_event{};
+
+template<size_t event_index>
+struct event_size_by_event_index{
+  const static size_t value = sir_event_by_index<event_index>().affected_people.size();
+};
+
 struct any_sir_event_size {
-  size_t operator()(const auto& x){
+  constexpr size_t operator()(const auto& x){
 
     return(x.affected_people.size());
   }
@@ -185,25 +258,6 @@ struct any_sir_event_print {
   }
 };
 
-any_sir_event construct_sir_by_event_index(size_t index){
-  any_sir_event rc;
-  switch(index) {
-  case 0:
-    rc.emplace<recovery_event>();
-    break;
-  case 1:
-    rc.emplace<infection_event>();
-    break;
-  case 2:
-    rc.emplace<null_event>();
-    break;
-  default:
-    throw Exception();
-  }
-  return(rc);
-  throw Exception();
-}
-
 /*
  * Printing helpers
  */
@@ -269,15 +323,6 @@ void print(const sir_state& state, std::string prefix = "", bool aggregate = tru
 };
 
 auto update_from_descendent = [](sir_state& ours, const sir_state& theirs){
-  if(ours.population_size != theirs.population_size){
-    printing_mutex.lock();
-    std::cout << "Population sizes differ" << std::endl;
-    printing_mutex.unlock();
-    throw Exception();
-  }
-    printing_mutex.lock();
-    std::cout << "Updating from DESCENDENT" << std::endl;
-    printing_mutex.unlock();
   if(theirs.time > ours.time){
     ours.time = theirs.time;
     for(person_t person = 0 ; person < ours.population_size; ++person){
@@ -293,14 +338,5 @@ auto update_from_descendent = [](sir_state& ours, const sir_state& theirs){
   }
 
  };
-
-sir_state default_state(person_t popsize=10){
-  sir_state rc(popsize);
-  rc.potential_states[0][I] = true;
-  for(size_t i = 1 ; i < rc.potential_states.size(); ++i){
-    rc.potential_states[i][S] = true;
-  }
-  return(rc);
-}
 
 #endif

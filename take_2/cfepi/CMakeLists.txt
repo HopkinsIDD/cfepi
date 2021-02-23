@@ -37,6 +37,9 @@ add_executable(simulation
 	src/main.cpp
 )
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) # Include Conan-generated file
+conan_basic_setup(TARGETS) # Introduce Conan-generated targets
+
 target_include_directories(simulation
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -47,5 +50,5 @@ target_include_directories(sir_simulation
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(sir_simulation ${STXXL_LIBRARIES})
-target_link_libraries(simulation ${STXXL_LIBRARIES})
+target_link_libraries(sir_simulation PRIVATE CONAN_PKG::range-v3 ${STXXL_LIBRARIES} )
+target_link_libraries(simulation PRIVATE CONAN_PKG::range-v3 ${STXXL_LIBRARIES})

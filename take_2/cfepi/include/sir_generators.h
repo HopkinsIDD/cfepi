@@ -34,11 +34,6 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
   }
   void apply_to_postconditions(sir_state& post_state,const any_sir_event& event){
     epidemic_time_t event_time = std::visit(any_sir_event_time{},event);
-    if(!(post_state.time == event_time)){
-      printing_mutex.lock();
-      std::cout << name << "Updating time from " << post_state.time << " to " << event_time << std::endl;
-      printing_mutex.unlock();
-    }
     post_state.time = event_time;
     size_t event_size = std::visit(any_sir_event_size{},event);
     if(event_size == 0){
@@ -73,22 +68,10 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
     // Check preconditions
     bool preconditions_satisfied = check_preconditions(pre_state, event);
     if(preconditions_satisfied){
-      if(DEBUG_EVENT_PRINT){
-	std::string msg = "postconditions satisfied, applying event";
-	printing_mutex.lock();
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       apply_to_postconditions(post_state,event);
     }
   };
   virtual void initialize(){
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as generator_with_sir_state";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     generator_with_buffered_state<sir_state,any_sir_event>::initialize();
     current_state = initial_state;
     future_state = initial_state;
@@ -111,17 +94,6 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
     update_state(future_state,event,current_state);
   };
   void update_state_from_state(sir_state& ours, const sir_state& theirs, std::string our_name, std::string their_name){
-    if(ours.population_size != theirs.population_size){
-      printing_mutex.lock();
-      std::cout << our_name << "Population sizes differ" << std::endl;
-      printing_mutex.unlock();
-      throw Exception();
-    }
-    printing_mutex.lock();
-    std::cout << our_name << "Updating from " << their_name << std::endl;
-    std::cout << our_name << "  our time " << ours.time << std::endl;
-    std::cout << our_name << "  their time " << theirs.time << std::endl;
-    printing_mutex.unlock();
     if(ours.time < theirs.time){
       for(person_t person = 0 ; person < ours.population_size; ++person){
 	for(auto compartment = 0; compartment < ncompartments; ++compartment){
@@ -137,9 +109,6 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
     }
   }
   void update_state_from_buffer(){
-    printing_mutex.lock();
-    std::cout << name << "Updating current state from time " << current_state.time << " to " << future_state.time << std::endl;
-    printing_mutex.unlock();
     current_state = future_state;
     for(size_t i = 0 ; i < future_state.potential_states.size(); ++i){
       for(size_t j = 0; j < future_state.potential_states[0].size(); ++j){
@@ -148,12 +117,6 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
     }
     for(auto it = std::begin(future_state.states_modified); it != std::end(future_state.states_modified); ++it){
       (*it) = false;
-    }
-    if(DEBUG_STATE_PRINT){
-      printing_mutex.lock();
-      print(current_state,name + " current : ");
-      print(future_state,name + " future : ");
-      printing_mutex.unlock();
     }
   }
   void update_state_from_downstream(const generator_with_state<sir_state,any_sir_event>* downstream){
@@ -182,19 +145,9 @@ public:
     if(std::visit(any_sir_event_size{},current_value) == 0){
       // If last value was a event of length 0
       // We need to update from downstream and update iterators
-      if(DEBUG_PRINT){
-	printing_mutex.lock();
-	std::cout << name << "Starting new time, so updating state from downstream" << std::endl;
-	printing_mutex.unlock();
-      }
       ready_to_update_from_downstream = true;
       update_state_from_all_downstream(current_value);
       update_iterators_for_new_event();
-      if(DEBUG_PRINT){
-	printing_mutex.lock();
-	print(current_state, name + " current state : ");
-	printing_mutex.unlock();
-      }
     }
     // Create and populate this event
     any_sir_event rc = construct_sir_by_event_index(event_type_index);
@@ -208,70 +161,16 @@ public:
 
     std::visit(any_sir_event_set_time{t_current},rc);
 
-    if(DEBUG_EVENT_PRINT){
-      printing_mutex.lock();
-      std::string msg = "Preparing to generate event";
-      debug_print(msg,name);
-      debug_print(rc,name);
-      printing_mutex.unlock();
-    }
-
-    if(event_type_index == (number_of_event_types - 1)){
-      printing_mutex.lock();
-      std::cout << name << "finishing with time " << t_current << std::endl;
-      printing_mutex.unlock();
-    }
-
-    if((event_type_index > 0) && (current_state.time + 1 < t_current)){
-	printing_mutex.lock();
-	std::string msg = "Events and state separated in time";
-	std::cout << name << msg << std::endl;
-	msg = "event time " + std::to_string(t_current);
-	std::cout << name << msg << std::endl;
-	msg = "state time " + std::to_string(current_state.time);
-	std::cout << name << msg << std::endl;
-	printing_mutex.unlock();
-	throw Exception();
-    }
-
     // process(rc);
 
-    if(DEBUG_EVENT_PRINT){
-      std::string msg = "Getting ready for next event";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     // Mess with iterators
     size_t this_iterator = 0;
     size_t max_iterator = std::visit(any_sir_event_size{},rc);
     bool finished = false;
     while(this_iterator < max_iterator){
-      if(DEBUG_STATE_PRINT){
-	std::string msg = "incrementing iterator " + std::to_string(this_iterator) + "/" + std::to_string(max_iterator);
-	printing_mutex.lock();
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       ++iterator_by_precondition[this_iterator]; // Increase the iterator at this position;
       // If this iterator is done, start it over and increment the next iterator
-      if(DEBUG_STATE_PRINT){
-	auto diff = iterator_by_precondition[this_iterator] - std::begin(persons_by_precondition[this_iterator]);
-	std::string msg = "    iterator has gone " + std::to_string(diff) + " steps";
-	printing_mutex.lock();
-	debug_print(msg,name);
-	diff = std::end(persons_by_precondition[this_iterator]) - iterator_by_precondition[this_iterator];
-	msg = "iterator has " + std::to_string(diff) + " steps left to go";
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       if(iterator_by_precondition[this_iterator] >= std::end(persons_by_precondition[this_iterator])){
-	if(DEBUG_PRINT){
-	  std::string msg = "    reseting iterator " + std::to_string(this_iterator);
-	  printing_mutex.lock();
-	  debug_print(msg,name);
-	  printing_mutex.unlock();
-	}
 	iterator_by_precondition[this_iterator] = std::begin(persons_by_precondition[this_iterator]);
 	++this_iterator;
       } else {
@@ -298,9 +197,6 @@ public:
     if((!finished)){
       event_type_index = 0;
       // Wait for downstream here
-      // printing_mutex.lock();
-      // std::cout << name << "    Should wait for downstream here" << std::endl;
-      // printing_mutex.unlock();
       while((!finished) && (event_type_index < std::variant_size<any_sir_event>::value)){
 	auto any_events_of_next_type = update_iterators_for_new_event();
 	// If we have at least one more event type, we are done incrementing
@@ -330,12 +226,6 @@ public:
     return(rc);
   };
   bool update_iterators_for_new_event(){
-    if(DEBUG_PRINT){
-      printing_mutex.lock();
-      std::string msg = "    moving to events of type " + std::to_string(event_type_index);
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
 
     any_sir_event rc = construct_sir_by_event_index(event_type_index);
     auto number_of_iterators = std::visit([](auto& x){return(x.preconditions.size());},rc);
@@ -368,12 +258,6 @@ public:
     return(t_current <= t_max);
   };
   void initialize() {
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as discrete_time_generator";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     post_events_generated = false;
 
     generator_with_sir_state::initialize();
@@ -382,12 +266,6 @@ public:
     current_state.time = 0;
     future_state.time = 1;
     auto update_success = update_iterators_for_new_event();
-    if(!update_success){
-      printing_mutex.lock();
-      std::cout << "Initial update successful.  Possibly a problem with initial conditions" << std::endl;
-      printing_mutex.unlock();
-      throw Exception();
-    }
   };
 
   discrete_time_generator(sir_state _initial_state, epidemic_time_t max_time, std::string _name = "discrete time generator : "):
@@ -409,25 +287,12 @@ public:
     return(filtered_generator<any_sir_event>::next_event());
   }
   bool more_events(){
-    if(DEBUG_STATE_PRINT){
-      printing_mutex.lock();
-      print(current_state,name + " current state : ");
-      print(future_state,name + " future state : ");
-      printing_mutex.unlock();
-    }
     return(filtered_generator<any_sir_event>::more_events());
   }
   std::function<bool(const sir_state&, const any_sir_event&)> user_filter;
   std::function<void(sir_state&, const any_sir_event&)> user_process;
   bool filter(const any_sir_event& event) {
     if(check_preconditions(current_state,event)){
-      if(DEBUG_EVENT_PRINT){
-	printing_mutex.lock();
-	std::cout << name << "Event" << std::endl;
-	print(event,name + "  " );
-	std::cout << name << "  passes preconditions" << std::endl;
-	printing_mutex.unlock();
-      }
       return(user_filter(current_state, event));
     }
     return(false);
@@ -439,12 +304,6 @@ public:
     return(filtered_generator<any_sir_event>::generate());
   }
   void initialize(){
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as sir_filtered_generator";
-      printing_mutex.lock();
-      debug_print(msg,generator<any_sir_event>::name);
-      printing_mutex.unlock();
-    }
     generator_with_state::initialize();
     filtered_generator<any_sir_event>::initialize();
     t_current = 1;

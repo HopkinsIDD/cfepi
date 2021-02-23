@@ -6,26 +6,6 @@
 #include <functional>
 #include <iostream>
 
-#define DEBUG_PRINT false
-#define DEBUG_EVENT_PRINT false
-#define DEBUG_STREAM_PRINT false
-#define DEBUG_STATE_PRINT false
-#define DEBUG_EVENT_PERIOD 10000000
-std::mutex printing_mutex;
-template<typename T>
-void print(const T&, std::string prefix);
-void print(const std::string& x, std::string prefix = ""){
-  std::cout << prefix << x << std::endl;
-}
-template<typename T>
-void debug_print(const T& x, std::string prefix){
-  if(DEBUG_PRINT){
-    print(x,prefix);
-  }
-}
-
-struct Exception {};
-
 /*
  * @name generator
  * @description An abstract class for generating events.  There are three generators defined in this file
@@ -61,14 +41,7 @@ public:
 					      [&dependent](std::reference_wrapper<generator<Event> > val){
 						return((&(val.get())) == (&(dependent.get())));
 					      });
-    if(std::end(downstream_dependents) != first_index_in_vector){
-      downstream_dependents.erase(first_index_in_vector);
-    } else {
-      printing_mutex.lock();
-      std::cout << name << "Could not un-register dependents" << std::endl;
-      printing_mutex.unlock();
-      throw Exception();
-    }
+    downstream_dependents.erase(first_index_in_vector);
     downstream_dependents_mutex.unlock();
     downstream_finished_mutex.unlock();
   }
@@ -91,22 +64,10 @@ public:
     return(false);
   }
   void generate(){
-    if(DEBUG_PRINT){
-      std::string msg = "generation begins";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     initialize();
     Event event;
     while(more_events()){
       event = next_event();
-      if(DEBUG_EVENT_PRINT){
-	printing_mutex.lock();
-	std::string msg = "yielding";
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       while(!is_ready()){
 	std::this_thread::yield();
       }
@@ -114,24 +75,12 @@ public:
       current_value = event;
       current_value_mutex.unlock();
       ++event_counter;
-      if(DEBUG_EVENT_PRINT || ((event_counter % DEBUG_EVENT_PERIOD) == 0)){
-	printing_mutex.lock();
-	std:: cout << name << "Generating event " << event_counter << std::endl;
-	debug_print(event,name);
-	printing_mutex.unlock();
-      }
     }
     running = false;
   }
   virtual Event next_event() = 0;
   virtual bool more_events() = 0;
   virtual void initialize() {
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as generator";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     event_counter = 0;
     running = true;
   };
@@ -157,58 +106,23 @@ public:
   virtual bool filter(const Event&) = 0;
   virtual void process(const Event&) = 0;
   virtual void initialize() {
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as filtered_generator";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     generator<Event>::initialize();
     this->event_counter = 0;
     parent_event_counter = 0;
-    if(DEBUG_EVENT_PRINT){
-      std::string msg = "waiting for parent";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     while(!parent->running){
       std::this_thread::yield();
-    }
-    if(DEBUG_EVENT_PRINT){
-      std::string msg = "ready";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
     }
     parent->downstream_ready();
   }
   Event next_event(){
-    if(DEBUG_EVENT_PRINT){
-      printing_mutex.lock();
-      std::cout << name << "Receiving event" << std::endl;
-      printing_mutex.unlock();
-    }
     auto value = parent -> current_value;
     process(value);
     parent->downstream_ready();
     return(value);
   };
   bool is_next_unfiltered_event(){
-    if(DEBUG_EVENT_PRINT){
-      printing_mutex.lock();
-      std::cout << name << "yielding" << std::endl;
-      std::cout << name << "waiting for parent event " << parent_event_counter + 1 << std::endl;
-      std::cout << name << "currently on parent event " << parent->event_counter << std::endl;
-      printing_mutex.unlock();
-    }
 
     while((parent->running) && (parent->event_counter <= parent_event_counter)){
-      if(DEBUG_EVENT_PRINT){
-	printing_mutex.lock();
-	// std::cout << name << "currently on parent event " << parent->event_counter << std::endl;
-	printing_mutex.unlock();
-      }
       std::this_thread::yield();
     }
     if(parent->event_counter > parent_event_counter){
@@ -218,27 +132,10 @@ public:
   }
   bool more_events(){
     while(is_next_unfiltered_event()){
-      if(DEBUG_EVENT_PRINT){
-	printing_mutex.lock();
-	std::cout << name << "Looking for more events" << std::endl;
-	printing_mutex.unlock();
-      }
       if(filter(parent->current_value)){
-	if(DEBUG_EVENT_PRINT){
-	  printing_mutex.lock();
-	  std::cout << name << "Accepted event" << std::endl;
-	  print(parent->current_value,name);
-	  printing_mutex.unlock();
-	}
 	++parent_event_counter;
 	return(true);
       } else {
-	if(DEBUG_EVENT_PRINT){
-	  printing_mutex.lock();
-	  std::cout << name << "Rejected event" << std::endl;
-	  print(parent->current_value,name);
-	  printing_mutex.unlock();
-	}
 	++parent_event_counter;
 	parent->downstream_ready();
       }
@@ -270,40 +167,17 @@ public:
   void process(const Event& next_event){
     downstream_dependents_mutex.lock();
     if(any_downstream_with_state){
-      if(DEBUG_EVENT_PRINT){
-	std::string msg = "Updating state from dependents";
-	printing_mutex.lock();
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       update_state_from_all_downstream(next_event);
     } else {
-      if(DEBUG_EVENT_PRINT){
-	std::string msg = "Updating state from event";
-	printing_mutex.lock();
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       current_state_mutex.lock();
       update_state_from_event(next_event);
       current_state_mutex.unlock();
-    }
-    if(DEBUG_STATE_PRINT){
-      printing_mutex.lock();
-      print(current_state,name + " state : ");
-      printing_mutex.unlock();
     }
     downstream_dependents_mutex.unlock();
   }
   generator_with_state(State initial_state, std::string _name = "generator_with_state : "): generator<Event>(_name), current_state(initial_state) {
   }
   virtual void initialize() {
-    if(DEBUG_PRINT){
-      std::string msg = "initialize as generator_with_state";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      printing_mutex.unlock();
-    }
     generator<Event>::initialize();
     downstream_dependents_mutex.lock();
     any_downstream_with_state = false;
@@ -316,8 +190,6 @@ public:
     downstream_dependents_mutex.unlock();
   }
   virtual void update_state_from_event(const Event&){
-    std::cout << "???" << std::endl;
-    throw Exception();
   };
 };
 
@@ -332,30 +204,11 @@ public:
   using generator<Event>::downstream_dependents_mutex;
   void update_state_from_event(const Event& next_event){
     apply_event_to_future_state(next_event);
-    if(DEBUG_EVENT_PRINT && DEBUG_STATE_PRINT){
-      std::string msg = "Applying event to future state";
-      printing_mutex.lock();
-      debug_print(msg,name);
-      debug_print(next_event,name);
-      print(future_state,name + " future_state: ");
-      printing_mutex.unlock();
-    }
     if(should_update_current_state(next_event)){
-      if(DEBUG_PRINT){
-	std::string msg = "Updating state from buffer";
-	printing_mutex.lock();
-	debug_print(msg,name);
-	printing_mutex.unlock();
-      }
       update_state_from_buffer();
     }
   }
   void update_state_from_all_downstream(const Event& next_event){
-    if(DEBUG_STREAM_PRINT){
-      printing_mutex.lock();
-      std::cout << name << "Updating from all downstream" << std::endl;
-      printing_mutex.unlock();
-    }
     current_state_mutex.lock();
     while(!generator<Event>::all_downstreams_ready()){
       std::this_thread::yield();
@@ -363,11 +216,6 @@ public:
 
     if(should_update_current_state(next_event)){
       for(auto downstream : downstream_dependents){
-	if(DEBUG_EVENT_PRINT){
-	  printing_mutex.lock();
-	  std::cout << name << downstream.get().name << "UPDATE" << std::endl;
-	  printing_mutex.unlock();
-	}
 	generator_with_state<State, Event>* downstream_pointer = dynamic_cast<generator_with_state<State,Event>* >(&downstream.get());
 	if(downstream_pointer){
 	  update_state_from_downstream(downstream_pointer);
