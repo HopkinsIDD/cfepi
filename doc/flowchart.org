@@ -1,0 +1,124 @@
+#+startup:inlineimages
+* Generator flow
+#+begin_src plantuml :file generator.png
+participant Filter order 1
+participant Downstream order 2
+
+hnote over Filter
+  Set Running true
+endhnote
+
+loop while more events
+  Filter -> Filter : get next Event
+  group Wait for Downstream
+    loop over all Downstream
+      Downstream -> Filter : Ready
+    end
+  end
+  hnote over Filter
+    Set current Event to next Event
+    Increment Event Counter
+  endhnote
+end
+
+hnote over Filter
+  Set Running false
+endhnote
+
+#+end_src
+
+#+RESULTS:
+[[file:generator.png]]
+
+#+begin_src plantuml :file filtered_generator.png
+participant Upstream order 1
+participant Filter order 2
+participant Downstream order 3
+
+group On Construction
+  Filter->Upstream: Register
+end
+
+group Wait for Upstream
+  hnote over Upstream
+    Set Running true
+  endhnote
+end
+
+Filter -> Upstream : Ready
+group Wait for Upstream
+  alt Upstream is still running
+    hnote over Upstream
+      increase event counter
+    endhnote
+  else Upstream Finished Running
+    hnote over Upstream
+      Set Running false
+    endhnote
+  end
+end
+alt Upstream is running
+  Filter -> Upstream : Get Event
+  Filter -> Upstream : Ready
+  hnote over Filter
+    Update parent event counter
+  endhnote
+  alt Event Accepted by Filter
+    group Wait for Downstream
+      loop over all Downstream
+        Downstream -> Filter : Ready
+      end
+    end
+    Filter -> Filter : Process Event
+    Filter -> Filter : Return Event
+  else Event Rejected by Filter
+  end
+else Upstream is not running
+  alt Upstream counter > parent counter
+    Filter -> Upstream : Get Event
+    Filter -> Upstream : Ready
+    hnote over Filter
+      Update parent event counter
+    endhnote
+    alt Event Accepted by Filter
+      group Wait for Downstream
+        loop over all Downstream
+          Downstream -> Filter : Ready
+        end
+      end
+      hnote over Filter
+        Process Event
+        Return Event
+      endhnote
+    else Event Rejected by Filter
+    end
+  else
+  end
+end
+
+
+hnote over Filter
+  Set Running false
+endhnote
+
+#+end_src
+
+#+RESULTS:
+[[file:filtered_generator.png]]
+
+#+begin_src plantuml :file generator_with_state.png
+participant Filter order 1
+
+loop Process Event
+
+Filter -> Filter : Event
+alt Has Downstreams
+Filter -> Filter : Update Current State based on Downstream
+else Has no Downstreams
+Filter -> Filter : Update Current State based on Event
+end
+
+#+end_src
+
+#+RESULTS:
+[[file:generator_with_state.png]]

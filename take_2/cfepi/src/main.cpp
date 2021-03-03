@@ -12,7 +12,7 @@
 
 using std::chrono::steady_clock;
 
-auto do_nothing = [](const auto&x){return;};
+auto do_nothing = [](__attribute((unused)) const auto& x){return;};
 
 /*
  * @name State
@@ -22,9 +22,6 @@ struct state {
   std::string prefix;
 };
 
-void print(const state& s, std::string prefix = ""){
-  std::cout << prefix << s.prefix << std::endl;
-}
 /*
  * @name Event
  * @description An event that transitions the model between states
@@ -39,7 +36,7 @@ struct event {
   }
 };
 
-void print(const event& x, std::string prefix = ""){
+static void print(const event& x, std::string prefix = ""){
   std::cout << prefix << x.value << std::endl;
 }
 
@@ -50,28 +47,28 @@ void print(const event& x, std::string prefix = ""){
 struct counting_generator : generator<event> {
   int max_count;
   int current_count;
-  bool more_events(){
+  bool more_events() override {
     return(max_count > current_count);
   }
-  event next_event(){
+  event next_event() override {
     event rc(current_count++);
     return(rc);
   }
   counting_generator(int max, int start = 0,std::string _name = "counting_generator : ") : generator<event>(_name), max_count(max), current_count(start) {
-  };
+  }
 };
 
 struct printing_generator : filtered_generator<event> {
   using generator<event>::name;
-  bool filter(const event& value){
+  bool filter(__attribute__((unused)) const event& value) override {
     return true;
   }
-  void process(const event& value){
+  void process(const event& value) override {
     print(value,name);
     return;
   }
-  printing_generator(generator<event>* _parent,std::string _name) : generator<event>(_name), filtered_generator<event>(_parent,_name){
-  };
+  printing_generator(generator<event>* _parent,std::string _name) : generator<event>(_name), filtered_generator<event>(_parent){
+  }
 };
 
 auto filter_1 = [](const event& x){
@@ -83,8 +80,7 @@ auto filter_2 = [](const event& x){
 };
 
 
-int main ()
-{
+int main (){
   counting_generator g(100,0,"g            : ");
   basic_filtered_generator<event> f1_of_g(&g,filter_1,do_nothing,"f1_of_g       : ");
   basic_filtered_generator<event> f2_of_g(&g,filter_2,do_nothing,"f2_of_g       : ");

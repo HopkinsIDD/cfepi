@@ -48,7 +48,7 @@ struct sir_state {
       : population_size(population_size) {
     potential_states.resize(population_size);
     states_modified.resize(population_size);
-  };
+  }
 };
 
 sir_state default_state(person_t population_size = 10,
@@ -94,7 +94,7 @@ struct infection_event : public sir_event<2> {
     preconditions = {std::array<bool, 3>({true, false, false}),
                      std::array<bool, 3>({false, true, false})};
     postconditions[0] = I;
-  };
+  }
   infection_event(const infection_event &) = default;
   infection_event(person_t p1, person_t p2, epidemic_time_t _time) {
     time = _time;
@@ -113,7 +113,7 @@ struct recovery_event : public sir_event<1> {
   constexpr recovery_event() noexcept {
     preconditions = {std::array<bool, 3>({false, true, false})};
     postconditions[0] = R;
-  };
+  }
   recovery_event(const recovery_event &) = default;
   recovery_event(person_t p1, epidemic_time_t _time) {
     time = _time;
@@ -174,7 +174,7 @@ struct sir_event_constructor<N, std::index_sequence<indices...>> {
     }
     ((rc = (event_index == indices) ? sir_event_by_index<indices>() : rc), ...);
     return rc;
-  };
+  }
 };
 
 /*******************************************************************************
@@ -210,7 +210,7 @@ struct any_sir_event_postconditions {
 };
 
 struct any_sir_event_set_time {
-  epidemic_time_t &value;
+  epidemic_time_t value;
   void operator()(auto &x) {
     x.time = value;
     return;
@@ -244,7 +244,7 @@ struct any_sir_event_print {
  */
 void print(const any_sir_event &event, std::string prefix = "") {
   std::visit(any_sir_event_print{prefix}, event);
-};
+}
 
 constexpr size_t int_pow(size_t base, size_t exponent) {
   if (exponent == 0) {
@@ -269,8 +269,8 @@ void print(const sir_state &state, std::string prefix = "",
     for (auto possible_states : state.potential_states) {
       std::cout << prefix << person_counter << "(";
       state_count = 0;
-      for (auto state : possible_states) {
-        if (state) {
+      for (auto this_state : possible_states) {
+        if (this_state) {
           std::cout << " " << state_count;
         }
         ++state_count;
@@ -306,6 +306,6 @@ void print(const sir_state &state, std::string prefix = "",
       std::cout << " : " << aggregates[subset] << std::endl;
     }
   }
-};
+}
 
 #endif

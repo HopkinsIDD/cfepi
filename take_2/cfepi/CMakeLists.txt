@@ -16,7 +16,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${STXXL_CXX_FLAGS}")
 # add STXXL include directory
 include_directories(${STXXL_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -latomic")
+# set(CMAKE_CXX_FLAGS "-Weverything -latomic")
+# set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wextra-semi -Wnon-virtual-dtor -Wabstract-vbase-init -Wnon-virtual-dtor -Wunreachable-code -Wshadow -Wsuggest-override -Wzero-as-null-pointer-constant -Wsign-conversion -latomic")
 
 
 # Debug flags
@@ -27,10 +29,14 @@ endif()
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 
 # Release flags
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-g -O3")
 
 add_executable(sir_simulation
 	src/sir.cpp
+)
+
+add_executable(sir_concepts_simulation
+	src/sir_concepts.cpp
 )
 
 add_executable(simulation
@@ -50,5 +56,11 @@ target_include_directories(sir_simulation
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_include_directories(sir_concepts_simulation
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 target_link_libraries(sir_simulation PRIVATE CONAN_PKG::range-v3 ${STXXL_LIBRARIES} )
+target_link_libraries(sir_concepts_simulation PRIVATE CONAN_PKG::range-v3 ${STXXL_LIBRARIES} )
 target_link_libraries(simulation PRIVATE CONAN_PKG::range-v3 ${STXXL_LIBRARIES})

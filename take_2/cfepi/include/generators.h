@@ -5,6 +5,106 @@
 #include <atomic>
 #include <functional>
 #include <iostream>
+#include <range/v3/all.hpp>
+
+std::mutex printing_mutex;
+
+template <typename generator_t>
+concept generator_c = requires(const generator_t &cgr, generator_t &gr,
+			       const generator_t cg, generator_t g) {
+  typename generator_t::event_type;
+
+  { initialize(gr) };
+
+  { finalize(gr) };
+
+  { more_events(gr) }
+  ->std::convertible_to<bool>;
+
+  { emit_event(gr) };
+
+};
+
+template<typename T>
+void initialize(__attribute__((unused)) T&){}
+
+template<typename T>
+void finalize(__attribute__((unused)) T&){}
+
+template<typename T>
+requires requires(T tr){ {tr.current_value} -> std::same_as<typename T::event_type>; }
+typename T::event_type current_value(const T& t){
+  return(t.current_value);
+}
+
+template<typename generator_t>
+requires generator_c<generator_t>
+void generate(generator_t& gen){
+  initialize(gen);
+  while (more_events(gen)) {
+    emit_event(gen);
+  }
+  finalize(gen);
+}
+
+template <typename object_t>
+concept has_downstream_container_c = requires(object_t o, const object_t co,
+                                              object_t &oref,
+                                              const object_t &coref) {
+
+  typename object_t::downstream_container_type;
+
+  { co.downstream_container } -> ranges::forward_range;
+
+  { *std::begin(co.downstream_container) } -> generator_c;
+
+  { o.ready } -> std::same_as<std::atomic<bool> >;
+
+  { lock_downstream_container(oref) };
+
+  { unlock_downstream_container(oref) };
+
+};
+
+template <typename generator_t>
+requires has_downstream_container_c<generator_t>
+bool is_ready(generator_t & gen) {
+  bool rc = gen.ready;
+  lock_downstream_container(gen);
+  for(auto dependent : gen.downstream_container){
+    rc = rc && is_ready(dependent);
+  }
+  unlock_downstream_container(gen);
+  return(rc);
+}
+
+/**********************************************************************************************
+ * Mutex boilerplate                                                                          *
+ *********************************************************************************************/
+
+template <typename generator_t>
+requires requires(generator_t t){ {t.current_value_mutex } -> std::same_as<std::mutex>; }
+void lock_current_value(generator_t& x){
+  x.current_value_mutex.lock();
+}
+
+template <typename generator_t>
+requires requires(generator_t t){ {t.current_value_mutex } -> std::same_as<std::mutex>; }
+void unlock_current_value(generator_t& x){
+  x.current_value_mutex.unlock();
+}
+
+template <typename generator_t>
+requires requires(generator_t t){ {t.downstream_container_mutex } -> std::same_as<std::mutex>; }
+void lock_downstream_container(generator_t& x){
+  x.downstream_container_mutex.lock();
+}
+
+template <typename generator_t>
+requires requires(generator_t t){ {t.downstream_container_mutex } -> std::same_as<std::mutex>; }
+void unlock_downstream_container(generator_t& x){
+  x.downstream_container_mutex.unlock();
+}
 
 /*
  * @name generator
@@ -53,6 +153,7 @@ public:
   bool all_downstreams_ready() {
     return(dependents_finished == downstream_dependents.size());
   }
+
   bool is_ready() {
     downstream_finished_mutex.lock();
     if(all_downstreams_ready()){
@@ -63,6 +164,7 @@ public:
     downstream_finished_mutex.unlock();
     return(false);
   }
+
   void generate(){
     initialize();
     Event event;
@@ -83,12 +185,13 @@ public:
   virtual void initialize() {
     event_counter = 0;
     running = true;
-  };
+  }
   generator(std::string _name ) : name(_name){
     downstream_finished_mutex.lock();
     dependents_finished = 0;
     downstream_finished_mutex.unlock();
   }
+  virtual ~generator() = default;
 };
 
 
@@ -105,7 +208,7 @@ public:
   using generator<Event>::name;
   virtual bool filter(const Event&) = 0;
   virtual void process(const Event&) = 0;
-  virtual void initialize() {
+  virtual void initialize() override {
     generator<Event>::initialize();
     this->event_counter = 0;
     parent_event_counter = 0;
@@ -114,12 +217,12 @@ public:
     }
     parent->downstream_ready();
   }
-  Event next_event(){
+  Event next_event() override {
     auto value = parent -> current_value;
     process(value);
     parent->downstream_ready();
     return(value);
-  };
+  }
   bool is_next_unfiltered_event(){
 
     while((parent->running) && (parent->event_counter <= parent_event_counter)){
@@ -130,7 +233,7 @@ public:
     }
     return(false);
   }
-  bool more_events(){
+  bool more_events() override {
     while(is_next_unfiltered_event()){
       if(filter(parent->current_value)){
 	++parent_event_counter;
@@ -141,11 +244,11 @@ public:
       }
     }
     return(false);
-  };
-  filtered_generator(generator<Event>* _parent, std::string _name = "filtered_generator : ") :generator<Event>(_name), parent(_parent) {
+  }
+  filtered_generator(generator<Event>* _parent) : parent(_parent) {
     parent -> register_dependent(*this);
   }
-  ~filtered_generator(){
+  virtual ~filtered_generator(){
     parent -> unregister_dependent(*this);
   }
 };
@@ -154,6 +257,7 @@ public:
  * @description An abstract class for generating events based on a remembered state.  Provides functions for upkeeping said state as events come in
  */
 
+/*
 template<typename State, typename Event>
 class generator_with_state : virtual public generator<Event> {
 public:
@@ -161,75 +265,81 @@ public:
   bool any_downstream_with_state;
   std::mutex current_state_mutex;
   using generator<Event>::downstream_dependents;
-  using generator<Event>::name;
+  // using generator<Event>::name;
   using generator<Event>::downstream_dependents_mutex;
-  virtual void update_state_from_all_downstream(const Event& next_event) = 0;
-  void process(const Event& next_event){
+
+
+  generator_with_state(State initial_state, std::string _name = "generator_with_state : "):
+    generator<Event>(_name), current_state(initial_state) {
+  }
+};
+*/
+
+template<typename State, typename Event>
+class generator_with_buffered_state : virtual public generator<Event> {
+public:
+  using event_type = Event;
+  using generator<Event>::name;
+  using generator<Event>::downstream_dependents;
+  using generator<Event>::downstream_dependents_mutex;
+  State current_state;
+  State future_state;
+  State initial_state;
+  std::mutex current_state_mutex;
+  bool any_downstream_with_state;
+  void update_state_from_all_downstream(){
+    printing_mutex.lock();
+    print(current_state, name + "current : ");
+    print(future_state, name + "future pre : ");
+    printing_mutex.unlock();
+
+    while(!generator<Event>::all_downstreams_ready()){
+      std::this_thread::yield();
+    }
+
     downstream_dependents_mutex.lock();
     if(any_downstream_with_state){
-      update_state_from_all_downstream(next_event);
-    } else {
-      current_state_mutex.lock();
-      update_state_from_event(next_event);
-      current_state_mutex.unlock();
+      for(auto downstream : downstream_dependents){
+	generator_with_buffered_state<State, Event>* downstream_pointer = dynamic_cast<generator_with_buffered_state<State,Event>* >(&downstream.get());
+	if(downstream_pointer){
+	  downstream_pointer -> update_state_from_all_downstream();
+	  update_state_from_downstream(downstream_pointer);
+	}
+      }
     }
     downstream_dependents_mutex.unlock();
+
+    /*
+    current_state_mutex.lock();
+    current_state = future_state;
+    current_state_mutex.unlock();
+
+    printing_mutex.lock();
+    print(future_state, name + "future post : ");
+    printing_mutex.unlock();
+    */
+
   }
-  generator_with_state(State initial_state, std::string _name = "generator_with_state : "): generator<Event>(_name), current_state(initial_state) {
-  }
-  virtual void initialize() {
+  virtual void initialize() override {
     generator<Event>::initialize();
+    current_state = initial_state;
+    future_state = initial_state;
     downstream_dependents_mutex.lock();
     any_downstream_with_state = false;
     for(auto downstream : downstream_dependents){
-      generator_with_state<State, Event>* downstream_pointer = dynamic_cast<generator_with_state<State,Event>* >(&downstream.get());
+      generator_with_buffered_state<State, Event>* downstream_pointer = dynamic_cast<generator_with_buffered_state<State,Event>* >(&downstream.get());
       if(downstream_pointer){
 	any_downstream_with_state = true;
       }
     }
     downstream_dependents_mutex.unlock();
   }
-  virtual void update_state_from_event(const Event&){
-  };
-};
-
-template<typename State, typename Event>
-class generator_with_buffered_state : virtual public generator_with_state<State, Event> {
-public:
-  using generator_with_state<State,Event>::current_state;
-  using generator<Event>::name;
-  State future_state;
-  using generator_with_state<State,Event>::current_state_mutex;
-  using generator<Event>::downstream_dependents;
-  using generator<Event>::downstream_dependents_mutex;
-  void update_state_from_event(const Event& next_event){
-    apply_event_to_future_state(next_event);
-    if(should_update_current_state(next_event)){
-      update_state_from_buffer();
-    }
-  }
-  void update_state_from_all_downstream(const Event& next_event){
-    current_state_mutex.lock();
-    while(!generator<Event>::all_downstreams_ready()){
-      std::this_thread::yield();
-    }
-
-    if(should_update_current_state(next_event)){
-      for(auto downstream : downstream_dependents){
-	generator_with_state<State, Event>* downstream_pointer = dynamic_cast<generator_with_state<State,Event>* >(&downstream.get());
-	if(downstream_pointer){
-	  update_state_from_downstream(downstream_pointer);
-	}
-      }
-    }
-    current_state_mutex.unlock();
-  }
-  virtual bool should_update_current_state(const Event&) = 0;
   virtual void apply_event_to_future_state(const Event&) = 0;
   virtual void update_state_from_buffer() = 0;
-  virtual void update_state_from_downstream(const generator_with_state<State,Event>*) = 0;
-  generator_with_buffered_state(State initial_state, std::string _name = "generator_with_state : "): generator_with_state<State,Event>(initial_state, _name), future_state(initial_state) {
-  };
+  virtual void update_state_from_downstream(const generator_with_buffered_state<State,Event>*) = 0;
+  generator_with_buffered_state(State _initial_state) :
+    current_state(_initial_state), future_state(_initial_state), initial_state(_initial_state) {
+  }
   // Plan is to create current state by polling the downstream states using the update_state_from_dependent function
 };
 
@@ -239,20 +349,20 @@ class basic_filtered_generator : public filtered_generator<Event>{
 public:
   std::function<bool(const Event&)> user_filter;
   std::function<void(const Event&)> user_process;
-  bool filter(const Event& event) {
+  bool filter(const Event& event) override {
     return(user_filter(event));
-  };
-  void process(const Event& event){
+  }
+  void process(const Event& event) override {
     user_process(event);
-  };
+  }
   basic_filtered_generator(
 			   generator<Event>* _parent,
 			   std::function<bool(const Event&)> _filter,
 			   std::function<void(const Event&)> _process,
 			   std::string _name = "basic_filtered_generator : "
 			   ) :
-    generator<Event>(_name), filtered_generator<Event>(_parent, _name), user_filter(_filter), user_process(_process) {
+    generator<Event>(_name), filtered_generator<Event>(_parent), user_filter(_filter), user_process(_process) {
 
-  };
+  }
 };
 #endif
