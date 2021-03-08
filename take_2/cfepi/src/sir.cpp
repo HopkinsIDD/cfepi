@@ -93,13 +93,16 @@ int main () {
   epidemic_time_t epidemic_length = 2;
   auto initial_conditions = default_state(10);
 
-  discrete_time_generator g(initial_conditions,epidemic_length,"Initial Generator : ");
+  toy_generator g(initial_conditions,epidemic_length,"Initial Generator : ");
   // sir_filtered_generator f1_of_g(&g,initial_conditions, filter_1, "Second Generator  : ");
   // sir_filtered_generator f2_of_g(&g,initial_conditions, filter_2, "Third Generator  : ");
   // printing_generator out1(&g,"initial : ");
   // printing_generator out2(&f1_of_g,"filtered : ");
 
-  std::thread th1 = std::thread(&generator<any_sir_event>::generate,&g);
+  auto generate_obj = [](auto x){return(generate<decltype(x)>(x));};
+  // generate_obj(g);
+  std::thread th1 = std::thread(generate_obj, g);
+  // std::thread th1 = std::thread(&generate_obj,g);
   // std::thread th2 = std::thread(&generator<any_sir_event>::generate,&f1_of_g);
   // std::thread th3 = std::thread(&sir_filtered_generator::generate,&f2_of_g);
   // std::thread th3 = std::thread(&generator<any_sir_event>::generate,&out1);
@@ -110,15 +113,15 @@ int main () {
   // th3.join();
   // th4.join();
 
-  std::cout << "Final results" << std::endl;
-  std::cout << g.event_counter << std::endl;
+  // std::cout << "Final results" << std::endl;
+  // std::cout << g.event_counter << std::endl;
   // std::cout << f1_of_g.event_counter << std::endl;
   // std::cout << f2_of_g.event_counter << std::endl;
   // std::cout << out1.event_counter << std::endl;
   // std::cout << out2.event_counter << std::endl;
 
   // if(DEBUG_STATE_PRINT){
-  print(g.current_state,g.name);
+  // print(g.current_state,g.name);
   // print(f1_of_g.current_state,"filter_1 current: ");
   // print(f2_of_g.current_state,"filter_2 current: ");
   // print(f1_of_g.future_state,"filter_1 future : ");

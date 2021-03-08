@@ -239,9 +239,40 @@ struct any_sir_event_print {
   }
 };
 
+struct any_sir_state_check_preconditions {
+  sir_state& sir_state;
+  void operator()(const auto &x) {
+    auto rc = true;
+    auto tmp = false;
+    size_t event_size = x.affected_people.size();
+    for(person_t i = 0; i < event_size; ++i){
+      tmp = false;
+      for(size_t compartment = 0; compartment < ncompartments; ++compartment){
+	auto lhs = x.preconditions[compartment];
+	auto rhs = sir_state.potential_states[x.affected_people[i] ][compartment];
+	tmp = tmp || (lhs && rhs);
+      }
+      rc = rc && tmp;
+    }
+    return(rc);
+  }
+};
+
+struct any_sir_event_apply_to_sir_state {
+  sir_state& sir_state;
+  void operator()(const auto &x) {
+    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(x.affected_people.size())){
+      if(x.postconditions[person_index]){
+	sir_state.potential_states[x.affected_people[person_index] ][*x.postconditions[person_index]] = true;
+      }
+    }
+  }
+};
+
 /*
  * Printing helpers
  */
+
 void print(const any_sir_event &event, std::string prefix = "") {
   std::visit(any_sir_event_print{prefix}, event);
 }

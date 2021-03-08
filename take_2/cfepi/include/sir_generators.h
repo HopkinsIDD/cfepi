@@ -36,6 +36,22 @@ void update_from_descendent(sir_state &ours, const sir_state &theirs) {
   }
 }
 
+bool check_preconditions(const sir_state& pre_state, any_sir_event event){
+    auto rc = true;
+    auto tmp = false;
+    size_t event_size = std::visit(any_sir_event_size{},event);
+    for(person_t i = 0; i < event_size; ++i){
+      tmp = false;
+      for(size_t compartment = 0; compartment < ncompartments; ++compartment){
+	auto lhs = std::visit(any_sir_event_preconditions{i},event)[compartment];
+	auto rhs = pre_state.potential_states[std::visit(any_sir_event_affected_people{i},event)][compartment];
+	tmp = tmp || (lhs && rhs);
+      }
+      rc = rc && tmp;
+    }
+    return(rc);
+  }
+
 template<size_t event_index, size_t precondition_index>
 bool check_event_precondition(std::array<bool, number_of_event_types> x){
   bool rc = false;
@@ -191,7 +207,8 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
     // Check preconditions
     bool preconditions_satisfied = check_preconditions(pre_state, event);
     if(preconditions_satisfied){
-      apply_event_to_state(post_state,event);
+      std::visit(any_sir_event_apply_to_sir_state{post_state}, event);
+      // update_state(post_state,event);
     }
   }
   virtual void initialize() override {
@@ -269,6 +286,7 @@ struct toy_generator {
   void initialize(){
     t_current = 0;
     current_state = initial_state;
+    current_state.time = t_current;
     future_state = initial_state;
     update_iterators_for_new_event();
   }
@@ -281,16 +299,22 @@ struct toy_generator {
     return(event_iterator != ranges::end(event_range));
   }
 
+  void process(any_sir_event e){
+    std::visit(any_sir_event_apply_to_sir_state{future_state}, e);
+  }
+
+
   auto next_event(){
 
     auto rc = *event_iterator;
     std::visit(any_sir_event_set_time{t_current},rc);
 
+    process(rc);
+
     event_iterator = ranges::next(event_iterator, 1, ranges::end(event_range));
 
     if (ranges::end(event_range) == event_iterator) {
       if(t_current < t_max){
-	++t_current;
 	update_iterators_for_new_event();
       }
     }
@@ -298,9 +322,18 @@ struct toy_generator {
   }
 
   void update_iterators_for_new_event(){
+    print(current_state);
+    print(future_state);
+    current_state = future_state;
+    ++t_current;
     event_generator = single_time_event_generator<number_of_event_types>(current_state);
     event_range = event_generator.event_range();
     event_iterator = ranges::begin(event_range);
+    for(auto& potentials : future_state.potential_states){
+      for(auto& value : potentials){
+	value = false;
+      }
+    }
   }
 
   toy_generator(sir_state _initial_state, epidemic_time_t max_time, __attribute__((unused)) std::string _name):
