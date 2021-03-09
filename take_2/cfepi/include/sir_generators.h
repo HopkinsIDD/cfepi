@@ -36,6 +36,39 @@ void update_from_descendent(sir_state &ours, const sir_state &theirs) {
   }
 }
 
+void apply_to_postconditions(sir_state& post_state,const any_sir_event& event) {
+  epidemic_time_t event_time = std::visit(any_sir_event_time{},event);
+  post_state.time = event_time;
+  size_t event_size = std::visit(any_sir_event_size{},event);
+  if(event_size == 0){
+    return;
+  }
+  size_t i = 0;
+  auto to_state = std::visit(any_sir_event_postconditions{i},event);
+  person_t affected_person = 0;
+
+  for(i = 0; i < event_size; ++i){
+    to_state = std::visit(any_sir_event_postconditions{i},event);
+    if(to_state){
+      affected_person = std::visit(any_sir_event_affected_people{i},event);
+      bool previously_in_compartment = false;
+      bool any_changes = false;
+      if(!post_state.states_modified[affected_person]){
+	for(auto previous_compartment = 0; previous_compartment < ncompartments; ++previous_compartment){
+	  post_state.potential_states[affected_person][previous_compartment] = false;
+	  // previously_in_compartment = std::visit(any_sir_event_preconditions{i},event)[previous_compartment];
+	  // post_state.potential_states[affected_person][previous_compartment] =
+	  //   previously_in_compartment ?
+	  //   false :
+	  //   post_state.potential_states[affected_person][previous_compartment];
+	}
+	post_state.states_modified[affected_person] = true;
+      }
+      post_state.potential_states[affected_person][to_state.value() ] = true;
+    }
+  }
+}
+
 bool check_preconditions(const sir_state& pre_state, any_sir_event event){
     auto rc = true;
     auto tmp = false;
@@ -266,7 +299,7 @@ struct generator_with_sir_state : virtual public generator_with_buffered_state<s
  * Discrete time emitting generator.  Emits events based on a local state which it updates.
  */
 
-struct toy_generator {
+struct discrete_time_simple_generator {
   std::string name;
   std::vector<std::vector<person_t> > persons_by_precondition;
   std::vector<std::vector<person_t>::iterator > iterator_by_precondition;
@@ -287,11 +320,15 @@ struct toy_generator {
     t_current = 0;
     current_state = initial_state;
     current_state.time = t_current;
-    future_state = initial_state;
+    future_state = current_state;
+    future_state.time = t_current;
+    print(current_state, "current : ");
+    print(future_state, "future : ");
     update_iterators_for_new_event();
   }
 
   void finalize(){
+    update_iterators_for_new_event();
     std::cout << "Finished" << "\n";
   }
 
@@ -321,10 +358,25 @@ struct toy_generator {
     return(rc);
   }
 
-  void update_iterators_for_new_event(){
+  void update_current_state_from_future_state(){
     print(current_state);
+    auto population_size = current_state.potential_states.size();
+    // This doesn't really work in the case of actual potential states (just real states)
+    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(population_size)){
+      bool any_set = false;
+      for(auto this_set : future_state.potential_states[person_index]){
+	any_set = any_set || this_set;
+      }
+      if(!any_set){
+	future_state.potential_states[person_index] = current_state.potential_states[person_index];
+      }
+    }
     print(future_state);
     current_state = future_state;
+  }
+
+  void update_iterators_for_new_event(){
+    update_current_state_from_future_state();
     ++t_current;
     event_generator = single_time_event_generator<number_of_event_types>(current_state);
     event_range = event_generator.event_range();
@@ -336,7 +388,7 @@ struct toy_generator {
     }
   }
 
-  toy_generator(sir_state _initial_state, epidemic_time_t max_time, __attribute__((unused)) std::string _name):
+  discrete_time_simple_generator(sir_state _initial_state, epidemic_time_t max_time, std::string _name):
     name(_name),
     initial_state(_initial_state),
     current_state(_initial_state),
@@ -560,7 +612,8 @@ bool more_events(generator_t& gen){
 template<typename generator_t>
 requires requires(generator_t gen){ { gen.next_event() }; }
 void emit_event(generator_t& gen){
-  print(gen.next_event());
+  auto current_event = gen.next_event();
+  print(current_event);
 }
 
 template<typename T>

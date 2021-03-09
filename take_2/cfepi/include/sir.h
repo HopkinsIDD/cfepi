@@ -241,7 +241,7 @@ struct any_sir_event_print {
 
 struct any_sir_state_check_preconditions {
   sir_state& sir_state;
-  void operator()(const auto &x) {
+  bool operator()(const auto &x) {
     auto rc = true;
     auto tmp = false;
     size_t event_size = x.affected_people.size();
@@ -261,9 +261,20 @@ struct any_sir_state_check_preconditions {
 struct any_sir_event_apply_to_sir_state {
   sir_state& sir_state;
   void operator()(const auto &x) {
-    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(x.affected_people.size())){
-      if(x.postconditions[person_index]){
-	sir_state.potential_states[x.affected_people[person_index] ][*x.postconditions[person_index]] = true;
+    sir_state.time = x.time;
+    size_t event_size = x.affected_people.size();
+    if(event_size == 0){
+      return;
+    }
+
+    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(event_size)){
+      auto to_state = x.postconditions[person_index];
+      if(to_state){
+	auto affected_person = x.affected_people[person_index];
+	for(auto previous_compartment : ranges::views::iota( 0UL) | ranges::views::take(ncompartments)){
+	  sir_state.potential_states[affected_person][previous_compartment] = false;
+	}
+	sir_state.potential_states[affected_person][to_state.value()] = true;
       }
     }
   }
@@ -293,9 +304,11 @@ constexpr size_t int_pow(size_t base, size_t exponent) {
 
 void print(const sir_state &state, std::string prefix = "",
            bool aggregate = true) {
-  std::cout << prefix << "Possible states at time " << state.time << std::endl;
+  std::cout << prefix << "Possible states at time ";
+  std::cout << state.time << std::endl;
   int person_counter = 0;
   int state_count = ncompartments;
+  // return;
   if (!aggregate) {
     for (auto possible_states : state.potential_states) {
       std::cout << prefix << person_counter << "(";
@@ -312,7 +325,7 @@ void print(const sir_state &state, std::string prefix = "",
     return;
   }
 
-  std::array<size_t, int_pow(2, ncompartments)> aggregates;
+  std::array<size_t, int_pow(2, ncompartments)+1> aggregates;
   for (size_t subset = 0; subset <= int_pow(2, ncompartments); ++subset) {
     aggregates[subset] = 0;
   }

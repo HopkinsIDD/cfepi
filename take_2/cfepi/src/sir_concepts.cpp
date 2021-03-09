@@ -90,10 +90,10 @@ std::function<bool(const sir_state&, const any_sir_event&)> filter_2 = [](__attr
 };
 
 int main () {
-  epidemic_time_t epidemic_length = 2;
+  epidemic_time_t epidemic_length = 4;
   auto initial_conditions = default_state(10);
 
-  discrete_time_generator g(initial_conditions,epidemic_length,"Initial Generator : ");
+  discrete_time_simple_generator g(initial_conditions,epidemic_length,"Initial Generator : ");
   // sir_filtered_generator f1_of_g(&g,initial_conditions, filter_1, "Second Generator  : ");
   // sir_filtered_generator f2_of_g(&g,initial_conditions, filter_2, "Third Generator  : ");
   // printing_generator out1(&g,"initial : ");
@@ -119,7 +119,7 @@ int main () {
   // std::cout << out2.event_counter << std::endl;
 
   // if(DEBUG_STATE_PRINT){
-  // print(g.current_state,g.name);
+  print(g.current_state,g.name);
   // print(f1_of_g.current_state,"filter_1 current: ");
   // print(f2_of_g.current_state,"filter_2 current: ");
   // print(f1_of_g.future_state,"filter_1 future : ");
