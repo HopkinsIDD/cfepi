@@ -61,6 +61,6 @@ target_include_directories(sir_concepts_simulation
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(sir_simulation PRIVATE CONAN_PKG::range-v3)
-target_link_libraries(sir_concepts_simulation PRIVATE CONAN_PKG::range-v3)
-target_link_libraries(simulation PRIVATE CONAN_PKG::range-v3)
+target_link_libraries(sir_simulation PRIVATE CONAN_PKG::range-v3 CONAN_PKG::threadpool)
+target_link_libraries(sir_concepts_simulation PRIVATE CONAN_PKG::range-v3 CONAN_PKG::threadpool)
+target_link_libraries(simulation PRIVATE CONAN_PKG::range-v3 CONAN_PKG::threadpool)

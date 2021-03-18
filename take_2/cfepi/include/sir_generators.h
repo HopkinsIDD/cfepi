@@ -5,6 +5,7 @@
 
 
 #include <sir.h>
+#include <generators.h>
 /*
  *
  */
@@ -84,101 +85,6 @@ bool check_preconditions(const sir_state& pre_state, any_sir_event event){
     }
     return(rc);
   }
-
-template<size_t event_index, size_t precondition_index>
-bool check_event_precondition(std::array<bool, number_of_event_types> x){
-  bool rc = false;
-  auto tmp = sir_event_true_preconditions<event_index, precondition_index>::value;
-  for(auto elem : tmp){
-    rc = rc || x[elem];
-  }
-  return(rc);
-}
-
-template<
-  size_t event_index,
-  size_t precondition_index
-  >
-struct filter_population_by_event_preconditions{
-  static auto get_filtered_reference_vectors(const auto & single_gen){
-    auto vector_start = ranges::begin(single_gen);
-
-    return(ranges::to<std::vector<size_t> >(
-	ranges::transform_view(
-	  ranges::filter_view(single_gen, &check_event_precondition<event_index,precondition_index>),
-	  [&vector_start](auto & x){ return(&x - vector_start); }
-	)
-      ));
-  }
-};
-
-template<size_t event_index>
-const auto transform_lambda = [](auto&& x){
-  sir_event_by_index<event_index> rc;
-  std::apply([&rc](auto... y){rc.affected_people = {y...};}, x);
-  return((any_sir_event) rc);
- };
-
-template<size_t event_index, typename = std::make_index_sequence<event_size_by_event_index<event_index>::value > >
-struct cartesian_multiproduct;
-
-template<size_t event_index, size_t... precondition_index>
-struct cartesian_multiproduct<event_index,std::index_sequence<precondition_index...> >{
-  std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<precondition_index>::value>... > vectors;
-  constexpr const static auto apply_lambda = [](auto&... x){return(ranges::views::cartesian_product(x...));};
-  auto cartesian_range(){
-    return(std::apply(apply_lambda, vectors));
-  }
-  auto event_range(){
-    return(ranges::transform_view(cartesian_range(), transform_lambda<event_index>));
-  }
-  // cartesian_multiproduct(std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<precondition_index>::value>... > _vectors) : vectors(std::move(_vectors)) {};
-  // cartesian_multiproduct(const cartesian_multiproduct& _from) : vectors(std::move(_from.vectors)) {};
-  cartesian_multiproduct() = default;
-  cartesian_multiproduct(const sir_state& current_state) {
-    auto count_gen = ranges::span(current_state.potential_states);
-    vectors = std::make_tuple(filter_population_by_event_preconditions<event_index,precondition_index>::get_filtered_reference_vectors(count_gen)...);
-  }
-};
-
-template<typename T, size_t N = number_of_event_types, typename = std::make_index_sequence<N> >
-struct any_event_type_range;
-
-template<typename T, size_t N, size_t... event_index>
-struct any_event_type_range<T, N, std::index_sequence<event_index...> > :
-  std::variant<decltype(cartesian_multiproduct<event_index>().event_range())...> {};
-
-template <size_t N = number_of_event_types,
-          typename = std::make_index_sequence<N>>
-struct single_time_event_generator;
-
-template <size_t N, size_t... event_index>
-struct single_time_event_generator<N, std::index_sequence<event_index...>> {
-
-  std::tuple<cartesian_multiproduct<event_index>...> product_thing;
-
-  constexpr const static auto concat_lambda = [](auto &...x) {
-    return (ranges::views::concat(x.event_range()...));
-  };
-
-  std::variant<decltype(std::get<event_index>(product_thing).event_range())...>
-      range_variant;
-  /*
-    cppcoro::generator<any_sir_event> test(){
-    for(any_sir_event elem : std::get<0>(product_thing).event_range()){
-    co_yield elem;
-    }
-    }
-  */
-
-  auto event_range() { return (std::apply(concat_lambda, product_thing)); }
-
-  single_time_event_generator() = default;
-  single_time_event_generator(sir_state &initial_conditions)
-      : product_thing(
-            cartesian_multiproduct<event_index>(initial_conditions)...){}
-};
-
 
 /*******************************************************************************
  * Actual event generators                                                     *
@@ -340,7 +246,6 @@ struct discrete_time_simple_generator {
     std::visit(any_sir_event_apply_to_sir_state{future_state}, e);
   }
 
-
   auto next_event(){
 
     auto rc = *event_iterator;
@@ -397,212 +302,6 @@ struct discrete_time_simple_generator {
   }
 };
 
-struct discrete_time_generator : public generator_with_sir_state {
-public:
-  std::vector<std::vector<person_t> > persons_by_precondition;
-  std::vector<std::vector<person_t>::iterator > iterator_by_precondition;
-  epidemic_time_t t_current;
-  epidemic_time_t t_max;
-  size_t event_type_index;
-  bool post_events_generated;
-  sir_event_constructor<number_of_event_types> event_constructor;
-  single_time_event_generator<number_of_event_types> event_generator;
-  decltype(event_generator.event_range()) event_range;
-  decltype(ranges::begin(event_range)) event_iterator;
-
-  any_sir_event next_event() override {
-
-    auto rc = (*event_iterator);
-    event_iterator = ranges::next(event_iterator, 1, ranges::end(event_range));
-    std::visit(any_sir_event_set_time{t_current},rc);
-    printing_mutex.lock();
-    print(rc, "next event : " );
-    printing_mutex.unlock();
-    if (ranges::end(event_range) == event_iterator) {
-      update_state_from_all_downstream();
-      ++t_current;
-      update_iterators_for_new_event();
-    }
-
-    if (!any_downstream_with_state) {
-      apply_event_to_future_state(rc);
-    }
-
-    return(rc);
-
-    // Old
-
-    if(std::visit(any_sir_event_size{},current_value) == 0){
-      // If last value was a event of length 0
-      // We need to update from downstream and update iterators
-      ready_to_update_from_downstream = true;
-      update_state_from_all_downstream();
-      update_iterators_for_new_event();
-    }
-    // Create and populate this event
-    // any_sir_event rc = event_constructor.construct_sir_event(event_type_index);
-
-
-    for(person_t precondition = 0; precondition < std::visit(any_sir_event_size{},rc); ++precondition){
-      auto value = (*iterator_by_precondition[precondition]);
-      // std::visit([this,value](auto& x){x.affected_people[precondition] = (*iterator_by_precondition[precondition]);},rc);
-      std::visit(any_sir_event_set_affected_people{precondition,value},rc);
-    }
-
-    std::visit(any_sir_event_set_time{t_current},rc);
-
-    // Mess with iterators
-    size_t this_iterator = 0;
-    size_t max_iterator = std::visit(any_sir_event_size{},rc);
-    bool finished = false;
-    while(this_iterator < max_iterator){
-      ++iterator_by_precondition[this_iterator]; // Increase the iterator at this position;
-      // If this iterator is done, start it over and increment the next iterator
-      /*
-	// Errors here:
-      if(iterator_by_precondition[this_iterator] >= std::end(persons_by_precondition[this_iterator])){
-	iterator_by_precondition[this_iterator] = std::begin(persons_by_precondition[this_iterator]);
-	++this_iterator;
-      } else {
-	// We are done incrementing the state so return
-	finished = true;
-	this_iterator = -1;
-      }
-      */
-
-    }
-    // If we reset all of the iterators, we should increment the event type
-    if(!finished){
-      ++event_type_index;
-      while((!finished) && (event_type_index < std::variant_size<any_sir_event>::value)){
-	auto any_events_of_next_type = update_iterators_for_new_event();
-	// If we have at least one more event type, we are done incrementing
-	if(any_events_of_next_type){
-	  finished = true;
-	} else {
-	  ++event_type_index;
-	}
-      }
-    }
-    // Otherwise reset the event type index and we increment time
-    if((!finished)){
-      event_type_index = 0;
-      // Wait for downstream here
-      while((!finished) && (event_type_index < std::variant_size<any_sir_event>::value)){
-	auto any_events_of_next_type = update_iterators_for_new_event();
-	// If we have at least one more event type, we are done incrementing
-	if(any_events_of_next_type){
-	  finished = true;
-	} else {
-	  ++event_type_index;
-	}
-      }
-      ++t_current;
-      finished = true;
-    }
-    if(std::visit([](const auto&x){
-		    bool any_person_duplicated = false;
-		    for(auto it1 = std::begin(x.affected_people); it1 != std::end(x.affected_people); ++ it1){
-		      for(auto it2 = it1+1; it2 != std::end(x.affected_people); ++it2){
-			any_person_duplicated = any_person_duplicated || ((*it1) == (*it2));
-		      }
-		    }
-		    return(any_person_duplicated);
-		  }, rc)
-      ){
-
-      return(next_event());
-    }
-
-    return(rc);
-  }
-
-  bool update_iterators_for_new_event(){
-
-    event_generator = single_time_event_generator<number_of_event_types>(current_state);
-    event_range = event_generator.event_range();
-    event_iterator = ranges::begin(event_range);
-
-    return(true);
-
-  }
-
-  bool more_events() override {
-    return(t_current <= t_max);
-  }
-
-  void initialize() override {
-    post_events_generated = false;
-
-    generator_with_sir_state::initialize();
-    event_type_index = 0;
-    t_current = 1;
-    current_state = initial_state;
-    future_state = initial_state;
-    current_state.time = 0;
-    future_state.time = 0;
-    event_generator = single_time_event_generator<number_of_event_types>(current_state);
-    update_iterators_for_new_event();
-  }
-
-  discrete_time_generator(sir_state _initial_state, epidemic_time_t max_time, std::string _name = "discrete time generator : "):
-    generator<any_sir_event>(_name),
-    generator_with_buffered_state<sir_state,any_sir_event>(_initial_state),
-    generator_with_sir_state(),
-    t_max(max_time) {
-  }
-
-};
-
-struct sir_filtered_generator :
-  virtual public generator_with_sir_state,
-  virtual public filtered_generator<any_sir_event> {
-public:
-  using filtered_generator<any_sir_event>::next_event;
-  using generator<any_sir_event>::name;
-  any_sir_event next_event() override {
-    return(filtered_generator<any_sir_event>::next_event());
-  }
-  bool more_events() override {
-    return(filtered_generator<any_sir_event>::more_events());
-  }
-  std::function<bool(const sir_state&, const any_sir_event&)> user_filter;
-  std::function<void(sir_state&, const any_sir_event&)> user_process;
-  bool filter(const any_sir_event& event) override {
-    if(check_preconditions(current_state,event)){
-      return(user_filter(current_state, event));
-    }
-    return(false);
-  }
-  void process(const any_sir_event& event) override {
-    return(filtered_generator<any_sir_event>::process(event));
-  }
-  void generate(){
-    return(filtered_generator<any_sir_event>::generate());
-  }
-  void initialize() override {
-    generator_with_buffered_state::initialize();
-    filtered_generator<any_sir_event>::initialize();
-    t_current = 1;
-    current_state.time = 0;
-    future_state.time = 0;
-  }
-  sir_filtered_generator(
-			 generator<any_sir_event>* _parent,
-			 sir_state initial_state,
-			 std::function<bool(const sir_state&, const any_sir_event&)> _filter,
-			 std::string _name = "sir_filtered_generator"
-			 ) :
-    generator<any_sir_event>(_name),
-    generator_with_buffered_state<sir_state,any_sir_event>(initial_state),
-    generator_with_sir_state(),
-    filtered_generator<any_sir_event>(_parent),
-    user_filter(_filter)
-  {
-  }
-
-};
-
 template<typename generator_t>
 requires requires(generator_t gen){ { gen.more_events() } -> std::same_as<bool>; }
 bool more_events(generator_t& gen){
@@ -627,4 +326,5 @@ requires requires(T t){ {t.finalize()}; }
 auto finalize(T& t){
   return(t.finalize());
 }
+
 #endif
