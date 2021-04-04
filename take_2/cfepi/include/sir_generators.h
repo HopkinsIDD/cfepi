@@ -3,7 +3,6 @@
 #include <variant>
 #include <string>
 
-
 #include <sir.h>
 #include <generators.h>
 /*
@@ -52,10 +51,8 @@ void apply_to_postconditions(sir_state& post_state,const any_sir_event& event) {
     to_state = std::visit(any_sir_event_postconditions{i},event);
     if(to_state){
       affected_person = std::visit(any_sir_event_affected_people{i},event);
-      bool previously_in_compartment = false;
-      bool any_changes = false;
       if(!post_state.states_modified[affected_person]){
-	for(auto previous_compartment = 0; previous_compartment < ncompartments; ++previous_compartment){
+	for(auto previous_compartment = 0UL ; previous_compartment < ncompartments; ++previous_compartment){
 	  post_state.potential_states[affected_person][previous_compartment] = false;
 	  // previously_in_compartment = std::visit(any_sir_event_preconditions{i},event)[previous_compartment];
 	  // post_state.potential_states[affected_person][previous_compartment] =

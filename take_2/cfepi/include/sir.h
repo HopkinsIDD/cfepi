@@ -289,6 +289,43 @@ struct any_sir_event_apply_to_sir_state {
   }
 };
 
+struct any_sir_event_apply_entered_states {
+  sir_state& sir_state;
+  void operator()(const auto &x) {
+    sir_state.time = x.time;
+    size_t event_size = x.affected_people.size();
+
+    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(event_size)){
+      auto to_state = x.postconditions[person_index];
+      if(to_state){
+	auto affected_person = x.affected_people[person_index];
+	sir_state.potential_states[affected_person][to_state.value()] = true;
+      }
+    }
+  }
+};
+
+struct any_sir_event_apply_left_states {
+  sir_state& sir_state;
+  void operator()(const auto &x) {
+    sir_state.time = x.time;
+    size_t event_size = x.affected_people.size();
+
+    for(auto person_index : ranges::views::iota( 0UL ) | ranges::views::take(event_size)){
+      auto to_state = x.postconditions[person_index];
+      if(to_state){
+	for(auto state_index : ranges::views::iota( 0UL ) | ranges::views::take(ncompartments)){
+	  sir_state.potential_states[x.affected_people[person_index] ][state_index] =
+	    sir_state.potential_states[x.affected_people[person_index] ][state_index] ||
+	    x.preconditions[person_index][state_index];
+	  if(x.preconditions[person_index][state_index]){
+	    // std::cout << "\tPerson " << x.affected_people[person_index] << " left state " << state_index << "\n";
+	  }
+	}
+      }
+    }
+  }
+};
 /*******************************************************************************
  * Template helper functions for sir_events to use in generation               *
  *******************************************************************************/
