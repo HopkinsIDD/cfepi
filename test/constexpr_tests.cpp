@@ -1,14 +1,14 @@
 #include <catch2/catch.hpp>
 
-constexpr unsigned int Factorial(unsigned int number)
+#include <cfepi/sir.hpp>
+TEST_CASE("Repeat works","[repeat]")
 {
-  return number <= 1 ? number : Factorial(number - 1) * number;
+  STATIC_REQUIRE(std::is_same<repeat<int,1>, int>::value );
+  STATIC_REQUIRE(std::is_same<repeat<int,2>, int>::value );
+  STATIC_REQUIRE(std::is_same<repeat<int,3>, int>::value );
 }
 
-TEST_CASE("Factorials are computed with constexpr", "[factorial]")
+TEST_CASE("Default State Works", "[sir_state]")
 {
-  STATIC_REQUIRE(Factorial(1) == 1);
-  STATIC_REQUIRE(Factorial(2) == 2);
-  STATIC_REQUIRE(Factorial(3) == 6);
-  STATIC_REQUIRE(Factorial(10) == 3628800);
+  STATIC_REQUIRE(std::is_same<decltype(default_state()), sir_state>::value);
 }
