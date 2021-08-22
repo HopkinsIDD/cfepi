@@ -12,8 +12,11 @@ target_compile_features(project_options INTERFACE cxx_std_20)
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   option(ENABLE_BUILD_WITH_TIME_TRACE "Enable -ftime-trace to generate time tracing .json files on clang" OFF)
   if(ENABLE_BUILD_WITH_TIME_TRACE)
-    target_compile_options(project_options INTERFACE -ftime-trace)
+    target_compile_options(project_options INTERFACE -ftime-trace -O3)
   endif()
+endif()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
@@ -62,6 +65,9 @@ set(CONAN_EXTRA_OPTIONS "")
 
 set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} range-v3/0.11.0)
 set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} threadpool/20140926)
+set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} andreasbuhr-cppcoro/cci.20210113)
+set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} rangesnext/cci.20210426)
+
 
 include(cmake/Conan.cmake)
 run_conan()

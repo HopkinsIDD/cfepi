@@ -7,4 +7,6 @@ target_link_libraries(
   INTERFACE project_options
           project_warnings
           CONAN_PKG::threadpool
-          CONAN_PKG::range-v3)
+          CONAN_PKG::range-v3
+          CONAN_PKG::rangesnext
+)
