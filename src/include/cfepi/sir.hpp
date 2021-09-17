@@ -148,34 +148,22 @@ struct recovery_event : public sir_event<1> {
   }
 };
 
-struct null_event : public sir_event<0> {
-  using sir_event<0>::time;
-  using sir_event<0>::affected_people;
-  using sir_event<0>::preconditions;
-  using sir_event<0>::postconditions;
-  constexpr null_event() noexcept = default;
-  null_event(null_event &) = default;
-  explicit null_event(epidemic_time_t _time) { time = _time; }
-};
-
-typedef std::variant<null_event, recovery_event, infection_event> any_sir_event;
+typedef std::variant<recovery_event, infection_event> any_sir_event;
 constexpr size_t number_of_event_types = 3;
 
 template<size_t index, size_t permutation_index> struct sir_event_true_preconditions;
 
-template<> struct sir_event_true_preconditions<1, 0> { constexpr static auto value = { I }; };
+template<> struct sir_event_true_preconditions<0, 0> { constexpr static auto value = { I }; };
 
-template<> struct sir_event_true_preconditions<2, 0> { constexpr static auto value = { S }; };
+template<> struct sir_event_true_preconditions<1, 0> { constexpr static auto value = { S }; };
 
-template<> struct sir_event_true_preconditions<2, 1> { constexpr static auto value = { I }; };
+template<> struct sir_event_true_preconditions<1, 1> { constexpr static auto value = { I }; };
 
 template<size_t event_index> struct sir_event_by_index;
 
-template<> struct sir_event_by_index<0> : null_event {};
+template<> struct sir_event_by_index<0> : recovery_event {};
 
-template<> struct sir_event_by_index<1> : recovery_event {};
-
-template<> struct sir_event_by_index<2> : infection_event {};
+template<> struct sir_event_by_index<1> : infection_event {};
 
 template<size_t N = number_of_event_types, typename = std::make_index_sequence<N>>
 struct sir_event_constructor;
@@ -200,7 +188,7 @@ struct sir_event_constructor<N, std::index_sequence<indices...>> {
  *******************************************************************************/
 
 template<size_t event_index> struct event_size_by_event_index {
-  static const size_t value = sir_event_by_index<event_index>().affected_people.size();
+  constexpr static const size_t value = sir_event_by_index<event_index>().affected_people.size();
 };
 
 struct any_sir_event_size {
@@ -376,9 +364,9 @@ void print(const any_sir_event &event, std::string prefix = "") {
 constexpr size_t int_pow(size_t base, size_t exponent) {
   if (exponent == 0) { return 1; }
   if (exponent == 1) { return base; }
-  size_t sqrtfloor = int_pow(base, exponent / 2);
-  if ((exponent % 2) == 0) { return (sqrtfloor * sqrtfloor); }
-  return (sqrtfloor * sqrtfloor * base);
+  return (exponent % 2) == 0 ?
+  int_pow(base, exponent / 2) * int_pow(base, exponent / 2) :
+   int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
 }
 
 void print(const sir_state &state, const std::string &prefix = "", bool aggregate = true) {

@@ -10,9 +10,8 @@ TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
   auto initial_conditions = default_state(population_size);
   auto event_range_generator =
-    single_type_event_generator<2>(initial_conditions);
+    single_type_event_generator<1>(initial_conditions);
   auto event_range = event_range_generator.event_range();
-
 
   size_t counter = 0;
   person_t zero = 0ul;
@@ -28,7 +27,7 @@ TEST_CASE("Single Time Event Generator works as expected") {
   REQUIRE(counter == population_size - 1);
 
   initial_conditions.potential_states[1][I] = true;
-  event_range_generator = single_type_event_generator<2>(initial_conditions);
+  event_range_generator = single_type_event_generator<1>(initial_conditions);
   event_range = event_range_generator.event_range();
 
   counter = 0;
@@ -66,103 +65,86 @@ TEST_CASE("sample_view is working", "[sample_view]") {
   }
 }
 
-/*
-TEST_CASE("Interesting ranges problem", "[ranges]"){
-  auto gen = std::mt19937{std::random_device{}()};
-  auto view_1 = std::ranges::views::iota(0) |
-    std::ranges::views::take(10);
-  auto view_2 = std::ranges::views::iota(0) |
-    std::ranges::views::take(100) |
-    probability::views::sample(.1, gen);
-  // auto product_view = cor3ntin::rangesnext::product(view_1, view_2);
-  size_t counter = 0;
-
-  for(auto elem : view_1){
-    std::cout << elem << "\n";
-  }
-  for(auto elem : view_2){
-    std::cout << elem << "\n";
-  }
-  for(auto __attribute__((unused)) elem : product_view){
-    std::cout << std::get<0>(elem) << ", " << std::get<1>(elem) << "\n";
-    ++counter;
-  }
-
-  for(auto __attribute__((unused)) elem : product_view){
-    std::cout << std::get<0>(elem) << ", " << std::get<1>(elem) << "\n";
-  }
-  assert(counter == 100);
-}
-*/
-
-
 TEST_CASE("Full stack test works", "[sir_generator]") {
   std::random_device rd;
   std::default_random_engine random_source_1{ 1 };
   const person_t population_size = 10000;
 
-  auto always_x = [](const auto x){
-      return([x](const auto &param) { return (x); });
-    };
   auto always_true = [](const auto &param) { return (true); };
   auto always_false = [](const auto &param) { return (false); };
   auto initial_conditions = default_state(population_size);
 
-  std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_true};
+  std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
 
   // BEGIN
   auto current_state = initial_conditions;
+
+  auto setups_by_filter = ranges::to<std::vector>(
+    ranges::views::transform(filters, [&current_state](auto &x) {
+      return (std::make_tuple(current_state, current_state, current_state, x));
+    }));
   for(epidemic_time_t t = 0UL; t < 365; ++t){
 
-    auto future_states_entered = current_state;
-    future_states_entered.reset();
-    auto future_states_remained = ranges::to<std::vector>(ranges::views::transform(filters, always_x(current_state)));
+    current_state.reset();
+    current_state = std::transform_reduce(
+      std::begin(setups_by_filter),
+      std::end(setups_by_filter),
+      current_state,
+      [](const auto &x, const auto &y) { return (x || y); },
+      [](const auto &x) { return (std::get<0>(x)); });
+    ranges::for_each(setups_by_filter, [](auto&x){std::get<1>(x).reset();});
 
     auto event_range_generator =
-      single_type_event_generator<2>(current_state);
-    auto event_range = event_range_generator.event_range();
+      single_type_event_generator<1>(current_state);
+    auto this_event_range = event_range_generator.event_range();
 
     auto t1 = std::get<0>(event_range_generator.vectors);
 
 
 
-    auto sampled_event_view = event_range | probability::views::sample(10./population_size, random_source_1);
+    // auto sampled_event_view = this_event_range | probability::views::sample(10./population_size, random_source_1);
 
     size_t counter = 0;
+    ranges::for_each(setups_by_filter, [&counter](auto&x){++counter;});
+    // ranges::for_each(this_event_range, [&counter](auto&x){++counter;});
+
     ranges::for_each(
-		     ranges::filter_view(
-					 ranges::views::cartesian_product(
-									  ranges::views::enumerate(filters),
-									  sampled_event_view),
-					 [&current_state](auto __attribute__((unused)) && x) {
-					   auto __attribute__((unused)) a = current_state;
-					   auto filter = std::get<1>(std::get<0>(x));
-					   any_sir_event event = std::get<1>(x);
-					   return (filter(event));
-					 }),
-		     [&counter, &future_states_remained, &future_states_entered](const auto &x) {
-		       auto remained_index = std::get<0>(std::get<0>(x));
-		       auto tmp = std::get<1>(x);
-		       for (auto i : std::ranges::views::iota(0UL, tmp.affected_people.size())) {
-			 if (tmp.postconditions[i]) {
-			   future_states_entered.potential_states[tmp.affected_people[i]][*(tmp.postconditions[i])] = true;
-			   for (auto j :
-				  std::ranges::views::iota(0UL, future_states_remained[remained_index].potential_states[tmp.affected_people[i]].size())) {
-			     future_states_remained[remained_index].potential_states[tmp.affected_people[i]][j] =
-			       future_states_remained[remained_index].potential_states[tmp.affected_people[i]][j] && (!tmp.preconditions[i][j]);
-			   }
-			 }
-		       }
-		       ++counter;
-		       return;
-		     });
+      ranges::filter_view(
+			  // ranges::views::cartesian_product(setups_by_filter, sampled_event_view),
+			  ranges::views::cartesian_product(setups_by_filter, this_event_range),
+        [&current_state](const auto & x) {
+          auto filter = std::get<3>(std::get<0>(x));
+          any_sir_event event = std::get<1>(x);
+          return (filter(event));
+        }),
+      [&counter](const auto &x) {
+	// std::cout << probability::detail::type_name(x)
+	return;
+	/*
+        auto tmp = std::get<1>(x);
+        for (auto i : std::ranges::views::iota(0UL, tmp.affected_people.size())) {
+          if (tmp.postconditions[i]) {
+	    auto& test = std::get<1>(std::get<0>(x));
+	    test.potential_states[tmp.affected_people[i]][*(tmp.postconditions[i])] = true;
+            for (auto j : std::ranges::views::iota(0UL,
+                   std::get<2>(std::get<0>(x)).potential_states[tmp.affected_people[i]].size())) {
+              std::get<2>(std::get<0>(x)).potential_states[tmp.affected_people[i]][j] =
+                std::get<2>(std::get<0>(x)).potential_states[tmp.affected_people[i]][j]
+                && (!tmp.preconditions[i][j]);
+            }
+          }
+        }
+	*/
+        ++counter;
+        return;
+      });
     std::cout << counter << std::endl;
-    for(const auto& elem: future_states_remained){
-      future_states_entered = future_states_entered || elem;
-    }
-    future_states_entered.time = t;
-    print(future_states_entered);
-    current_state = future_states_entered;
+
+    ranges::for_each(setups_by_filter, [& t](auto&x){
+      std::get<0>(x) = std::get<1>(x) || std::get<2>(x);
+      std::get<0>(x).time = t;
+      print(std::get<0>(x));
+    });
   }
 
 }
