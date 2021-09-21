@@ -244,13 +244,14 @@ struct any_sir_event_print {
 
 struct any_sir_state_check_preconditions {
   sir_state &this_sir_state;
-  bool operator()(const auto &x) const {
+  template<size_t event_index>
+  bool operator()(const sir_event_by_index<event_index> x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();
     for (person_t i = 0; i < event_size; ++i) {
       auto tmp = false;
       for (size_t compartment = 0; compartment < ncompartments; ++compartment) {
-        auto lhs = x.preconditions[compartment];
+        auto lhs = x.preconditions[i][compartment];
         auto rhs = this_sir_state.potential_states[x.affected_people[i]][compartment];
         tmp = tmp || (lhs && rhs);
       }
