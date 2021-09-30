@@ -1,75 +1,17 @@
-#include <catch2/catch.hpp>
-
 #include <cfepi/sir.hpp>
 #include <cfepi/sample_view.hpp>
 #include <iostream>
 #include <range/v3/all.hpp>
-// #include <stxxl>
 
-TEST_CASE("Single Time Event Generator works as expected") {
-  const person_t population_size = 5;
-  auto initial_conditions = default_state(population_size);
-  auto event_range_generator =
-    single_type_event_generator<1>(initial_conditions);
-  auto event_range = event_range_generator.event_range();
-
-  size_t counter = 0;
-  person_t zero = 0ul;
-  const person_t one = 1ul;
-  for (auto val : event_range) {
-    ++counter;
-    REQUIRE(val.affected_people[one] == 0ul);
-    // REQUIRE(std::visit(any_sir_event_affected_people{one},val) == 0ul);
-    REQUIRE(val.affected_people[zero] == counter);
-    // REQUIRE(std::visit(any_sir_event_affected_people{zero},val) == counter);
+int main(int argc, char** argv) {
+  if (argc != 4) {
+    std::cout << "This program takes 3 arguments: population size, number of time steps and seed." << std::endl;
+    return 1;
   }
-
-  REQUIRE(counter == population_size - 1);
-
-  initial_conditions.potential_states[1][I] = true;
-  event_range_generator = single_type_event_generator<1>(initial_conditions);
-  event_range = event_range_generator.event_range();
-
-  counter = 0;
-  for (auto val : event_range) {
-    ++counter;
-    REQUIRE(val.affected_people[zero] == ((counter - 1) / 2) + 1);
-    if (((counter - 1) % 2) == 0) {
-      REQUIRE(val.affected_people[one] == 0ul);
-    } else {
-      REQUIRE(val.affected_people[one] == 1ul);
-    }
-  }
-
-  REQUIRE(counter == 2 * (population_size - 1));
-}
-
-TEST_CASE("sample_view is working", "[sample_view]") {
-  auto gen1 = std::mt19937{ std::random_device{}() };
-  auto gen2 = std::mt19937{ gen1 };
-  auto gen3 = std::mt19937{ gen1 };
-  auto view = std::ranges::views::iota(0, 100000);
-  probability::sample_view view1(view, 0.005, gen1);
-  auto view2 = view | probability::views::sample(0.005, gen2);
-  probability::sample_view view3(view, 0.005, gen3);
-  static_assert(std::ranges::forward_range<probability::sample_view<decltype(view), decltype(gen1)>>);
-  auto it2 = std::begin(view2);
-  for (auto it1 = std::begin(view1); (it1 != std::end(view1)) && (it2 != std::end(view2)); ++it1) {
-    REQUIRE((*it1) == (*it2));
-    ++it2;
-  }
-  it2 = std::begin(view2);
-  for (auto it1 = std::begin(view3); (it1 != std::end(view3)) && (it2 != std::end(view2)); ++it1) {
-    REQUIRE((*it1) == (*it2));
-    ++it2;
-  }
-}
-
-TEST_CASE("Full stack test works", "[sir_generator]") {
   std::random_device rd;
-  size_t seed = 2;
+  size_t seed = atoi(argv[3]);
   std::default_random_engine random_source_1{ seed++ };
-  const person_t population_size = 100;
+  const person_t population_size = atoi(argv[1]);
 
   auto always_true = [](const auto &param) { return (true); };
   auto always_false = [](const auto &param) { return (false); };
@@ -84,7 +26,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     ranges::views::transform(filters, [&current_state](auto &x) {
       return (std::make_tuple(current_state, current_state, current_state, x));
     }));
-  for(epidemic_time_t t = 0UL; t < 365; ++t){
+  for(epidemic_time_t t = 0UL; t < atoi(argv[2]); ++t){
 
     current_state.reset();
     current_state = std::transform_reduce(

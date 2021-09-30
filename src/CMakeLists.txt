@@ -10,3 +10,5 @@ target_link_libraries(
           CONAN_PKG::range-v3
           CONAN_PKG::rangesnext
 )
+add_executable(cfepi_test tests.cpp)
+target_link_libraries(cfepi_test cfepi)

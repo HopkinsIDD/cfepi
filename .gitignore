@@ -4,3 +4,9 @@
 *.#*
 */build/
 build/
+.vs/cfepi_new/v16/.suo
+*.db
+.vs/
+cmake/.vs/
+build_linux/
+CMakeSettings.json
