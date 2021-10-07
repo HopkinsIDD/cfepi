@@ -4,7 +4,6 @@
 #include <cfepi/sample_view.hpp>
 #include <iostream>
 #include <range/v3/all.hpp>
-// #include <stxxl>
 
 TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
@@ -65,6 +64,10 @@ TEST_CASE("sample_view is working", "[sample_view]") {
   }
 }
 
+TEST_CASE("", "") {
+
+}
+
 TEST_CASE("Full stack test works", "[sir_generator]") {
   std::random_device rd;
   size_t seed = 2;
@@ -84,6 +87,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     ranges::views::transform(filters, [&current_state](auto &x) {
       return (std::make_tuple(current_state, current_state, current_state, x));
     }));
+
   for(epidemic_time_t t = 0UL; t < 365; ++t){
 
     current_state.reset();
@@ -98,17 +102,17 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
       std::get<2>(x) = std::get<0>(x);
     });
 
-    std::array<double, 2> event_probabilities = {.5, 2. / population_size};
+    std::array<double, 2> event_probabilities = {.2, 2. / population_size};
 
-    const auto single_event_type_run = [ &seed, &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index){
-      random_source_1.seed(seed++);
+    const auto single_event_type_run = [ &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index, const size_t seed){
+      random_source_1.seed(seed);
       auto event_range_generator =
         single_type_event_generator<event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
-  
+
       auto sampled_event_view =
         this_event_range | probability::views::sample(event_probabilities[event_index], random_source_1);
-  
+
       size_t counter = 0UL;
       auto setup_view = std::ranges::views::iota(0UL, setups_by_filter.size());
       auto view_to_filter = ranges::views::cartesian_product(setup_view, sampled_event_view);
@@ -117,35 +121,15 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
         any_sir_event event = std::get<1>(x);
         return (filter(event));
       });
-  
-      ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto &x) {
-        auto tmp = std::get<1>(x);
-        std::string prefix = "";
-        prefix += std::get<0>(x);
-        prefix += " : ";
-        // print(tmp, prefix);
-        for (auto i : std::ranges::views::iota(0UL, tmp.affected_people.size())) {
-          if (tmp.postconditions[i]) {
-            auto& current_state = std::get<0>(setups_by_filter[std::get<0>(x)]);
-  	  if (any_sir_state_check_preconditions{current_state}(tmp)) {
-  	    auto& states_entered = std::get<1>(setups_by_filter[std::get<0>(x)]);
-  	    auto& states_remained = std::get<2>(setups_by_filter[std::get<0>(x)]);
-  
-  	    states_entered.potential_states[tmp.affected_people[i]][*(tmp.postconditions[i])] = true;
-              std::cout << "Person " << tmp.affected_people[i] << " is entering state " << *(tmp.postconditions[i]) << std::endl;
-              for (auto j : std::ranges::views::iota(0UL, ncompartments)) {
-                states_remained.potential_states[tmp.affected_people[i]][j] =
-                  states_remained.potential_states[tmp.affected_people[i]][j]
-                  && !tmp.preconditions[i][j];
-              }
-            }
-          }
-        }
-        ++counter;
-        return;
+
+      ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto&x) {
+	if (any_sir_state_check_preconditions{std::get<0>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x))) {
+	  any_sir_event_apply_entered_states{std::get<1>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
+	  any_sir_event_apply_left_states{std::get<2>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
+	}
       });
       std::cout << counter << std::endl;
-  
+
       ranges::for_each(setups_by_filter, [& t](auto&x){
         std::get<0>(x) = std::get<1>(x) || std::get<2>(x);
         std::get<0>(x).time = t;
@@ -153,8 +137,8 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
       });
     };
 
-    single_event_type_run(std::integral_constant<size_t, 0UL>());
-    single_event_type_run(std::integral_constant<size_t, 1UL>());
+    single_event_type_run(std::integral_constant<size_t, 0UL>(), seed++);
+    single_event_type_run(std::integral_constant<size_t, 1UL>(), seed++);
   }
 
 }

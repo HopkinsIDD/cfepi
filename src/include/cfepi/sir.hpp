@@ -244,8 +244,7 @@ struct any_sir_event_print {
 
 struct any_sir_state_check_preconditions {
   sir_state &this_sir_state;
-  template<size_t event_index>
-  bool operator()(const sir_event_by_index<event_index> x) const {
+  template<size_t event_index> bool operator()(const sir_event_by_index<event_index> x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();
     for (person_t i = 0; i < event_size; ++i) {
@@ -310,7 +309,7 @@ struct any_sir_event_apply_left_states {
         for (auto state_index : std::ranges::views::iota(0UL, ncompartments)) {
           this_sir_state.potential_states[x.affected_people[person_index]][state_index] =
             this_sir_state.potential_states[x.affected_people[person_index]][state_index]
-            || x.preconditions[person_index][state_index];
+            && !x.preconditions[person_index][state_index];
           if (x.preconditions[person_index][state_index]) {
             // std::cout << "\tPerson " << x.affected_people[person_index] << " left state " <<
             // state_index << "\n";
@@ -365,9 +364,8 @@ void print(const any_sir_event &event, std::string prefix = "") {
 constexpr size_t int_pow(size_t base, size_t exponent) {
   if (exponent == 0) { return 1; }
   if (exponent == 1) { return base; }
-  return (exponent % 2) == 0 ?
-  int_pow(base, exponent / 2) * int_pow(base, exponent / 2) :
-   int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
+  return (exponent % 2) == 0 ? int_pow(base, exponent / 2) * int_pow(base, exponent / 2)
+                             : int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
 }
 
 void print(const sir_state &state, const std::string &prefix = "", bool aggregate = true) {
@@ -411,11 +409,11 @@ void print(const sir_state &state, const std::string &prefix = "", bool aggregat
   }
 }
 
+const auto apply_lambda = [](const auto &...x) { return cor3ntin::rangesnext::product(x...); };
+
 template<size_t event_index,
   typename = std::make_index_sequence<event_size_by_event_index<event_index>::value>>
 struct single_type_event_generator;
-
-const auto apply_lambda = [](const auto &...x) { return cor3ntin::rangesnext::product(x...); };
 
 template<size_t event_index, size_t... precondition_index>
 struct single_type_event_generator<event_index, std::index_sequence<precondition_index...>> {
