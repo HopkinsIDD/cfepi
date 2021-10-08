@@ -310,10 +310,6 @@ struct any_sir_event_apply_left_states {
           this_sir_state.potential_states[x.affected_people[person_index]][state_index] =
             this_sir_state.potential_states[x.affected_people[person_index]][state_index]
             && !x.preconditions[person_index][state_index];
-          if (x.preconditions[person_index][state_index]) {
-            // std::cout << "\tPerson " << x.affected_people[person_index] << " left state " <<
-            // state_index << "\n";
-          }
         }
       }
     }
