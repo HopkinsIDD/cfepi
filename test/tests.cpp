@@ -73,20 +73,18 @@ TEST_CASE("States are properly separated", "") {
       return(static_cast<size_t>(n_SIR_compartments));
     }
   };
-  typedef float epidemic_time_t_test;
-  typedef size_t person_t_test;
 
   sir_state<test_epidemic_states>{};
 }
 
 TEST_CASE("Full stack test works", "[sir_generator]") {
   std::random_device rd;
-  size_t seed = 2;
-  std::default_random_engine random_source_1{ seed++ };
+  size_t global_seed = 2;
+  std::default_random_engine random_source_1{ global_seed++ };
   const person_t population_size = 100;
 
-  auto always_true = [](const auto &param) { return (true); };
-  auto always_false = [](const auto &param) { return (false); };
+  auto always_true = [](const auto &param __attribute__((unused)) ) { return (true); };
+  auto always_false = [](const auto &param __attribute__((unused)) ) { return (false); };
   auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
 
   std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
@@ -148,8 +146,8 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
       });
     };
 
-    single_event_type_run(std::integral_constant<size_t, 0UL>(), seed++);
-    single_event_type_run(std::integral_constant<size_t, 1UL>(), seed++);
+    single_event_type_run(std::integral_constant<size_t, 0UL>(), global_seed++);
+    single_event_type_run(std::integral_constant<size_t, 1UL>(), global_seed++);
   }
 
 }

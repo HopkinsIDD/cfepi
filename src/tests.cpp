@@ -9,12 +9,12 @@ int main(int argc, char** argv) {
     return 1;
   }
   std::random_device rd;
-  size_t seed = atoi(argv[3]);
+  size_t seed = static_cast<size_t>(atoi(argv[3]));
   std::default_random_engine random_source_1{ seed++ };
-  const person_t population_size = atoi(argv[1]);
+  const person_t population_size = static_cast<person_t>(atoi(argv[1]));
 
-  auto always_true = [](const auto &param) { return (true); };
-  auto always_false = [](const auto &param) { return (false); };
+  auto always_true = [](const auto &param __attribute__((unused)) ) { return (true); };
+  auto always_false = [](const auto &param __attribute__((unused)) ) { return (false); };
   auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
 
   std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     ranges::views::transform(filters, [&current_state](auto &x) {
       return (std::make_tuple(current_state, current_state, current_state, x));
     }));
-  for(epidemic_time_t t = 0UL; t < atoi(argv[2]); ++t){
+  for(epidemic_time_t t = 0UL; t < static_cast<epidemic_time_t>(atoi(argv[2])); ++t){
 
     current_state.reset();
     current_state = std::transform_reduce(
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
       std::get<2>(x) = std::get<0>(x);
     });
 
-    std::array<double, 2> event_probabilities = {.5, 2. / population_size};
+    std::array<double, 2> event_probabilities = {.5, 2. / static_cast<double>(population_size)};
 
     const auto single_event_type_run = [ &seed, &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index){
       random_source_1.seed(seed++);
@@ -62,14 +62,10 @@ int main(int argc, char** argv) {
 
       ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto &x) {
         auto tmp = std::get<1>(x);
-        std::string prefix = "";
-        prefix += std::get<0>(x);
-        prefix += " : ";
-        // print(tmp, prefix);
         for (auto i : std::ranges::views::iota(0UL, tmp.affected_people.size())) {
           if (tmp.postconditions[i]) {
-            auto& current_state = std::get<0>(setups_by_filter[std::get<0>(x)]);
-  	  if (any_sir_state_check_preconditions{current_state}(tmp)) {
+            auto& local_current_state = std::get<0>(setups_by_filter[std::get<0>(x)]);
+  	  if (any_sir_state_check_preconditions{local_current_state}(tmp)) {
   	    auto& states_entered = std::get<1>(setups_by_filter[std::get<0>(x)]);
   	    auto& states_remained = std::get<2>(setups_by_filter[std::get<0>(x)]);
 
