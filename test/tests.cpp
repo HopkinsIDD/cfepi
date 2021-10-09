@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <cfepi/sir.hpp>
+#include <cfepi/sir_specific.hpp>
 #include <cfepi/sample_view.hpp>
 #include <iostream>
 #include <range/v3/all.hpp>
