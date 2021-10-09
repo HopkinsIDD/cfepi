@@ -19,9 +19,9 @@ jobs:
       matrix:
         os: ubuntu-latest
         include:
-          runs-on: ubuntu-latest
-          compiler: gcc
-          gcc: 10
+          - runs-on: ubuntu-latest
+            compiler: gcc
+            gcc: 10
 
     steps:
     - uses: actions/checkout@v2
