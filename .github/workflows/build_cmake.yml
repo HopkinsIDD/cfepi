@@ -20,8 +20,8 @@ jobs:
         os: [ubuntu-latest]
         include:
           - runs-on: ubuntu-latest
-            compiler: gcc
-            gcc: 10
+            C_COMPILER: gcc-10
+            CXX_COMPILER: g++-10
 
     steps:
     - uses: actions/checkout@v2
@@ -60,7 +60,7 @@ jobs:
       # We need to source the profile file to make sure conan is in PATH
       run: |
         source ~/.profile
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_C_COMPILER=${{ matrix.C_COMPILER }} -DCMAKE_CXX_COMPILER=${{ matrix.CXX_COMPILER }}
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
