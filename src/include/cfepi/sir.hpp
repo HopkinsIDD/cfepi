@@ -31,11 +31,25 @@ template<typename T, size_t i> using repeat = T;
  * SIR Helper Type Definitions                                                 *
  *******************************************************************************/
 
-enum epidemic_state { S, I, R, n_SIR_compartments };
-constexpr size_t ncompartments = n_SIR_compartments;
+struct epidemic_states{
+public:
+  enum state { S, I, R, n_SIR_compartments };
+  constexpr auto size() const {
+    return(static_cast<size_t>(n_SIR_compartments));
+  }
+};
+
 typedef float epidemic_time_t;
 typedef size_t person_t;
 size_t global_event_counter = 0;
+
+template<typename enum_type>
+concept is_sized_enum = requires(enum_type e) {
+  // { e.state };
+  { std::size(e) } -> std::unsigned_integral;
+} &&
+std::default_initializable<enum_type> &&
+std::is_enum<typename enum_type::state>::value;
 
 /*******************************************************************************
  * SIR State Definition                                                        *
@@ -46,13 +60,15 @@ size_t global_event_counter = 0;
  * @description The state of the model.
  */
 
+template<typename states_t>
+requires is_sized_enum<states_t>
 struct sir_state {
   person_t population_size = 0;
-  std::vector<std::array<bool, ncompartments>> potential_states;
+  std::vector<std::array<bool, std::size(states_t{})> > potential_states;
   epidemic_time_t time = -1;
   std::string prefix;
   sir_state() noexcept = default;
-  sir_state(person_t _population_size = 10) noexcept : population_size(_population_size) {
+  sir_state(person_t _population_size) noexcept : population_size(_population_size) {
     potential_states.resize(population_size);
   }
   sir_state operator||(const sir_state &other) const {
@@ -61,7 +77,7 @@ struct sir_state {
       throw "Cannot compare sir_states with different sizes";
     }
     for (auto person_index : std::ranges::views::iota(0UL, rc.potential_states.size())) {
-      for (auto compartment_index : std::ranges::views::iota(0UL, ncompartments)) {
+      for (auto compartment_index : std::ranges::views::iota(0UL, std::size(states_t{}))) {
         rc.potential_states[person_index][compartment_index] =
           rc.potential_states[person_index][compartment_index]
           || other.potential_states[person_index][compartment_index];
@@ -77,20 +93,25 @@ struct sir_state {
   }
 };
 
-sir_state default_state(person_t _population_size = 10, person_t initial_infected = 1) {
-  sir_state rc(_population_size);
-  auto base_range = std::ranges::views::iota(_population_size * 0, _population_size);
+template<typename states_t>
+sir_state<states_t> default_state(
+				  const typename states_t::state base_state,
+				  const typename states_t::state infected_state,
+				  const person_t population_size = 10,
+				  const person_t initial_infected = 1
+				  ) {
+  sir_state<states_t> rc{population_size};
+  auto base_range = std::ranges::views::iota(population_size * 0, population_size);
   for (auto elem : base_range | std::ranges::views::take(initial_infected)) {
-    rc.potential_states[elem][I] = true;
+    rc.potential_states[elem][infected_state] = true;
   }
-  rc.potential_states[0][I] = true;
   for (auto elem : base_range | std::ranges::views::drop(initial_infected)) {
-    rc.potential_states[elem][S] = true;
+    rc.potential_states[elem][base_state] = true;
   }
   return (rc);
 }
 
-auto sample_sir_state = default_state(1, 0);
+auto sample_sir_state = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, 1UL, 0UL);
 
 /*******************************************************************************
  * SIR Event Definition                                                        *
@@ -101,24 +122,24 @@ auto sample_sir_state = default_state(1, 0);
  * @description An event that transitions the model between states
  */
 
-template<size_t size> struct sir_event {
+template<typename states_t, size_t size> struct sir_event {
   epidemic_time_t time = -1;
   std::array<person_t, size> affected_people = {};
-  std::array<std::array<bool, ncompartments>, size> preconditions = {};
-  std::array<std::optional<epidemic_state>, size> postconditions;
+  std::array<std::array<bool, std::size(states_t{})>, size> preconditions = {};
+  std::array<std::optional<epidemic_states::state>, size> postconditions;
   sir_event() noexcept = default;
   sir_event(const sir_event &) = default;
 };
 
-struct infection_event : public sir_event<2> {
-  using sir_event<2>::time;
-  using sir_event<2>::affected_people;
-  using sir_event<2>::preconditions;
-  using sir_event<2>::postconditions;
+struct infection_event : public sir_event<epidemic_states, 2> {
+  using sir_event<epidemic_states, 2>::time;
+  using sir_event<epidemic_states, 2>::affected_people;
+  using sir_event<epidemic_states, 2>::preconditions;
+  using sir_event<epidemic_states, 2>::postconditions;
   constexpr infection_event() noexcept {
     preconditions = { std::array<bool, 3>({ true, false, false }),
       std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = I;
+    postconditions[0] = epidemic_states::I;
   }
   infection_event(const infection_event &) = default;
   infection_event(person_t p1, person_t p2, epidemic_time_t _time) {
@@ -126,25 +147,25 @@ struct infection_event : public sir_event<2> {
     affected_people = { p1, p2 };
     preconditions = { std::array<bool, 3>({ true, false, false }),
       std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = I;
+    postconditions[0] = epidemic_states::I;
   }
 };
 
-struct recovery_event : public sir_event<1> {
-  using sir_event<1>::time;
-  using sir_event<1>::affected_people;
-  using sir_event<1>::preconditions;
-  using sir_event<1>::postconditions;
+struct recovery_event : public sir_event<epidemic_states, 1> {
+  using sir_event<epidemic_states, 1>::time;
+  using sir_event<epidemic_states, 1>::affected_people;
+  using sir_event<epidemic_states, 1>::preconditions;
+  using sir_event<epidemic_states, 1>::postconditions;
   constexpr recovery_event() noexcept {
     preconditions = { std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = R;
+    postconditions[0] = epidemic_states::R;
   }
   recovery_event(const recovery_event &) = default;
   recovery_event(person_t p1, epidemic_time_t _time) {
     time = _time;
     affected_people[0] = p1;
     preconditions = { std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = R;
+    postconditions[0] = epidemic_states::R;
   }
 };
 
@@ -153,11 +174,11 @@ constexpr size_t number_of_event_types = 3;
 
 template<size_t index, size_t permutation_index> struct sir_event_true_preconditions;
 
-template<> struct sir_event_true_preconditions<0, 0> { constexpr static auto value = { I }; };
+template<> struct sir_event_true_preconditions<0, 0> { constexpr static auto value = { epidemic_states::I }; };
 
-template<> struct sir_event_true_preconditions<1, 0> { constexpr static auto value = { S }; };
+template<> struct sir_event_true_preconditions<1, 0> { constexpr static auto value = { epidemic_states::S }; };
 
-template<> struct sir_event_true_preconditions<1, 1> { constexpr static auto value = { I }; };
+template<> struct sir_event_true_preconditions<1, 1> { constexpr static auto value = { epidemic_states::I }; };
 
 template<size_t event_index> struct sir_event_by_index;
 
@@ -242,14 +263,16 @@ struct any_sir_event_print {
   }
 };
 
+template<typename states_t>
 struct any_sir_state_check_preconditions {
-  sir_state &this_sir_state;
+  sir_state<states_t> &this_sir_state;
   template<size_t event_index> bool operator()(const sir_event_by_index<event_index> x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();
     for (person_t i = 0; i < event_size; ++i) {
       auto tmp = false;
-      for (size_t compartment = 0; compartment < ncompartments; ++compartment) {
+      // Make an iterator for states_t maybe
+      for (size_t compartment = 0; compartment < std::size(states_t{}); ++compartment) {
         auto lhs = x.preconditions[i][compartment];
         auto rhs = this_sir_state.potential_states[x.affected_people[i]][compartment];
         tmp = tmp || (lhs && rhs);
@@ -260,8 +283,9 @@ struct any_sir_state_check_preconditions {
   }
 };
 
+template<typename states_t>
 struct any_sir_event_apply_to_sir_state {
-  sir_state &this_sir_state;
+  sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
     size_t event_size = x.affected_people.size();
@@ -272,7 +296,7 @@ struct any_sir_event_apply_to_sir_state {
       if (to_state) {
         auto affected_person = x.affected_people[person_index];
         for (auto previous_compartment :
-          std::ranges::views::iota(0UL) | std::ranges::views::take(ncompartments)) {
+	       std::ranges::views::iota(0UL) | std::ranges::views::take(std::size(states_t{}))) {
           this_sir_state.potential_states[affected_person][previous_compartment] = false;
         }
         this_sir_state.potential_states[affected_person][to_state.value()] = true;
@@ -281,8 +305,9 @@ struct any_sir_event_apply_to_sir_state {
   }
 };
 
+template<typename states_t>
 struct any_sir_event_apply_entered_states {
-  sir_state &this_sir_state;
+  sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
     size_t event_size = x.affected_people.size();
@@ -297,8 +322,9 @@ struct any_sir_event_apply_entered_states {
   }
 };
 
+template<typename states_t>
 struct any_sir_event_apply_left_states {
-  sir_state &this_sir_state;
+  sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
     size_t event_size = x.affected_people.size();
@@ -306,7 +332,7 @@ struct any_sir_event_apply_left_states {
     for (auto person_index : std::ranges::views::iota(0UL, event_size)) {
       auto to_state = x.postconditions[person_index];
       if (to_state) {
-        for (auto state_index : std::ranges::views::iota(0UL, ncompartments)) {
+        for (auto state_index : std::ranges::views::iota(0UL, std::size(states_t{}))) {
           this_sir_state.potential_states[x.affected_people[person_index]][state_index] =
             this_sir_state.potential_states[x.affected_people[person_index]][state_index]
             && !x.preconditions[person_index][state_index];
@@ -333,8 +359,8 @@ const auto check_event_precondition_enumerated = [](const auto &x) {
   return (check_event_precondition<event_index, precondition_index>(x.value));
 };
 
-template<size_t event_index, size_t precondition_index>
-const auto get_precondition_satisfying_indices(const sir_state &current_state) {
+template<typename states_t, size_t event_index, size_t precondition_index>
+const auto get_precondition_satisfying_indices(const sir_state<states_t> &current_state) {
   return (cor3ntin::rangesnext::to<std::vector>(
     cor3ntin::rangesnext::enumerate(current_state.potential_states)
     | std::ranges::views::filter(
@@ -364,7 +390,8 @@ constexpr size_t int_pow(size_t base, size_t exponent) {
                              : int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
 }
 
-void print(const sir_state &state, const std::string &prefix = "", bool aggregate = true) {
+template<typename states_t>
+void print(const sir_state<states_t> &state, const std::string &prefix = "", bool aggregate = true) {
   std::cout << prefix << "Possible states at time ";
   std::cout << state.time << std::endl;
   // return;
@@ -383,19 +410,19 @@ void print(const sir_state &state, const std::string &prefix = "", bool aggregat
     return;
   }
 
-  std::array<size_t, int_pow(2, ncompartments) + 1> aggregates;
-  for (size_t subset = 0; subset <= int_pow(2, ncompartments); ++subset) { aggregates[subset] = 0; }
+  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregates;
+  for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) { aggregates[subset] = 0; }
   for (auto possible_states : state.potential_states) {
     size_t index = 0;
-    for (size_t state_index = 0; state_index < ncompartments; ++state_index) {
+    for (size_t state_index = 0; state_index < std::size(states_t{}); ++state_index) {
       if (possible_states[state_index]) { index += int_pow(2, state_index); }
     }
     aggregates[index]++;
   }
-  for (size_t subset = 0; subset <= int_pow(2, ncompartments); ++subset) {
+  for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) {
     if (aggregates[subset] > 0) {
       std::cout << prefix;
-      for (size_t compartment = 0; compartment < ncompartments; ++compartment) {
+      for (size_t compartment = 0; compartment < std::size(states_t{}); ++compartment) {
         if ((subset % int_pow(2, compartment + 1) / int_pow(2, compartment)) == 1) {
           std::cout << compartment << " ";
         }
@@ -407,12 +434,19 @@ void print(const sir_state &state, const std::string &prefix = "", bool aggregat
 
 const auto apply_lambda = [](const auto &...x) { return cor3ntin::rangesnext::product(x...); };
 
-template<size_t event_index,
-  typename = std::make_index_sequence<event_size_by_event_index<event_index>::value>>
+template<
+  typename states_t,
+  size_t event_index,
+  typename = std::make_index_sequence<event_size_by_event_index<event_index>::value>
+  >
 struct single_type_event_generator;
 
-template<size_t event_index, size_t... precondition_index>
-struct single_type_event_generator<event_index, std::index_sequence<precondition_index...>> {
+template<
+  typename states_t,
+  size_t event_index,
+  size_t... precondition_index
+  >
+struct single_type_event_generator<states_t, event_index, std::index_sequence<precondition_index...>> {
   std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<precondition_index>::value>...>
     vectors;
   auto cartesian_range() {
@@ -423,17 +457,17 @@ struct single_type_event_generator<event_index, std::index_sequence<precondition
     return (
       std::ranges::transform_view(cartesian_range(), transform_array_to_sir_event_l<event_index>));
   }
-  explicit single_type_event_generator(const sir_state &current_state)
+  explicit single_type_event_generator(const sir_state<states_t> &current_state)
     : vectors{ std::make_tuple(
-      get_precondition_satisfying_indices<event_index, precondition_index>(current_state)...) } {}
+			       get_precondition_satisfying_indices<states_t, event_index, precondition_index>(current_state)...) } {}
 };
 
-template<typename T, size_t N = number_of_event_types, typename = std::make_index_sequence<N>>
+template<typename states_t, typename T, size_t N = number_of_event_types, typename = std::make_index_sequence<N>>
 struct any_event_type_range;
 
-template<typename T, size_t N, size_t... event_index>
-struct any_event_type_range<T, N, std::index_sequence<event_index...>>
-  : std::variant<decltype(single_type_event_generator<event_index>().event_range())...> {};
+template<typename states_t, typename T, size_t N, size_t... event_index>
+struct any_event_type_range<states_t, T, N, std::index_sequence<event_index...>>
+  : std::variant<decltype(single_type_event_generator<states_t, event_index>().event_range())...> {};
 
 /*
 template <size_t N = number_of_event_types,

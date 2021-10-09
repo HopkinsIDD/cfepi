@@ -7,9 +7,9 @@
 
 TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
-  auto initial_conditions = default_state(population_size);
+  auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
   auto event_range_generator =
-    single_type_event_generator<1>(initial_conditions);
+    single_type_event_generator<epidemic_states, 1>(initial_conditions);
   auto event_range = event_range_generator.event_range();
 
   size_t counter = 0;
@@ -25,8 +25,8 @@ TEST_CASE("Single Time Event Generator works as expected") {
 
   REQUIRE(counter == population_size - 1);
 
-  initial_conditions.potential_states[1][I] = true;
-  event_range_generator = single_type_event_generator<1>(initial_conditions);
+  initial_conditions.potential_states[1][epidemic_states::I] = true;
+  event_range_generator = single_type_event_generator<epidemic_states, 1>(initial_conditions);
   event_range = event_range_generator.event_range();
 
   counter = 0;
@@ -64,8 +64,19 @@ TEST_CASE("sample_view is working", "[sample_view]") {
   }
 }
 
-TEST_CASE("", "") {
+TEST_CASE("States are properly separated", "") {
 
+  struct test_epidemic_states{
+  public:
+    enum state { S, E, I, R, n_SIR_compartments };
+    constexpr auto size() const {
+      return(static_cast<size_t>(n_SIR_compartments));
+    }
+  };
+  typedef float epidemic_time_t_test;
+  typedef size_t person_t_test;
+
+  sir_state<test_epidemic_states>{};
 }
 
 TEST_CASE("Full stack test works", "[sir_generator]") {
@@ -76,7 +87,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
 
   auto always_true = [](const auto &param) { return (true); };
   auto always_false = [](const auto &param) { return (false); };
-  auto initial_conditions = default_state(population_size);
+  auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
 
   std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
 
@@ -107,7 +118,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     const auto single_event_type_run = [ &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index, const size_t seed){
       random_source_1.seed(seed);
       auto event_range_generator =
-        single_type_event_generator<event_index>(current_state);
+        single_type_event_generator<epidemic_states, event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
 
       auto sampled_event_view =

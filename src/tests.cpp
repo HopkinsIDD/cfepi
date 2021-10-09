@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 
   auto always_true = [](const auto &param) { return (true); };
   auto always_false = [](const auto &param) { return (false); };
-  auto initial_conditions = default_state(population_size);
+  auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
 
   std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
 
@@ -45,12 +45,12 @@ int main(int argc, char** argv) {
     const auto single_event_type_run = [ &seed, &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index){
       random_source_1.seed(seed++);
       auto event_range_generator =
-        single_type_event_generator<event_index>(current_state);
+        single_type_event_generator<epidemic_states, event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
-  
+
       auto sampled_event_view =
         this_event_range | probability::views::sample(event_probabilities[event_index], random_source_1);
-  
+
       size_t counter = 0UL;
       auto setup_view = std::ranges::views::iota(0UL, setups_by_filter.size());
       auto view_to_filter = ranges::views::cartesian_product(setup_view, sampled_event_view);
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         any_sir_event event = std::get<1>(x);
         return (filter(event));
       });
-  
+
       ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto &x) {
         auto tmp = std::get<1>(x);
         std::string prefix = "";
@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
   	  if (any_sir_state_check_preconditions{current_state}(tmp)) {
   	    auto& states_entered = std::get<1>(setups_by_filter[std::get<0>(x)]);
   	    auto& states_remained = std::get<2>(setups_by_filter[std::get<0>(x)]);
-  
+
   	    states_entered.potential_states[tmp.affected_people[i]][*(tmp.postconditions[i])] = true;
               std::cout << "Person " << tmp.affected_people[i] << " is entering state " << *(tmp.postconditions[i]) << std::endl;
-              for (auto j : std::ranges::views::iota(0UL, ncompartments)) {
+              for (auto j : std::ranges::views::iota(0UL, std::size(epidemic_states{}))) {
                 states_remained.potential_states[tmp.affected_people[i]][j] =
                   states_remained.potential_states[tmp.affected_people[i]][j]
                   && !tmp.preconditions[i][j];
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
         return;
       });
       std::cout << counter << std::endl;
-  
+
       ranges::for_each(setups_by_filter, [& t](auto&x){
         std::get<0>(x) = std::get<1>(x) || std::get<2>(x);
         std::get<0>(x).time = t;
