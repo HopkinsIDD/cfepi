@@ -17,12 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         include:
           - runs-on: ubuntu-latest
-            C_COMPILER: gcc-10
-            CXX_COMPILER: g++-10
-          - runs-on: macos-latest
             C_COMPILER: gcc-10
             CXX_COMPILER: g++-10
           - runs-on: windows-latest
