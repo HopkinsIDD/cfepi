@@ -16,6 +16,7 @@ size_t global_event_counter = 0;
 
 auto sample_sir_state = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, 1UL, 0UL);
 
+/*
 struct infection_event : public sir_event<epidemic_states, 2> {
   using sir_event<epidemic_states, 2>::time;
   using sir_event<epidemic_states, 2>::affected_people;
@@ -35,23 +36,15 @@ struct infection_event : public sir_event<epidemic_states, 2> {
     postconditions[0] = epidemic_states::I;
   }
 };
+*/
+struct infection_event : public interaction_event<epidemic_states> {
+  constexpr infection_event() noexcept : interaction_event<epidemic_states>({true, false, false}, {false, true, false}, epidemic_states::I) {};
+  constexpr infection_event(person_t p1, person_t p2, epidemic_time_t _time) noexcept : interaction_event<epidemic_states>(p1, p2, _time, {true, false, false}, {false, true, false}, epidemic_states::I) {};
+};
 
-struct recovery_event : public sir_event<epidemic_states, 1> {
-  using sir_event<epidemic_states, 1>::time;
-  using sir_event<epidemic_states, 1>::affected_people;
-  using sir_event<epidemic_states, 1>::preconditions;
-  using sir_event<epidemic_states, 1>::postconditions;
-  constexpr recovery_event() noexcept {
-    preconditions = { std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = epidemic_states::R;
-  }
-  recovery_event(const recovery_event &) = default;
-  recovery_event(person_t p1, epidemic_time_t _time) {
-    time = _time;
-    affected_people[0] = p1;
-    preconditions = { std::array<bool, 3>({ false, true, false }) };
-    postconditions[0] = epidemic_states::R;
-  }
+struct recovery_event : public transition_event<epidemic_states> {
+  constexpr recovery_event() noexcept : transition_event<epidemic_states>({false, true, false}, epidemic_states::R) {};
+  constexpr recovery_event(person_t p1, epidemic_time_t _time) noexcept : transition_event<epidemic_states>(p1, _time, {false, true, false}, epidemic_states::R) {};
 };
 
 typedef std::variant<recovery_event, infection_event> any_sir_event;

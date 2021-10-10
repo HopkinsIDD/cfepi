@@ -136,7 +136,7 @@ struct interaction_event : public sir_event<states_t, 2> {
     postconditions[0] = result_state;
   }
   interaction_event(const interaction_event &) = default;
-  interaction_event(
+  constexpr interaction_event(
 		  person_t p1,
 		  person_t p2,
 		  epidemic_time_t _time,
@@ -165,14 +165,13 @@ struct transition_event : public sir_event<states_t, 1> {
     postconditions[0] = result_state;
   }
   transition_event(const transition_event &) = default;
-  transition_event(person_t p1,
-		  person_t p2,
+  constexpr transition_event(person_t p1,
 		  epidemic_time_t _time,
 		  const std::array<bool, std::size(states_t{})> _preconditions,
 		  const states_t::state result_state
 		  ) {
     time = _time;
-    affected_people = { p1, p2 };
+    affected_people = { p1 };
     preconditions = { _preconditions };
     postconditions[0] = result_state;
   }
