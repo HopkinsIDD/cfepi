@@ -9,7 +9,7 @@ TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
   auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
   auto event_range_generator =
-    single_type_event_generator<epidemic_states, 1>(initial_conditions);
+    single_type_event_generator<epidemic_states, any_sir_event, 1>(initial_conditions);
   auto event_range = event_range_generator.event_range();
 
   size_t counter = 0;
@@ -26,7 +26,7 @@ TEST_CASE("Single Time Event Generator works as expected") {
   REQUIRE(counter == population_size - 1);
 
   initial_conditions.potential_states[1][epidemic_states::I] = true;
-  event_range_generator = single_type_event_generator<epidemic_states, 1>(initial_conditions);
+  event_range_generator = single_type_event_generator<epidemic_states, any_sir_event, 1>(initial_conditions);
   event_range = event_range_generator.event_range();
 
   counter = 0;
@@ -62,6 +62,21 @@ TEST_CASE("sample_view is working", "[sample_view]") {
     REQUIRE((*it1) == (*it2));
     ++it2;
   }
+}
+
+TEST_CASE("sample_view with probability 1 has the same size as original view", "[sample_view]") {
+  auto gen = std::mt19937{ std::random_device{}() };
+  auto base_view = std::ranges::views::iota(0, 100000);
+  probability::sample_view fully_sampled_view(base_view, 1.0 , gen);
+  size_t base_counter = 0UL;
+  for(auto elem __attribute__((unused)) : base_view ) {
+    ++base_counter;
+  }
+  size_t fully_sampled_counter = 0UL;
+  for(auto elem __attribute__((unused)) : fully_sampled_view ) {
+    ++fully_sampled_counter;
+  }
+  REQUIRE(base_counter == fully_sampled_counter);
 }
 
 TEST_CASE("States are properly separated", "") {
@@ -116,7 +131,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     const auto single_event_type_run = [ &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index, const size_t seed){
       random_source_1.seed(seed);
       auto event_range_generator =
-        single_type_event_generator<epidemic_states, event_index>(current_state);
+        single_type_event_generator<epidemic_states, any_sir_event, event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
 
       auto sampled_event_view =
@@ -132,9 +147,9 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
       });
 
       ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto&x) {
-	if (any_sir_state_check_preconditions{std::get<0>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x))) {
-	  any_sir_event_apply_entered_states{std::get<1>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
-	  any_sir_event_apply_left_states{std::get<2>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
+	if (any_state_check_preconditions<any_sir_event, epidemic_states>{std::get<0>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x))) {
+	  any_event_apply_entered_states{std::get<1>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
+	  any_event_apply_left_states{std::get<2>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
 	}
       });
       std::cout << counter << std::endl;

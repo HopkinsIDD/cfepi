@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     const auto single_event_type_run = [ &seed, &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index){
       random_source_1.seed(seed++);
       auto event_range_generator =
-        single_type_event_generator<epidemic_states, event_index>(current_state);
+        single_type_event_generator<epidemic_states, any_sir_event, event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
 
       auto sampled_event_view =
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         for (auto i : std::ranges::views::iota(0UL, tmp.affected_people.size())) {
           if (tmp.postconditions[i]) {
             auto& local_current_state = std::get<0>(setups_by_filter[std::get<0>(x)]);
-  	  if (any_sir_state_check_preconditions{local_current_state}(tmp)) {
+	    if (any_state_check_preconditions<any_sir_event, epidemic_states>{local_current_state}(tmp)) {
   	    auto& states_entered = std::get<1>(setups_by_filter[std::get<0>(x)]);
   	    auto& states_remained = std::get<2>(setups_by_filter[std::get<0>(x)]);
 

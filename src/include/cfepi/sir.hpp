@@ -63,17 +63,38 @@ struct sir_state {
     potential_states.resize(population_size);
   }
   sir_state operator||(const sir_state &other) const {
-    sir_state rc{ *this };
+    sir_state rc{*this};
     if (rc.potential_states.size() != other.potential_states.size()) {
       throw "Cannot compare sir_states with different sizes";
     }
+    std::ranges::transform(
+			   this->potential_states,
+			   other.potential_states,
+			   std::begin(rc.potential_states),
+			   [](auto& x, auto&y __attribute__((unused))){
+			     auto rc_2{x};
+			     std::ranges::transform(x,y,std::begin(rc_2), std::logical_or<>());
+    /*
+			     // for(size_t count = 0; count < std::size(states_t{}); ++count){
+			     //   x[count] = x[count] || y[count];
+			     // }
+    */
+			     return(rc_2);
+			   },
+			   //std::logical_or<>(),
+			   {},
+			   {}
+			   );
+    /*
     for (auto person_index : std::ranges::views::iota(0UL, rc.potential_states.size())) {
       for (auto compartment_index : std::ranges::views::iota(0UL, std::size(states_t{}))) {
+
         rc.potential_states[person_index][compartment_index] =
-          rc.potential_states[person_index][compartment_index]
+          this->potential_states[person_index][compartment_index]
           || other.potential_states[person_index][compartment_index];
       }
     }
+    */
     return (rc);
   }
 
@@ -178,8 +199,8 @@ struct transition_event : public sir_event<states_t, 1> {
 };
 
 // Users will need to write these :
-template<size_t event_index> struct sir_event_by_index;
-template<size_t index, size_t permutation_index> struct sir_event_true_preconditions;
+template<typename any_event, size_t event_index> struct event_by_index;
+template<typename any_event, size_t index, size_t permutation_index> struct event_true_preconditions;
 
 template<size_t N, typename = std::make_index_sequence<N>>
 struct sir_event_constructor;
@@ -206,8 +227,8 @@ struct sir_event_constructor<N, std::index_sequence<indices...>> {
  *******************************************************************************/
 
 
-template<size_t event_index> struct event_size_by_event_index {
-  constexpr static const size_t value = sir_event_by_index<event_index>().affected_people.size();
+template<typename any_event, size_t event_index> struct event_size_by_event_index {
+  constexpr static const size_t value = event_by_index<any_event, event_index>().affected_people.size();
 };
 
 struct any_sir_event_size {
@@ -261,10 +282,10 @@ struct any_sir_event_print {
   }
 };
 
-template<typename states_t>
-struct any_sir_state_check_preconditions {
+template<typename any_event, typename states_t>
+struct any_state_check_preconditions {
   sir_state<states_t> &this_sir_state;
-  template<size_t event_index> bool operator()(const sir_event_by_index<event_index> x) const {
+  template<size_t event_index> bool operator()(const event_by_index<any_event, event_index> x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();
     for (person_t i = 0; i < event_size; ++i) {
@@ -304,7 +325,7 @@ struct any_sir_event_apply_to_sir_state {
 };
 
 template<typename states_t>
-struct any_sir_event_apply_entered_states {
+struct any_event_apply_entered_states {
   sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
@@ -321,7 +342,7 @@ struct any_sir_event_apply_entered_states {
 };
 
 template<typename states_t>
-struct any_sir_event_apply_left_states {
+struct any_event_apply_left_states {
   sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
@@ -351,31 +372,31 @@ bool check_event_precondition(std::array<bool, std::size(states_t{})>) {
   return (std::any_of(sir_event_true_preconditions<event_index, precondition_index>::value));
 }
 */
-template<typename states_t, size_t event_index, size_t precondition_index>
+template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 bool check_event_precondition(std::array<bool, std::size(states_t{})> x) {
   bool rc = false;
-  auto tmp = sir_event_true_preconditions<event_index, precondition_index>::value;
+  auto tmp = event_true_preconditions<any_event, event_index, precondition_index>::value;
   for (auto elem : tmp) { rc = rc || x[elem]; }
   return (rc);
 }
 
-template<typename states_t, size_t event_index, size_t precondition_index>
+template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 const auto check_event_precondition_enumerated = [](const auto &x) {
-  return (check_event_precondition<states_t, event_index, precondition_index>(x.value));
+  return (check_event_precondition<states_t, any_event, event_index, precondition_index>(x.value));
 };
 
-template<typename states_t, size_t event_index, size_t precondition_index>
+template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 const auto get_precondition_satisfying_indices(const sir_state<states_t> &current_state) {
   return (cor3ntin::rangesnext::to<std::vector>(
     cor3ntin::rangesnext::enumerate(current_state.potential_states)
     | std::ranges::views::filter(
-				 check_event_precondition_enumerated<states_t, event_index, precondition_index>)
+				 check_event_precondition_enumerated<states_t, any_event, event_index, precondition_index>)
     | std::ranges::views::transform([](const auto &x) { return (x.index); })));
 }
 
-template<size_t event_index>
+template<typename any_event, size_t event_index>
 const auto transform_array_to_sir_event_l = [](const auto &x) {
-  sir_event_by_index<event_index> rc;
+  event_by_index<any_event, event_index> rc;
   std::apply([&rc](const auto... y) { rc.affected_people = { y... }; }, x);
   return (rc);
 };
@@ -433,18 +454,20 @@ const auto apply_lambda = [](const auto &...x) { return cor3ntin::rangesnext::pr
 
 template<
   typename states_t,
+  typename any_event,
   size_t event_index,
-  typename = std::make_index_sequence<event_size_by_event_index<event_index>::value>
+  typename = std::make_index_sequence<event_size_by_event_index<any_event, event_index>::value>
   >
 struct single_type_event_generator;
 
 template<
   typename states_t,
+  typename any_event,
   size_t event_index,
   size_t... precondition_index
   >
-struct single_type_event_generator<states_t, event_index, std::index_sequence<precondition_index...>> {
-  std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<precondition_index>::value>...>
+struct single_type_event_generator<states_t, any_event, event_index, std::index_sequence<precondition_index...>> {
+  std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<any_event, precondition_index>::value>...>
     vectors;
   auto cartesian_range() {
     // return(std::apply(apply_lambda, vectors));
@@ -452,13 +475,14 @@ struct single_type_event_generator<states_t, event_index, std::index_sequence<pr
   }
   auto event_range() {
     return (
-      std::ranges::transform_view(cartesian_range(), transform_array_to_sir_event_l<event_index>));
+	    std::ranges::transform_view(cartesian_range(), transform_array_to_sir_event_l<any_event, event_index>));
   }
   explicit single_type_event_generator(const sir_state<states_t> &current_state)
     : vectors{ std::make_tuple(
-			       get_precondition_satisfying_indices<states_t, event_index, precondition_index>(current_state)...) } {}
+			       get_precondition_satisfying_indices<states_t, any_event, event_index, precondition_index>(current_state)...) } {}
 };
 
+/*
 template<typename states_t, typename T, size_t N, typename = std::make_index_sequence<N>>
 struct any_event_type_range;
 
@@ -466,7 +490,6 @@ template<typename states_t, typename T, size_t N, size_t... event_index>
 struct any_event_type_range<states_t, T, N, std::index_sequence<event_index...>>
   : std::variant<decltype(single_type_event_generator<states_t, event_index>().event_range())...> {};
 
-/*
 template <size_t N = number_of_event_types,
           typename = std::make_index_sequence<N>>
 struct single_time_event_generator;
