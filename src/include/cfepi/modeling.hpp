@@ -1,11 +1,13 @@
 #include <cfepi/sir.hpp>
+#include <cfepi/sample_view.hpp>
+#include <range/v3/all.hpp>
 
 
-template<typename states_t, typename any_event, size_t nevents>
+template<typename states_t, typename any_event>
 auto run_simulation(
 		    const sir_state<states_t>& initial_conditions,
-		    const std::array<double, nevents> event_probabilities,
-		    const std::vector<std::function<bool(const any_event &)>> filters,
+		    const std::array<double, std::variant_size_v<any_event>> event_probabilities,
+		    const std::vector<std::function<bool(const any_event &, std::default_random_engine&)>> filters,
 		    const epidemic_time_t epidemic_duration = 365,
 		    size_t simulation_seed = 2
 		    ) {
@@ -53,10 +55,10 @@ auto run_simulation(
       auto setup_view = std::ranges::views::iota(0UL, setups_by_filter.size());
       auto view_to_filter = ranges::views::cartesian_product(setup_view, sampled_event_view);
       auto filtered_view = ranges::filter_view(
-        view_to_filter, [setups_by_filter = std::as_const(setups_by_filter)](const auto &x) {
+					       view_to_filter, [setups_by_filter = std::as_const(setups_by_filter), &random_source_1](const auto &x) {
           auto filter = std::get<3>(setups_by_filter[std::get<0>(x)]);
           any_event event = std::get<1>(x);
-          return (filter(event));
+          return (filter(event, random_source_1));
         });
 
       ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto &x) {
@@ -83,7 +85,7 @@ auto run_simulation(
       single_event_type_run(event_index, simulation_seed);
     };
 
-    cfor::constexpr_for<0, 3, 1>(seeded_single_event_type_run);
+    cfor::constexpr_for<0, std::variant_size_v<any_event>, 1>(seeded_single_event_type_run);
   }
 
 }

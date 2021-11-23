@@ -10,6 +10,7 @@
 #include <variant>
 #include <vector>
 #include <span>
+#include <bitset>
 
 #include <cor3ntin/rangesnext/to.hpp>
 #include <cor3ntin/rangesnext/product.hpp>
@@ -55,7 +56,7 @@ template<typename states_t>
 requires is_sized_enum<states_t>
 struct sir_state {
   person_t population_size = 0;
-  std::vector<std::array<bool, std::size(states_t{})> > potential_states;
+  std::vector<std::bitset<std::size(states_t{})> > potential_states;
   epidemic_time_t time = -1;
   std::string prefix;
   sir_state() noexcept = default;
@@ -67,40 +68,22 @@ struct sir_state {
     if (rc.potential_states.size() != other.potential_states.size()) {
       throw "Cannot compare sir_states with different sizes";
     }
+
     std::ranges::transform(
 			   this->potential_states,
 			   other.potential_states,
 			   std::begin(rc.potential_states),
-			   [](auto& x, auto&y __attribute__((unused))){
-			     auto rc_2{x};
-			     std::ranges::transform(x,y,std::begin(rc_2), std::logical_or<>());
-    /*
-			     // for(size_t count = 0; count < std::size(states_t{}); ++count){
-			     //   x[count] = x[count] || y[count];
-			     // }
-    */
-			     return(rc_2);
-			   },
-			   //std::logical_or<>(),
+			   std::bit_or<>(),
 			   {},
 			   {}
 			   );
-    /*
-    for (auto person_index : std::ranges::views::iota(0UL, rc.potential_states.size())) {
-      for (auto compartment_index : std::ranges::views::iota(0UL, std::size(states_t{}))) {
-
-        rc.potential_states[person_index][compartment_index] =
-          this->potential_states[person_index][compartment_index]
-          || other.potential_states[person_index][compartment_index];
-      }
-    }
-    */
     return (rc);
   }
 
   void reset() {
     for (auto &i : potential_states) {
-      for (auto &j : i) { j = false; }
+      //for (auto &j : i) { j = false; }
+      i.reset();
     }
   }
 };
@@ -136,7 +119,7 @@ sir_state<states_t> default_state(
 template<typename states_t, size_t size> struct sir_event {
   epidemic_time_t time = -1;
   std::array<person_t, size> affected_people = {};
-  std::array<std::array<bool, std::size(states_t{})>, size> preconditions = {};
+  std::array<std::bitset<std::size(states_t{})>, size> preconditions = {};
   std::array<std::optional<typename states_t::state>, size> postconditions;
   sir_event() noexcept = default;
   sir_event(const sir_event &) = default;
@@ -148,21 +131,13 @@ struct interaction_event : public sir_event<states_t, 2> {
   using sir_event<states_t, 2>::affected_people;
   using sir_event<states_t, 2>::preconditions;
   using sir_event<states_t, 2>::postconditions;
-  constexpr interaction_event(
-			    const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
-			    const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
-			    const typename states_t::state result_state
-			    ) noexcept {
-    preconditions = { preconditions_for_first_person, preconditions_for_second_person };
-    postconditions[0] = result_state;
-  }
   interaction_event(const interaction_event &) = default;
   constexpr interaction_event(
 		  person_t p1,
 		  person_t p2,
 		  epidemic_time_t _time,
-		  const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
-		  const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
+		  const std::bitset<std::size(states_t{})> preconditions_for_first_person,
+		  const std::bitset<std::size(states_t{})> preconditions_for_second_person,
 		  const typename states_t::state result_state
 		  ) {
     time = _time;
@@ -170,6 +145,11 @@ struct interaction_event : public sir_event<states_t, 2> {
     preconditions = { preconditions_for_first_person, preconditions_for_second_person };
     postconditions[0] = result_state;
   }
+  constexpr interaction_event(
+			    const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
+			    const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
+			    const typename states_t::state result_state
+			      ) noexcept : interaction_event(0UL,0UL,-1,preconditions_for_first_person, preconditions_for_second_person, result_state) {};
 };
 
 template<typename states_t>
@@ -178,24 +158,20 @@ struct transition_event : public sir_event<states_t, 1> {
   using sir_event<states_t, 1>::affected_people;
   using sir_event<states_t, 1>::preconditions;
   using sir_event<states_t, 1>::postconditions;
-  constexpr transition_event(
-			    const std::array<bool, std::size(states_t{})> _preconditions,
-			    const typename states_t::state result_state
-			    ) noexcept {
-    preconditions = { _preconditions };
-    postconditions[0] = result_state;
-  }
   transition_event(const transition_event &) = default;
   constexpr transition_event(person_t p1,
-		  epidemic_time_t _time,
-		  const std::array<bool, std::size(states_t{})> _preconditions,
-		  const states_t::state result_state
-		  ) {
+    epidemic_time_t _time,
+    const std::bitset<std::size(states_t{})> _preconditions,
+    const states_t::state result_state) {
     time = _time;
     affected_people = { p1 };
     preconditions = { _preconditions };
     postconditions[0] = result_state;
   }
+  constexpr transition_event(
+			    const std::array<bool, std::size(states_t{})> _preconditions,
+			    const typename states_t::state result_state
+			     ) noexcept : transition_event(0,-1,_preconditions,result_state) {}
 };
 
 // Users will need to write these :
@@ -372,6 +348,7 @@ bool check_event_precondition(std::array<bool, std::size(states_t{})>) {
   return (std::any_of(sir_event_true_preconditions<event_index, precondition_index>::value));
 }
 */
+/*
 template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 bool check_event_precondition(std::array<bool, std::size(states_t{})> x) {
   bool rc = false;
@@ -383,6 +360,14 @@ bool check_event_precondition(std::array<bool, std::size(states_t{})> x) {
 template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 const auto check_event_precondition_enumerated = [](const auto &x) {
   return (check_event_precondition<states_t, any_event, event_index, precondition_index>(x.value));
+};
+*/
+
+template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
+const auto check_event_precondition_enumerated = [](const auto &x) {// x is a potential_states
+  return ((x.value
+           & std::variant_alternative_t<event_index, any_event>{}.preconditions[precondition_index])
+            .any());
 };
 
 template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
@@ -417,11 +402,7 @@ void print(const sir_state<states_t> &state, const std::string &prefix = "", boo
     int person_counter = 0;
     for (auto possible_states : state.potential_states) {
       std::cout << prefix << person_counter << "(";
-      int state_count = 0;
-      for (auto this_state : possible_states) {
-        if (this_state) { std::cout << " " << state_count; }
-        ++state_count;
-      }
+      std::cout << possible_states << "\n";
       std::cout << " )" << std::endl;
       ++person_counter;
     }

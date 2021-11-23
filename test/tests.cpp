@@ -1,32 +1,77 @@
 #include <catch2/catch.hpp>
 
-#include <cfepi/sir_specific.hpp>
+
+#include <cfepi/sir.hpp>
 #include <cfepi/sample_view.hpp>
 #include <iostream>
 #include <range/v3/all.hpp>
 
+struct sir_epidemic_states {
+public:
+  enum state {S,I,R,n_compartments};
+  constexpr auto size() const {return (static_cast<size_t>(n_compartments));}
+};
+
+struct infection_event : public interaction_event<sir_epidemic_states> {
+  constexpr infection_event(person_t p1, person_t p2, epidemic_time_t _time) noexcept
+    : interaction_event<sir_epidemic_states>(p1,
+      p2,
+      _time,
+      { std::bitset<std::size(sir_epidemic_states{})>{
+        1 << sir_epidemic_states::S} },
+      { std::bitset<std::size(sir_epidemic_states{})>{
+        1 << sir_epidemic_states::I} },
+      sir_epidemic_states::I){};
+  constexpr infection_event() noexcept : infection_event(0UL, 0UL, -1) {};
+};
+
+struct recovery_event : public transition_event<sir_epidemic_states> {
+  constexpr recovery_event(person_t p1, epidemic_time_t _time) noexcept
+    : transition_event<sir_epidemic_states>(p1,
+      _time,
+      { std::bitset<std::size(sir_epidemic_states{})>{
+        1 << sir_epidemic_states::I} },
+      sir_epidemic_states::R){};
+  constexpr recovery_event() noexcept : recovery_event(0UL, -1) {};
+};
+
+typedef std::variant<recovery_event, infection_event> any_sir_event;
+
+template<> struct event_true_preconditions<any_sir_event, 0, 0> {
+  constexpr static auto value = { sir_epidemic_states::I };
+};
+template<> struct event_true_preconditions<any_sir_event, 1, 0> {
+  constexpr static auto value = { sir_epidemic_states::S };
+};
+template<> struct event_true_preconditions<any_sir_event, 1, 1> {
+  constexpr static auto value = { sir_epidemic_states::I };
+};
+
+template<> struct event_by_index<any_sir_event, 0> : recovery_event {};
+template<> struct event_by_index<any_sir_event, 1> : infection_event {};
+
 TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
-  auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
+  auto initial_conditions = default_state<sir_epidemic_states>(sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);
   auto event_range_generator =
-    single_type_event_generator<epidemic_states, any_sir_event, 1>(initial_conditions);
+    single_type_event_generator<sir_epidemic_states, any_sir_event, 1>(initial_conditions);
   auto event_range = event_range_generator.event_range();
+
 
   size_t counter = 0;
   person_t zero = 0ul;
   const person_t one = 1ul;
   for (auto val : event_range) {
     ++counter;
+    // print(val, "TEST");
     REQUIRE(val.affected_people[one] == 0ul);
-    // REQUIRE(std::visit(any_sir_event_affected_people{one},val) == 0ul);
     REQUIRE(val.affected_people[zero] == counter);
-    // REQUIRE(std::visit(any_sir_event_affected_people{zero},val) == counter);
   }
 
   REQUIRE(counter == population_size - 1);
 
-  initial_conditions.potential_states[1][epidemic_states::I] = true;
-  event_range_generator = single_type_event_generator<epidemic_states, any_sir_event, 1>(initial_conditions);
+  initial_conditions.potential_states[1][sir_epidemic_states::I] = true;
+  event_range_generator = single_type_event_generator<sir_epidemic_states, any_sir_event, 1>(initial_conditions);
   event_range = event_range_generator.event_range();
 
   counter = 0;
@@ -100,7 +145,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
 
   auto always_true = [](const auto &param __attribute__((unused)) ) { return (true); };
   auto always_false = [](const auto &param __attribute__((unused)) ) { return (false); };
-  auto initial_conditions = default_state<epidemic_states>(epidemic_states::S, epidemic_states::I, population_size, 1UL);
+  auto initial_conditions = default_state<sir_epidemic_states>(sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);
 
   std::vector<std::function<bool(const any_sir_event &)>> filters{always_true, always_false};
 
@@ -131,7 +176,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     const auto single_event_type_run = [ &t, &setups_by_filter, &random_source_1, &population_size, &current_state, &event_probabilities](const auto event_index, const size_t seed){
       random_source_1.seed(seed);
       auto event_range_generator =
-        single_type_event_generator<epidemic_states, any_sir_event, event_index>(current_state);
+        single_type_event_generator<sir_epidemic_states, any_sir_event, event_index>(current_state);
       auto this_event_range = event_range_generator.event_range();
 
       auto sampled_event_view =
@@ -147,7 +192,7 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
       });
 
       ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto&x) {
-	if (any_state_check_preconditions<any_sir_event, epidemic_states>{std::get<0>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x))) {
+	if (any_state_check_preconditions<any_sir_event, sir_epidemic_states>{std::get<0>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x))) {
 	  any_event_apply_entered_states{std::get<1>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
 	  any_event_apply_left_states{std::get<2>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
 	}
@@ -165,4 +210,10 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
     single_event_type_run(std::integral_constant<size_t, 1UL>(), global_seed++);
   }
 
+}
+
+TEST_CASE("Enumerated type works", "") {
+  // named_type<"Hello"> test;
+  // std::cout << S << std::endl;
+  // enumerated_type<"S","E","I","R"> test;
 }
