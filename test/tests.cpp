@@ -37,19 +37,6 @@ struct recovery_event : public transition_event<sir_epidemic_states> {
 
 typedef std::variant<recovery_event, infection_event> any_sir_event;
 
-template<> struct event_true_preconditions<any_sir_event, 0, 0> {
-  constexpr static auto value = { sir_epidemic_states::I };
-};
-template<> struct event_true_preconditions<any_sir_event, 1, 0> {
-  constexpr static auto value = { sir_epidemic_states::S };
-};
-template<> struct event_true_preconditions<any_sir_event, 1, 1> {
-  constexpr static auto value = { sir_epidemic_states::I };
-};
-
-template<> struct event_by_index<any_sir_event, 0> : recovery_event {};
-template<> struct event_by_index<any_sir_event, 1> : infection_event {};
-
 TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
   auto initial_conditions = default_state<sir_epidemic_states>(sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);

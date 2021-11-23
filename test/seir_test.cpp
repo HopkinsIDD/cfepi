@@ -46,6 +46,7 @@ struct infection_event : public transition_event<seir_epidemic_states> {
 
 typedef std::variant<recovery_event, infection_event, exposure_event> any_seir_event;
 
+/*
 template<> struct event_true_preconditions<any_seir_event, 0, 0> {
   constexpr static auto value = { seir_epidemic_states::I };
 };
@@ -62,6 +63,7 @@ template<> struct event_true_preconditions<any_seir_event, 2, 1> {
 template<> struct event_by_index<any_seir_event, 0> : recovery_event {};
 template<> struct event_by_index<any_seir_event, 1> : infection_event {};
 template<> struct event_by_index<any_seir_event, 2> : exposure_event {};
+*/
 
 TEST_CASE("SEIR_2 model works modularly", "[sir_generator]") {
   person_t population_size = 10000;

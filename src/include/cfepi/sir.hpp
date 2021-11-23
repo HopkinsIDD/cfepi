@@ -175,8 +175,8 @@ struct transition_event : public sir_event<states_t, 1> {
 };
 
 // Users will need to write these :
-template<typename any_event, size_t event_index> struct event_by_index;
-template<typename any_event, size_t index, size_t permutation_index> struct event_true_preconditions;
+// template<typename any_event, size_t event_index> struct event_by_index;
+// template<typename any_event, size_t index, size_t permutation_index> struct event_true_preconditions;
 
 template<size_t N, typename = std::make_index_sequence<N>>
 struct sir_event_constructor;
@@ -204,7 +204,7 @@ struct sir_event_constructor<N, std::index_sequence<indices...>> {
 
 
 template<typename any_event, size_t event_index> struct event_size_by_event_index {
-  constexpr static const size_t value = event_by_index<any_event, event_index>().affected_people.size();
+  constexpr static const size_t value = std::variant_alternative_t<event_index, any_event>{}.affected_people.size();
 };
 
 struct any_sir_event_size {
@@ -261,7 +261,7 @@ struct any_sir_event_print {
 template<typename any_event, typename states_t>
 struct any_state_check_preconditions {
   sir_state<states_t> &this_sir_state;
-  template<size_t event_index> bool operator()(const event_by_index<any_event, event_index> x) const {
+  bool operator()(const auto x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();
     for (person_t i = 0; i < event_size; ++i) {
@@ -381,7 +381,7 @@ const auto get_precondition_satisfying_indices(const sir_state<states_t> &curren
 
 template<typename any_event, size_t event_index>
 const auto transform_array_to_sir_event_l = [](const auto &x) {
-  event_by_index<any_event, event_index> rc;
+  std::variant_alternative_t<event_index, any_event> rc;
   std::apply([&rc](const auto... y) { rc.affected_people = { y... }; }, x);
   return (rc);
 };
