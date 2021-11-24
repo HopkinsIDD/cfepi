@@ -58,7 +58,6 @@ struct sir_state {
   person_t population_size = 0;
   std::vector<std::bitset<std::size(states_t{})> > potential_states;
   epidemic_time_t time = -1;
-  std::string prefix;
   sir_state() noexcept = default;
   sir_state(person_t _population_size) noexcept : population_size(_population_size) {
     potential_states.resize(population_size);
@@ -174,11 +173,7 @@ struct transition_event : public sir_event<states_t, 1> {
 			     ) noexcept : transition_event(0,-1,_preconditions,result_state) {}
 };
 
-// Users will need to write these :
-// template<typename any_event, size_t event_index> struct event_by_index;
-// template<typename any_event, size_t index, size_t permutation_index> struct event_true_preconditions;
-
-template<size_t N, typename = std::make_index_sequence<N>>
+template<typename states_t, size_t N, typename = std::make_index_sequence<N>>
 struct sir_event_constructor;
 
 /*
@@ -394,6 +389,18 @@ constexpr size_t int_pow(size_t base, size_t exponent) {
 }
 
 template<typename states_t>
+std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregate_state(const sir_state<states_t>& state) {
+  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> rc;
+  for (auto& elem : rc) {
+    elem = 0;
+  }
+  for (auto possible_states : state.potential_states) {
+    rc[possible_states.to_ulong()] += 1;
+  }
+  return(rc);
+}
+
+template<typename states_t>
 void print(const sir_state<states_t> &state, const std::string &prefix = "", bool aggregate = true) {
   std::cout << prefix << "Possible states at time ";
   std::cout << state.time << std::endl;
@@ -409,15 +416,8 @@ void print(const sir_state<states_t> &state, const std::string &prefix = "", boo
     return;
   }
 
-  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregates;
-  for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) { aggregates[subset] = 0; }
-  for (auto possible_states : state.potential_states) {
-    size_t index = 0;
-    for (size_t state_index = 0; state_index < std::size(states_t{}); ++state_index) {
-      if (possible_states[state_index]) { index += int_pow(2, state_index); }
-    }
-    aggregates[index]++;
-  }
+  auto aggregates = aggregate_state(state);
+
   for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) {
     if (aggregates[subset] > 0) {
       std::cout << prefix;

@@ -43,10 +43,11 @@ int main(int argc, char** argv) {
     std::cout << "This program takes 3 arguments: population size, number of time steps and seed." << std::endl;
     return 1;
   }
-  std::random_device rd;
   size_t seed = static_cast<size_t>(atoi(argv[3]));
-  std::default_random_engine random_source_1{ seed++ };
   const person_t population_size = static_cast<person_t>(atoi(argv[1]));
+  const epidemic_time_t epidemic_time = static_cast<epidemic_time_t>(atof(argv[2]));
+  std::random_device rd;
+  std::default_random_engine random_source_1{ seed++ };
 
   auto always_true = [](const auto &param __attribute__((unused)),
                        std::default_random_engine& rng __attribute__((unused))) { return (true); };
@@ -70,10 +71,16 @@ int main(int argc, char** argv) {
 
   std::vector<std::function<bool(const any_sir_event &, std::default_random_engine&)>> filters{always_true, sometimes_true, always_false};
 
-  run_simulation<sir_epidemic_states, any_sir_event>(
+  auto simulation = run_simulation<sir_epidemic_states, any_sir_event>(
 							   initial_conditions,
 							   std::array<double, 2>({ beta, gamma }),
-							   filters
+							   filters,
+							   epidemic_time,
+							   seed
 							   );
+
+  for(auto state : simulation) {
+    print(state, "current : ");
+  }
 
 }
