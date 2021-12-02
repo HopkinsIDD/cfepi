@@ -107,6 +107,20 @@ struct aggregated_sir_state {
 };
 
 template<typename states_t>
+bool is_simple(const aggregated_sir_state<states_t>& state) {
+  size_t pow_idx = 1;
+  bool rc = true;
+  for (auto idx : std::views::iota(1UL, int_pow(2, std::size(states_t{})) + 1)) {
+    if (idx != pow_idx) {
+      rc = rc && state.potential_state_counts[idx] == 0;
+    } else {
+      pow_idx *= 2;
+    }
+  }
+  return(rc);
+}
+
+template<typename states_t>
 sir_state<states_t> default_state(
 				  const typename states_t::state base_state,
 				  const typename states_t::state infected_state,
@@ -262,7 +276,7 @@ struct any_sir_event_set_affected_people {
 };
 
 struct any_sir_event_print {
-  std::string &prefix;
+  std::string prefix;
   void operator()(const auto &x) const {
     std::cout << prefix;
     std::cout << "time " << x.time << " ";
