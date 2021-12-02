@@ -40,7 +40,7 @@ const auto run_simulation(
       return (filtration_setup{current_state, x});
     }));
 
-  std::vector<sir_state<states_t>> results;
+  std::vector results{{aggregate_state(current_state)}};
   results.reserve(static_cast<size_t>(epidemic_duration));
 
   for (epidemic_time_t t = 0UL; t < epidemic_duration; ++t) {
@@ -102,8 +102,8 @@ const auto run_simulation(
 
       ranges::for_each(setups_by_filter, [&t](auto &x) {
 	x.current_state = x.states_entered || x.states_remained;
+	// auto tmp = aggregate_state(x.current_state);
 	x.current_state.time = t;
-	print(x.current_state);
       });
     };
 
@@ -116,7 +116,7 @@ const auto run_simulation(
     cfor::constexpr_for<0, std::variant_size_v<any_event>, 1>(seeded_single_event_type_run);
 
     ranges::for_each(setups_by_filter, [&results](filtration_setup<states_t, any_event>& x){
-      results.push_back(x.current_state);
+      results.push_back(aggregate_state(x.current_state));
     });
   }
 

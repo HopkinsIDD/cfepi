@@ -30,6 +30,13 @@ template<typename T, size_t i> using repeat = T;
 typedef float epidemic_time_t;
 typedef size_t person_t;
 
+constexpr size_t int_pow(size_t base, size_t exponent) {
+  if (exponent == 0) { return 1; }
+  if (exponent == 1) { return base; }
+  return (exponent % 2) == 0 ? int_pow(base, exponent / 2) * int_pow(base, exponent / 2)
+                             : int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
+}
+
 
 /*******************************************************************************
  * SIR Helper Type Definitions                                                 *
@@ -55,12 +62,11 @@ std::is_enum<typename enum_type::state>::value;
 template<typename states_t>
 requires is_sized_enum<states_t>
 struct sir_state {
-  person_t population_size = 0;
   std::vector<std::bitset<std::size(states_t{})> > potential_states;
   epidemic_time_t time = -1;
   sir_state() noexcept = default;
-  sir_state(person_t _population_size) noexcept : population_size(_population_size) {
-    potential_states.resize(population_size);
+  sir_state(person_t _population_size) noexcept {
+    potential_states.resize(_population_size);
   }
   sir_state operator||(const sir_state &other) const {
     sir_state rc{*this};
@@ -85,6 +91,19 @@ struct sir_state {
       i.reset();
     }
   }
+};
+
+template<typename states_t>
+struct aggregated_sir_state {
+  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> potential_state_counts;
+  epidemic_time_t time = -1;
+  aggregated_sir_state() = default;
+  aggregated_sir_state(
+		       const std::array<size_t, int_pow(2, std::size(states_t{})) + 1> &_potential_state_counts,
+		       epidemic_time_t _time)
+    : potential_state_counts(_potential_state_counts), time(_time){};
+  aggregated_sir_state(const sir_state<states_t> &sir_state)
+    : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time) {};
 };
 
 template<typename states_t>
@@ -381,15 +400,9 @@ const auto transform_array_to_sir_event_l = [](const auto &x) {
   return (rc);
 };
 
-constexpr size_t int_pow(size_t base, size_t exponent) {
-  if (exponent == 0) { return 1; }
-  if (exponent == 1) { return base; }
-  return (exponent % 2) == 0 ? int_pow(base, exponent / 2) * int_pow(base, exponent / 2)
-                             : int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
-}
 
 template<typename states_t>
-std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregate_state(const sir_state<states_t>& state) {
+std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(const sir_state<states_t>& state) {
   std::array<size_t, int_pow(2, std::size(states_t{})) + 1> rc;
   for (auto& elem : rc) {
     elem = 0;
@@ -401,32 +414,40 @@ std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregate_state(const 
 }
 
 template<typename states_t>
+aggregated_sir_state<states_t> aggregate_state(const sir_state<states_t>& state) {
+  return(aggregated_sir_state{state});
+}
+
+template<typename states_t>
 void print(const sir_state<states_t> &state, const std::string &prefix = "", bool aggregate = true) {
-  std::cout << prefix << "Possible states at time ";
-  std::cout << state.time << std::endl;
-  // return;
-  if (!aggregate) {
-    int person_counter = 0;
-    for (auto possible_states : state.potential_states) {
-      std::cout << prefix << person_counter << "(";
-      std::cout << possible_states << "\n";
-      std::cout << " )" << std::endl;
-      ++person_counter;
-    }
+  if (aggregate) {
+    print(aggregate_state(state), prefix);
     return;
   }
+  std::cout << prefix << "Possible states at time ";
+  std::cout << state.time << std::endl;
+  int person_counter{0};
+  for (auto possible_states : state.potential_states) {
+    std::cout << prefix << person_counter << "(";
+    std::cout << possible_states << "\n";
+    std::cout << " )" << std::endl;
+    ++person_counter;
+  }
+}
 
-  auto aggregates = aggregate_state(state);
-
+template<typename states_t>
+void print(const aggregated_sir_state<states_t> &aggregates, const std::string &prefix = "") {
+  std::cout << prefix << "Possible states at time ";
+  std::cout << aggregates.time << "\n";
   for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) {
-    if (aggregates[subset] > 0) {
+    if (aggregates.potential_state_counts[subset] > 0) {
       std::cout << prefix;
       for (size_t compartment = 0; compartment < std::size(states_t{}); ++compartment) {
         if ((subset % int_pow(2, compartment + 1) / int_pow(2, compartment)) == 1) {
           std::cout << compartment << " ";
         }
       }
-      std::cout << " : " << aggregates[subset] << std::endl;
+      std::cout << " : " << aggregates.potential_state_counts[subset] << std::endl;
     }
   }
 }
