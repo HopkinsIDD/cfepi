@@ -2,20 +2,39 @@
 #include <cfepi/sample_view.hpp>
 #include <range/v3/all.hpp>
 
+namespace cfepi {
+/*!
+ * \class
+ * \brief Data structure for storing a single world's worth of data.
+ * Includes the current state of the system, pending changes to that state, and filter functions
+ * needed to update that state.
+ */
 template<typename states_t, typename any_event> struct filtration_setup {
+  //! \brief The current state of the world
   sir_state<states_t> current_state;
+  //! \brief The states that are pending entry since reset
   sir_state<states_t> states_entered;
+  //! \brief The states that have not been left since reset
   sir_state<states_t> states_remained;
+  //! \brief A filter to use to apply only some events. Returns true if event should be kept
   std::function<bool(const any_event &, std::default_random_engine &)> filter_;
+  /*! \brief Construct from an initial state and a filter. This is the standard constructor*/
   filtration_setup(const sir_state<states_t> &initial_state,
     const std::function<bool(const any_event &, std::default_random_engine &)> &filter)
     : current_state(initial_state), states_entered(initial_state), states_remained(initial_state),
       filter_(filter) {
     states_entered.reset();
   };
-  void reset() {
+  /*! \brief Apply pending changes to current state, then clear them */
+  void apply() {
     current_state.reset();
     current_state = states_entered || states_remained;
+    states_entered.reset();
+    states_remained = current_state;
+  };
+  /*! \brief Clear pending changes */
+  void reset() {
+    current_state.reset();
     states_entered.reset();
     states_remained = current_state;
   };
@@ -23,12 +42,18 @@ template<typename states_t, typename any_event> struct filtration_setup {
 
 /*!
  * \brief Run a counterfactual simulation
- * Run a counterfactual simulation.
+ * Run a counterfactual simulation with a different filter for each world.
  * @param initial_conditions An sir_state to use as the state of the population at time 0.
- * @param event probabilities An array with one element for each event containing the probability of that event.
- * @param filters A vector of filters containing one filter for each scenario.  A filter is a function which takes events and a random number generator and returns true if that event should be kept or false if that event should be discarded.
- * @param epidemic_duration The number of time steps to run the model for (running the model past the last useful day will not dramatically impact runtime)
- * @param simulation_seed Random seed.  Different values will provide different simulations, the same values will provide the same simulations
+ * @param event probabilities An array with one element for each event containing the probability of
+ * that event.
+ * @param filters A vector of filters containing one filter for each scenario.  A filter is a
+ * function which takes events and a random number generator and returns true if that event should
+ * be kept or false if that event should be discarded.
+ * @param epidemic_duration The number of time steps to run the model for (running the model past
+ * the last useful day will not dramatically impact runtime)
+ * @param simulation_seed Random seed.  Different values will provide different simulations, the
+ * same values will provide the same simulations
+ * @return A vector of aggregated states, one for each time step.
  */
 template<typename states_t, typename any_event>
 const auto run_simulation(const sir_state<states_t> &initial_conditions,
@@ -60,13 +85,12 @@ const auto run_simulation(const sir_state<states_t> &initial_conditions,
       [](const auto &x, const auto &y) { return (x || y); },
       // [](const auto &x) { return (std::get<0>(x)); });
       [](const auto &x) { return (x.current_state); });
-    ranges::for_each(setups_by_filter, [](auto &x) { x.reset(); });
+    ranges::for_each(setups_by_filter, [](auto &x) { x.apply(); });
 
 
     const auto single_event_type_run =
       [&t, &setups_by_filter, &random_source_1, &current_state, &event_probabilities](
         const auto event_index, const size_t seed) {
-
         // ranges::for_each(setups_by_filter, [](auto &x) { x.reset(); });
 
         random_source_1.seed(seed);
@@ -120,3 +144,5 @@ const auto run_simulation(const sir_state<states_t> &initial_conditions,
 
   return (results);
 }
+
+}// namespace cfepi

@@ -3,9 +3,9 @@
 #include <cfepi/sir.hpp>
 TEST_CASE("Repeat works","[repeat]")
 {
-  STATIC_REQUIRE(std::is_same<repeat<int,1>, int>::value );
-  STATIC_REQUIRE(std::is_same<repeat<int,2>, int>::value );
-  STATIC_REQUIRE(std::is_same<repeat<int,3>, int>::value );
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int,1>, int>::value );
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int,2>, int>::value );
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int,3>, int>::value );
 }
 
 TEST_CASE("Sized Enum concept works", "[sir_state]")
@@ -19,12 +19,12 @@ TEST_CASE("Sized Enum concept works", "[sir_state]")
     }
   };
 
-  constexpr bool simple_enum_is_sized_enum = is_sized_enum<simple_enum>;
+  constexpr bool simple_enum_is_sized_enum = cfepi::is_sized_enum<simple_enum>;
   STATIC_REQUIRE(simple_enum_is_sized_enum);
 
-  auto x = sir_state<simple_enum>{1UL}.potential_states[0];
+  auto x = cfepi::sir_state<simple_enum>{1UL}.potential_states[0];
   STATIC_REQUIRE(std::is_same<decltype(x),std::bitset<simple_enum::state_count> >::value);
-  sir_state<simple_enum> test_state{1UL};
+  cfepi::sir_state<simple_enum> test_state{1UL};
   test_state.potential_states[0][simple_enum::D] = true;
   test_state.potential_states[0][simple_enum::D] = true;
 }

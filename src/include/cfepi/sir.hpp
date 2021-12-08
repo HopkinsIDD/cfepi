@@ -21,11 +21,14 @@
 #ifndef __SIR_H_
 #define __SIR_H_
 
+namespace cfepi {
 /*******************************************************************************
  * Generic functions                                                           *
  *******************************************************************************/
 
-template<typename T, size_t i> using repeat = T;
+  namespace detail {
+    template<typename T, size_t i> using repeat = T;
+  }
 
 typedef float epidemic_time_t;
 typedef size_t person_t;
@@ -483,7 +486,7 @@ template<
   size_t... precondition_index
   >
 struct single_type_event_generator<states_t, any_event, event_index, std::index_sequence<precondition_index...>> {
-  std::tuple<repeat<std::vector<size_t>, event_size_by_event_index<any_event, precondition_index>::value>...>
+  std::tuple<detail::repeat<std::vector<size_t>, event_size_by_event_index<any_event, precondition_index>::value>...>
     vectors;
   auto cartesian_range() {
     // return(std::apply(apply_lambda, vectors));
@@ -536,5 +539,7 @@ struct single_time_event_generator<N, std::index_sequence<event_index...>> {
             cartesian_multiproduct<event_index>(initial_conditions)...){}
 };
 */
+
+}
 
 #endif
