@@ -21,6 +21,15 @@ template<typename states_t, typename any_event> struct filtration_setup {
   };
 };
 
+/*!
+ * \brief Run a counterfactual simulation
+ * Run a counterfactual simulation.
+ * @param initial_conditions An sir_state to use as the state of the population at time 0.
+ * @param event probabilities An array with one element for each event containing the probability of that event.
+ * @param filters A vector of filters containing one filter for each scenario.  A filter is a function which takes events and a random number generator and returns true if that event should be kept or false if that event should be discarded.
+ * @param epidemic_duration The number of time steps to run the model for (running the model past the last useful day will not dramatically impact runtime)
+ * @param simulation_seed Random seed.  Different values will provide different simulations, the same values will provide the same simulations
+ */
 template<typename states_t, typename any_event>
 const auto run_simulation(const sir_state<states_t> &initial_conditions,
   const std::array<double, std::variant_size_v<any_event>> event_probabilities,
@@ -57,7 +66,6 @@ const auto run_simulation(const sir_state<states_t> &initial_conditions,
     const auto single_event_type_run =
       [&t, &setups_by_filter, &random_source_1, &current_state, &event_probabilities](
         const auto event_index, const size_t seed) {
-        std::cout << "Single Event Type Run Called\n";
 
         // ranges::for_each(setups_by_filter, [](auto &x) { x.reset(); });
 

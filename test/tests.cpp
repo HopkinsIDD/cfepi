@@ -2,18 +2,30 @@
 
 
 #include <cfepi/sir.hpp>
-#include <cfepi/sample_view.hpp>
+#include <cfepi/modeling.hpp>
 #include <iostream>
 #include <range/v3/all.hpp>
 
+/*** TEST OF SIR ***/
+
 struct sir_epidemic_states {
 public:
-  enum state {S,I,R,n_compartments};
-  constexpr auto size() const {return (static_cast<size_t>(n_compartments));}
+  enum state { S, I, R, n_compartments };
+  constexpr auto size() const { return (static_cast<size_t>(n_compartments)); }
 };
 
-struct infection_event : public interaction_event<sir_epidemic_states> {
-  constexpr infection_event(person_t p1, person_t p2, epidemic_time_t _time) noexcept
+struct sir_recovery_event : public transition_event<sir_epidemic_states> {
+  constexpr sir_recovery_event(person_t p1, epidemic_time_t _time) noexcept
+    : transition_event<sir_epidemic_states>(p1,
+      _time,
+      { std::bitset<std::size(sir_epidemic_states{})>{
+        1 << sir_epidemic_states::I} },
+      sir_epidemic_states::R){};
+  constexpr sir_recovery_event() noexcept : sir_recovery_event(0UL, -1) {};
+};
+
+struct sir_infection_event : public interaction_event<sir_epidemic_states> {
+  constexpr sir_infection_event(person_t p1, person_t p2, epidemic_time_t _time) noexcept
     : interaction_event<sir_epidemic_states>(p1,
       p2,
       _time,
@@ -22,20 +34,21 @@ struct infection_event : public interaction_event<sir_epidemic_states> {
       { std::bitset<std::size(sir_epidemic_states{})>{
         1 << sir_epidemic_states::I} },
       sir_epidemic_states::I){};
-  constexpr infection_event() noexcept : infection_event(0UL, 0UL, -1) {};
+  constexpr sir_infection_event() noexcept : sir_infection_event(0UL, 0UL, -1) {};
 };
 
-struct recovery_event : public transition_event<sir_epidemic_states> {
-  constexpr recovery_event(person_t p1, epidemic_time_t _time) noexcept
-    : transition_event<sir_epidemic_states>(p1,
-      _time,
-      { std::bitset<std::size(sir_epidemic_states{})>{
-        1 << sir_epidemic_states::I} },
-      sir_epidemic_states::R){};
-  constexpr recovery_event() noexcept : recovery_event(0UL, -1) {};
-};
+typedef std::variant<sir_recovery_event, sir_infection_event> any_sir_event;
 
-typedef std::variant<recovery_event, infection_event> any_sir_event;
+TEST_CASE("SIR model works modularly", "[sir_generator]") {
+  person_t population_size = 10000;
+  auto initial_conditions = default_state<sir_epidemic_states>(
+    sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);
+  auto always_true = [](const auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return (true); };
+  run_simulation<sir_epidemic_states, any_sir_event>(initial_conditions,
+    std::array<double, 2>({ .1, 2. / static_cast<double>(population_size) }),
+    { always_true, always_true });
+}
 
 TEST_CASE("Single Time Event Generator works as expected") {
   const person_t population_size = 5;
@@ -50,7 +63,7 @@ TEST_CASE("Single Time Event Generator works as expected") {
   const person_t one = 1ul;
   for (auto val : event_range) {
     ++counter;
-    // print(val, "TEST");
+    // any_sir_event_print{"TEST"}(val);
     REQUIRE(val.affected_people[one] == 0ul);
     REQUIRE(val.affected_people[zero] == counter);
   }
@@ -184,12 +197,12 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
 	  any_event_apply_left_states{std::get<2>(setups_by_filter[std::get<0>(x)])}(std::get<1>(x));
 	}
       });
-      std::cout << counter << std::endl;
+      // std::cout << counter << std::endl;
 
       ranges::for_each(setups_by_filter, [& t](auto&x){
         std::get<0>(x) = std::get<1>(x) || std::get<2>(x);
         std::get<0>(x).time = t;
-        print(std::get<0>(x));
+        // print(std::get<0>(x));
       });
     };
 
@@ -199,8 +212,55 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
 
 }
 
-TEST_CASE("Enumerated type works", "") {
-  // named_type<"Hello"> test;
-  // std::cout << S << std::endl;
-  // enumerated_type<"S","E","I","R"> test;
+/*** TEST OF SEIR ***/
+
+struct seir_epidemic_states {
+public:
+  enum state { S, E, I, R, n_compartments };
+  constexpr auto size() const { return (static_cast<size_t>(n_compartments)); }
+};
+
+struct seir_exposure_event : public interaction_event<seir_epidemic_states> {
+  constexpr seir_exposure_event(person_t p1, person_t p2, epidemic_time_t _time) noexcept
+    : interaction_event<seir_epidemic_states>(p1,
+      p2,
+      _time,
+      { std::bitset<std::size(seir_epidemic_states{})>{
+        1 << seir_epidemic_states::S} },
+      { std::bitset<std::size(seir_epidemic_states{})>{
+        1 << seir_epidemic_states::I} },
+      seir_epidemic_states::E){};
+  constexpr seir_exposure_event() noexcept : seir_exposure_event(0UL, 0UL, -1) {};
+};
+
+struct seir_recovery_event : public transition_event<seir_epidemic_states> {
+  constexpr seir_recovery_event(person_t p1, epidemic_time_t _time) noexcept
+    : transition_event<seir_epidemic_states>(p1,
+      _time,
+      { std::bitset<std::size(seir_epidemic_states{})>{
+        1 << seir_epidemic_states::I} },
+      seir_epidemic_states::R){};
+  constexpr seir_recovery_event() noexcept : seir_recovery_event(0UL, -1) {};
+};
+
+struct seir_infection_event : public transition_event<seir_epidemic_states> {
+  constexpr seir_infection_event(person_t p1, epidemic_time_t _time) noexcept
+    : transition_event<seir_epidemic_states>(p1,
+      _time,
+      { std::bitset<std::size(seir_epidemic_states{})>{
+        1 << seir_epidemic_states::E} },
+      seir_epidemic_states::I){};
+  constexpr seir_infection_event() noexcept : seir_infection_event(0UL, -1) {};
+};
+
+typedef std::variant<seir_recovery_event, seir_infection_event, seir_exposure_event> any_seir_event;
+
+TEST_CASE("SEIR model works modularly", "[sir_generator]") {
+  person_t population_size = 10000;
+  auto initial_conditions = default_state<seir_epidemic_states>(
+    seir_epidemic_states::S, seir_epidemic_states::I, population_size, 1UL);
+  auto always_true = [](const auto &param __attribute__((unused)), std::default_random_engine& rng __attribute__((unused))) { return (true); };
+  run_simulation<seir_epidemic_states, any_seir_event>(initial_conditions,
+    std::array<double, 3>({ .1, .8, 2. / static_cast<double>(population_size) }),
+    { always_true, always_true });
 }
