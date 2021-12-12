@@ -36,7 +36,7 @@ namespace detail {
   }
 }// namespace detail
 
-}
+}// namespace cfepi
 
 namespace cfepi {
 
@@ -50,17 +50,16 @@ typedef size_t person_t;
  * SIR Helper Type Definitions                                                 *
  *******************************************************************************/
 
-  //! @defgroup is_sized_enum
-  //! @ingroup generalconcepts
-  //! @{
+//! @defgroup is_sized_enum
+//! @ingroup generalconcepts
+//! @{
 template<typename enum_type>
 concept is_sized_enum = requires(enum_type e) {
   // { e.state };
   { std::size(e) } -> std::unsigned_integral;
-} &&
-std::default_initializable<enum_type> &&
-std::is_enum<typename enum_type::state>::value;
-  //! @}
+}
+&&std::default_initializable<enum_type> &&std::is_enum<typename enum_type::state>::value;
+//! @}
 
 /*******************************************************************************
  * SIR State Definition                                                        *
@@ -74,52 +73,46 @@ std::is_enum<typename enum_type::state>::value;
 template<typename states_t>
 requires is_sized_enum<states_t>
 struct sir_state {
-  std::vector<std::bitset<std::size(states_t{})> > potential_states;
+  std::vector<std::bitset<std::size(states_t{})>> potential_states;
   epidemic_time_t time = -1;
   sir_state() noexcept = default;
-  sir_state(person_t _population_size) noexcept {
-    potential_states.resize(_population_size);
-  }
+  sir_state(person_t _population_size) noexcept { potential_states.resize(_population_size); }
   sir_state operator||(const sir_state &other) const {
-    sir_state rc{*this};
+    sir_state rc{ *this };
     if (rc.potential_states.size() != other.potential_states.size()) {
       throw "Cannot compare sir_states with different sizes";
     }
 
-    std::ranges::transform(
-			   this->potential_states,
-			   other.potential_states,
-			   std::begin(rc.potential_states),
-			   std::bit_or<>(),
-			   {},
-			   {}
-			   );
+    std::ranges::transform(this->potential_states,
+      other.potential_states,
+      std::begin(rc.potential_states),
+      std::bit_or<>(),
+      {},
+      {});
     return (rc);
   }
 
   void reset() {
     for (auto &i : potential_states) {
-      //for (auto &j : i) { j = false; }
+      // for (auto &j : i) { j = false; }
       i.reset();
     }
   }
 };
 
-template<typename states_t>
-struct aggregated_sir_state {
+template<typename states_t> struct aggregated_sir_state {
   std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> potential_state_counts;
   epidemic_time_t time = -1;
   aggregated_sir_state() = default;
-  aggregated_sir_state(
-		       const std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> &_potential_state_counts,
-		       epidemic_time_t _time)
+  aggregated_sir_state(const std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1>
+                         &_potential_state_counts,
+    epidemic_time_t _time)
     : potential_state_counts(_potential_state_counts), time(_time){};
   aggregated_sir_state(const sir_state<states_t> &sir_state)
-    : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time) {};
+    : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time){};
 };
 
-template<typename states_t>
-bool is_simple(const aggregated_sir_state<states_t>& state) {
+template<typename states_t> bool is_simple(const aggregated_sir_state<states_t> &state) {
   size_t pow_idx = 1;
   bool rc = true;
   for (auto idx : std::views::iota(1UL, detail::int_pow(2, std::size(states_t{})) + 1)) {
@@ -129,17 +122,15 @@ bool is_simple(const aggregated_sir_state<states_t>& state) {
       pow_idx *= 2;
     }
   }
-  return(rc);
+  return (rc);
 }
 
 template<typename states_t>
-sir_state<states_t> default_state(
-				  const typename states_t::state base_state,
-				  const typename states_t::state infected_state,
-				  const person_t population_size = 10,
-				  const person_t initial_infected = 1
-				  ) {
-  sir_state<states_t> rc{population_size};
+sir_state<states_t> default_state(const typename states_t::state base_state,
+  const typename states_t::state infected_state,
+  const person_t population_size = 10,
+  const person_t initial_infected = 1) {
+  sir_state<states_t> rc{ population_size };
   auto base_range = std::ranges::views::iota(population_size * 0, population_size);
   for (auto elem : base_range | std::ranges::views::take(initial_infected)) {
     rc.potential_states[elem][infected_state] = true;
@@ -169,35 +160,36 @@ template<typename states_t, size_t size> struct sir_event {
   sir_event(const sir_event &) = default;
 };
 
-template<typename states_t>
-struct interaction_event : public sir_event<states_t, 2> {
+template<typename states_t> struct interaction_event : public sir_event<states_t, 2> {
   using sir_event<states_t, 2>::time;
   using sir_event<states_t, 2>::affected_people;
   using sir_event<states_t, 2>::preconditions;
   using sir_event<states_t, 2>::postconditions;
   interaction_event(const interaction_event &) = default;
-  constexpr interaction_event(
-		  person_t p1,
-		  person_t p2,
-		  epidemic_time_t _time,
-		  const std::bitset<std::size(states_t{})> preconditions_for_first_person,
-		  const std::bitset<std::size(states_t{})> preconditions_for_second_person,
-		  const typename states_t::state result_state
-		  ) {
+  constexpr interaction_event(person_t p1,
+    person_t p2,
+    epidemic_time_t _time,
+    const std::bitset<std::size(states_t{})> preconditions_for_first_person,
+    const std::bitset<std::size(states_t{})> preconditions_for_second_person,
+    const typename states_t::state result_state) {
     time = _time;
     affected_people = { p1, p2 };
     preconditions = { preconditions_for_first_person, preconditions_for_second_person };
     postconditions[0] = result_state;
   }
   constexpr interaction_event(
-			    const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
-			    const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
-			    const typename states_t::state result_state
-			      ) noexcept : interaction_event(0UL,0UL,-1,preconditions_for_first_person, preconditions_for_second_person, result_state) {};
+    const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
+    const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
+    const typename states_t::state result_state) noexcept
+    : interaction_event(0UL,
+      0UL,
+      -1,
+      preconditions_for_first_person,
+      preconditions_for_second_person,
+      result_state){};
 };
 
-template<typename states_t>
-struct transition_event : public sir_event<states_t, 1> {
+template<typename states_t> struct transition_event : public sir_event<states_t, 1> {
   using sir_event<states_t, 1>::time;
   using sir_event<states_t, 1>::affected_people;
   using sir_event<states_t, 1>::preconditions;
@@ -212,10 +204,9 @@ struct transition_event : public sir_event<states_t, 1> {
     preconditions = { _preconditions };
     postconditions[0] = result_state;
   }
-  constexpr transition_event(
-			    const std::array<bool, std::size(states_t{})> _preconditions,
-			    const typename states_t::state result_state
-			     ) noexcept : transition_event(0,-1,_preconditions,result_state) {}
+  constexpr transition_event(const std::array<bool, std::size(states_t{})> _preconditions,
+    const typename states_t::state result_state) noexcept
+    : transition_event(0, -1, _preconditions, result_state) {}
 };
 
 template<typename states_t, size_t N, typename = std::make_index_sequence<N>>
@@ -227,7 +218,8 @@ struct sir_event_constructor;
 
 
 template<typename any_event, size_t event_index> struct event_size_by_event_index {
-  constexpr static const size_t value = std::variant_alternative_t<event_index, any_event>{}.affected_people.size();
+  constexpr static const size_t value =
+    std::variant_alternative_t<event_index, any_event>{}.affected_people.size();
 };
 
 struct any_sir_event_print {
@@ -241,8 +233,7 @@ struct any_sir_event_print {
   }
 };
 
-template<typename any_event, typename states_t>
-struct any_state_check_preconditions {
+template<typename any_event, typename states_t> struct any_state_check_preconditions {
   sir_state<states_t> &this_sir_state;
   bool operator()(const auto x) const {
     auto rc = true;
@@ -261,8 +252,7 @@ struct any_state_check_preconditions {
   }
 };
 
-template<typename states_t>
-struct any_event_apply_entered_states {
+template<typename states_t> struct any_event_apply_entered_states {
   sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
@@ -278,8 +268,7 @@ struct any_event_apply_entered_states {
   }
 };
 
-template<typename states_t>
-struct any_event_apply_left_states {
+template<typename states_t> struct any_event_apply_left_states {
   sir_state<states_t> &this_sir_state;
   void operator()(const auto &x) const {
     this_sir_state.time = x.time;
@@ -314,7 +303,7 @@ const auto get_precondition_satisfying_indices(const sir_state<states_t> &curren
   return (cor3ntin::rangesnext::to<std::vector>(
     cor3ntin::rangesnext::enumerate(current_state.potential_states)
     | std::ranges::views::filter(
-				 check_event_precondition_enumerated<states_t, any_event, event_index, precondition_index>)
+      check_event_precondition_enumerated<states_t, any_event, event_index, precondition_index>)
     | std::ranges::views::transform([](const auto &x) { return (x.index); })));
 }
 
@@ -327,31 +316,30 @@ const auto transform_array_to_sir_event_l = [](const auto &x) {
 
 
 template<typename states_t>
-std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(const sir_state<states_t>& state) {
+std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(
+  const sir_state<states_t> &state) {
   std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> rc;
-  for (auto& elem : rc) {
-    elem = 0;
-  }
-  for (auto possible_states : state.potential_states) {
-    rc[possible_states.to_ulong()] += 1;
-  }
-  return(rc);
+  for (auto &elem : rc) { elem = 0; }
+  for (auto possible_states : state.potential_states) { rc[possible_states.to_ulong()] += 1; }
+  return (rc);
 }
 
 template<typename states_t>
-aggregated_sir_state<states_t> aggregate_state(const sir_state<states_t>& state) {
-  return(aggregated_sir_state{state});
+aggregated_sir_state<states_t> aggregate_state(const sir_state<states_t> &state) {
+  return (aggregated_sir_state{ state });
 }
 
 template<typename states_t>
-void print(const sir_state<states_t> &state, const std::string &prefix = "", bool aggregate = true) {
+void print(const sir_state<states_t> &state,
+  const std::string &prefix = "",
+  bool aggregate = true) {
   if (aggregate) {
     print(aggregate_state(state), prefix);
     return;
   }
   std::cout << prefix << "Possible states at time ";
   std::cout << state.time << std::endl;
-  int person_counter{0};
+  int person_counter{ 0 };
   for (auto possible_states : state.potential_states) {
     std::cout << prefix << person_counter << "(";
     std::cout << possible_states << "\n";
@@ -379,34 +367,32 @@ void print(const aggregated_sir_state<states_t> &aggregates, const std::string &
 
 const auto apply_lambda = [](const auto &...x) { return cor3ntin::rangesnext::product(x...); };
 
-template<
-  typename states_t,
+template<typename states_t,
   typename any_event,
   size_t event_index,
-  typename = std::make_index_sequence<event_size_by_event_index<any_event, event_index>::value>
-  >
+  typename = std::make_index_sequence<event_size_by_event_index<any_event, event_index>::value>>
 struct single_type_event_generator;
 
-template<
-  typename states_t,
-  typename any_event,
-  size_t event_index,
-  size_t... precondition_index
-  >
-struct single_type_event_generator<states_t, any_event, event_index, std::index_sequence<precondition_index...>> {
-  std::tuple<detail::repeat<std::vector<size_t>, event_size_by_event_index<any_event, precondition_index>::value>...>
+template<typename states_t, typename any_event, size_t event_index, size_t... precondition_index>
+struct single_type_event_generator<states_t,
+  any_event,
+  event_index,
+  std::index_sequence<precondition_index...>> {
+  std::tuple<detail::repeat<std::vector<size_t>,
+    event_size_by_event_index<any_event, precondition_index>::value>...>
     vectors;
   auto cartesian_range() {
     // return(std::apply(apply_lambda, vectors));
     return (std::apply(cor3ntin::rangesnext::product, vectors));
   }
   auto event_range() {
-    return (
-	    std::ranges::transform_view(cartesian_range(), transform_array_to_sir_event_l<any_event, event_index>));
+    return (std::ranges::transform_view(
+      cartesian_range(), transform_array_to_sir_event_l<any_event, event_index>));
   }
   explicit single_type_event_generator(const sir_state<states_t> &current_state)
     : vectors{ std::make_tuple(
-			       get_precondition_satisfying_indices<states_t, any_event, event_index, precondition_index>(current_state)...) } {}
+      get_precondition_satisfying_indices<states_t, any_event, event_index, precondition_index>(
+        current_state)...) } {}
 };
 
 /*
@@ -415,7 +401,8 @@ struct any_event_type_range;
 
 template<typename states_t, typename T, size_t N, size_t... event_index>
 struct any_event_type_range<states_t, T, N, std::index_sequence<event_index...>>
-  : std::variant<decltype(single_type_event_generator<states_t, event_index>().event_range())...> {};
+  : std::variant<decltype(single_type_event_generator<states_t, event_index>().event_range())...>
+{};
 
 template <size_t N = number_of_event_types,
           typename = std::make_index_sequence<N>>

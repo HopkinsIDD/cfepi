@@ -37,7 +37,7 @@ typedef std::variant<infection_event, recovery_event> any_sir_event;
 // template<> struct event_by_index<any_sir_event, 1> : recovery_event {};
 // template<> struct event_by_index<any_sir_event, 0> : infection_event {};
 
-}
+}// namespace detail
 
 using namespace detail;
 
