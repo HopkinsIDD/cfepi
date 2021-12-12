@@ -8,6 +8,7 @@
 
 // TEST OF SIR
 
+namespace detail {
 struct sir_epidemic_states {
 public:
   enum state { S, I, R, n_compartments };
@@ -263,4 +264,5 @@ TEST_CASE("SEIR model works modularly", "[sir_generator]") {
   cfepi::run_simulation<seir_epidemic_states, any_seir_event>(initial_conditions,
     std::array<double, 3>({ .1, .8, 2. / static_cast<double>(population_size) }),
     { always_true, always_true });
+}
 }

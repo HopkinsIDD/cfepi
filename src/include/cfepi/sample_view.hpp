@@ -10,7 +10,7 @@ namespace probability {
 // Replace me with the real concept when available
 template<typename E>
 concept uniform_random_number_engine = std::uniform_random_bit_generator<E> && requires(E e,
-  E::result_type s,
+  typename E::result_type s,
   E &&v,
   const E x,
   const E y) {
@@ -37,7 +37,7 @@ private:
     using Base = constify<R>;
     using difference_type = std::ranges::range_difference_t<Base>;
     // using value_type = Base::value_type;
-    using value_type = std::ranges::iterator_t<Base>::value_type;
+    using value_type = typename std::ranges::iterator_t<Base>::value_type;
 
     std::ranges::iterator_t<Base> current_{};
     std::ranges::sentinel_t<Base> end_{};

@@ -39,7 +39,12 @@ template<typename states_t, typename any_event> struct filtration_setup {
     states_remained = current_state;
   };
 };
+}// namespace cfepi
 
+
+namespace cfepi {
+//! \defgroup Model_Construction
+//! @{
 /*!
  * \brief Run a counterfactual simulation
  * Run a counterfactual simulation with a different filter for each world.
@@ -56,7 +61,7 @@ template<typename states_t, typename any_event> struct filtration_setup {
  * @return A vector of aggregated states, one for each time step.
  */
 template<typename states_t, typename any_event>
-const auto run_simulation(const sir_state<states_t> &initial_conditions,
+auto run_simulation(const sir_state<states_t> &initial_conditions,
   const std::array<double, std::variant_size_v<any_event>> event_probabilities,
   const std::vector<std::function<bool(const any_event &, std::default_random_engine &)>> filters,
   const epidemic_time_t epidemic_duration = 365,
@@ -144,5 +149,6 @@ const auto run_simulation(const sir_state<states_t> &initial_conditions,
 
   return (results);
 }
+//@}
 
 }// namespace cfepi

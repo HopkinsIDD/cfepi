@@ -21,30 +21,38 @@
 #ifndef __SIR_H_
 #define __SIR_H_
 
+
+//! \defgroup General_Purpose_Code
 namespace cfepi {
-/*******************************************************************************
- * Generic functions                                                           *
- *******************************************************************************/
 
-  namespace detail {
-    template<typename T, size_t i> using repeat = T;
+namespace detail {
+  template<typename T, size_t i> using repeat = T;
+  constexpr size_t int_pow(size_t base, size_t exponent) {
+    if (exponent == 0) { return 1; }
+    if (exponent == 1) { return base; }
+    return (exponent % 2) == 0
+             ? int_pow(base, exponent / 2) * detail::int_pow(base, exponent / 2)
+             : int_pow(base, exponent / 2) * detail::int_pow(base, exponent / 2) * base;
   }
+}// namespace detail
 
-typedef float epidemic_time_t;
-typedef size_t person_t;
-
-constexpr size_t int_pow(size_t base, size_t exponent) {
-  if (exponent == 0) { return 1; }
-  if (exponent == 1) { return base; }
-  return (exponent % 2) == 0 ? int_pow(base, exponent / 2) * int_pow(base, exponent / 2)
-                             : int_pow(base, exponent / 2) * int_pow(base, exponent / 2) * base;
 }
+
+namespace cfepi {
+
+// REMOVE ME
+typedef float epidemic_time_t;
+// REMOVE ME
+typedef size_t person_t;
 
 
 /*******************************************************************************
  * SIR Helper Type Definitions                                                 *
  *******************************************************************************/
 
+  //! @defgroup is_sized_enum
+  //! @ingroup generalconcepts
+  //! @{
 template<typename enum_type>
 concept is_sized_enum = requires(enum_type e) {
   // { e.state };
@@ -52,6 +60,7 @@ concept is_sized_enum = requires(enum_type e) {
 } &&
 std::default_initializable<enum_type> &&
 std::is_enum<typename enum_type::state>::value;
+  //! @}
 
 /*******************************************************************************
  * SIR State Definition                                                        *
@@ -98,11 +107,11 @@ struct sir_state {
 
 template<typename states_t>
 struct aggregated_sir_state {
-  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> potential_state_counts;
+  std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> potential_state_counts;
   epidemic_time_t time = -1;
   aggregated_sir_state() = default;
   aggregated_sir_state(
-		       const std::array<size_t, int_pow(2, std::size(states_t{})) + 1> &_potential_state_counts,
+		       const std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> &_potential_state_counts,
 		       epidemic_time_t _time)
     : potential_state_counts(_potential_state_counts), time(_time){};
   aggregated_sir_state(const sir_state<states_t> &sir_state)
@@ -113,7 +122,7 @@ template<typename states_t>
 bool is_simple(const aggregated_sir_state<states_t>& state) {
   size_t pow_idx = 1;
   bool rc = true;
-  for (auto idx : std::views::iota(1UL, int_pow(2, std::size(states_t{})) + 1)) {
+  for (auto idx : std::views::iota(1UL, detail::int_pow(2, std::size(states_t{})) + 1)) {
     if (idx != pow_idx) {
       rc = rc && state.potential_state_counts[idx] == 0;
     } else {
@@ -212,23 +221,6 @@ struct transition_event : public sir_event<states_t, 1> {
 template<typename states_t, size_t N, typename = std::make_index_sequence<N>>
 struct sir_event_constructor;
 
-/*
-template<typename any_sir_event, size_t N, size_t... indices>
-struct sir_event_constructor<N, std::index_sequence<indices...>> {
-  any_sir_event construct_sir_event(size_t event_index) {
-    any_sir_event rc;
-    bool any_possible = (false || ... || (event_index == indices));
-    if (!any_possible) {
-      std::cerr << "Printing index was out of bounds" << std::endl;
-      return rc;
-    }
-    ((rc = (event_index == indices) ? sir_event_by_index<indices>() : rc), ...);
-    return rc;
-  }
-};
-*/
-
-
 /*******************************************************************************
  * Helper functions for any_sir_event variant type                             *
  *******************************************************************************/
@@ -236,46 +228,6 @@ struct sir_event_constructor<N, std::index_sequence<indices...>> {
 
 template<typename any_event, size_t event_index> struct event_size_by_event_index {
   constexpr static const size_t value = std::variant_alternative_t<event_index, any_event>{}.affected_people.size();
-};
-
-struct any_sir_event_size {
-  size_t operator()(const auto &x) const { return (x.affected_people.size()); }
-};
-
-struct any_sir_event_time {
-  epidemic_time_t operator()(const auto &x) const { return (x.time); }
-};
-
-struct any_sir_event_preconditions {
-  person_t &person;
-  auto operator()(const auto &x) const { return (x.preconditions[person]); }
-};
-
-struct any_sir_event_affected_people {
-  person_t &person;
-  auto operator()(const auto &x) const { return (x.affected_people[person]); }
-};
-
-struct any_sir_event_postconditions {
-  person_t &person;
-  auto operator()(const auto &x) const { return (x.postconditions[person]); }
-};
-
-struct any_sir_event_set_time {
-  epidemic_time_t value;
-  void operator()(auto &x) const {
-    x.time = value;
-    return;
-  }
-};
-
-struct any_sir_event_set_affected_people {
-  person_t &position;
-  person_t &value;
-  void operator()(auto &x) const {
-    x.affected_people[position] = value;
-    return;
-  }
 };
 
 struct any_sir_event_print {
@@ -306,28 +258,6 @@ struct any_state_check_preconditions {
       rc = rc && tmp;
     }
     return (rc);
-  }
-};
-
-template<typename states_t>
-struct any_sir_event_apply_to_sir_state {
-  sir_state<states_t> &this_sir_state;
-  void operator()(const auto &x) const {
-    this_sir_state.time = x.time;
-    size_t event_size = x.affected_people.size();
-    if (event_size == 0) { return; }
-
-    for (auto person_index : std::ranges::views::iota(0UL) | std::ranges::views::take(event_size)) {
-      auto to_state = x.postconditions[person_index];
-      if (to_state) {
-        auto affected_person = x.affected_people[person_index];
-        for (auto previous_compartment :
-	       std::ranges::views::iota(0UL) | std::ranges::views::take(std::size(states_t{}))) {
-          this_sir_state.potential_states[affected_person][previous_compartment] = false;
-        }
-        this_sir_state.potential_states[affected_person][to_state.value()] = true;
-      }
-    }
   }
 };
 
@@ -372,28 +302,6 @@ struct any_event_apply_left_states {
  * Template helper functions for sir_events to use in generation               *
  *******************************************************************************/
 
-/*
-template<typename states_t, size_t event_index, size_t precondition_index>
-bool check_event_precondition(std::array<bool, std::size(states_t{})>) {
-  // bool rc = false;
-  return (std::any_of(sir_event_true_preconditions<event_index, precondition_index>::value));
-}
-*/
-/*
-template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
-bool check_event_precondition(std::array<bool, std::size(states_t{})> x) {
-  bool rc = false;
-  auto tmp = event_true_preconditions<any_event, event_index, precondition_index>::value;
-  for (auto elem : tmp) { rc = rc || x[elem]; }
-  return (rc);
-}
-
-template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
-const auto check_event_precondition_enumerated = [](const auto &x) {
-  return (check_event_precondition<states_t, any_event, event_index, precondition_index>(x.value));
-};
-*/
-
 template<typename states_t, typename any_event, size_t event_index, size_t precondition_index>
 const auto check_event_precondition_enumerated = [](const auto &x) {// x is a potential_states
   return ((x.value
@@ -419,8 +327,8 @@ const auto transform_array_to_sir_event_l = [](const auto &x) {
 
 
 template<typename states_t>
-std::array<size_t, int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(const sir_state<states_t>& state) {
-  std::array<size_t, int_pow(2, std::size(states_t{})) + 1> rc;
+std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(const sir_state<states_t>& state) {
+  std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> rc;
   for (auto& elem : rc) {
     elem = 0;
   }
@@ -456,11 +364,11 @@ template<typename states_t>
 void print(const aggregated_sir_state<states_t> &aggregates, const std::string &prefix = "") {
   std::cout << prefix << "Possible states at time ";
   std::cout << aggregates.time << "\n";
-  for (size_t subset = 0; subset <= int_pow(2, std::size(states_t{})); ++subset) {
+  for (size_t subset = 0; subset <= detail::int_pow(2, std::size(states_t{})); ++subset) {
     if (aggregates.potential_state_counts[subset] > 0) {
       std::cout << prefix;
       for (size_t compartment = 0; compartment < std::size(states_t{}); ++compartment) {
-        if ((subset % int_pow(2, compartment + 1) / int_pow(2, compartment)) == 1) {
+        if ((subset % detail::int_pow(2, compartment + 1) / detail::int_pow(2, compartment)) == 1) {
           std::cout << compartment << " ";
         }
       }
@@ -540,6 +448,6 @@ struct single_time_event_generator<N, std::index_sequence<event_index...>> {
 };
 */
 
-}
+}// namespace cfepi
 
 #endif

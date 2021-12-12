@@ -3,6 +3,7 @@
 #include <iostream>
 #include <range/v3/all.hpp>
 
+namespace detail {
 struct sir_epidemic_states {
 public:
   enum state { S, I, R, n_compartments };
@@ -35,6 +36,10 @@ typedef std::variant<infection_event, recovery_event> any_sir_event;
 
 // template<> struct event_by_index<any_sir_event, 1> : recovery_event {};
 // template<> struct event_by_index<any_sir_event, 0> : infection_event {};
+
+}
+
+using namespace detail;
 
 int main(int argc, char **argv) {
 
