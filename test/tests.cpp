@@ -67,7 +67,6 @@ TEST_CASE("Single Time Event Generator works as expected") {
   const cfepi::person_t one = 1ul;
   for (auto val : event_range) {
     ++counter;
-    // any_sir_event_print{"TEST"}(val);
     REQUIRE(val.affected_people[one] == 0ul);
     REQUIRE(val.affected_people[zero] == counter);
   }
@@ -210,12 +209,10 @@ TEST_CASE("Full stack test works", "[sir_generator]") {
             std::get<1>(x));
         }
       });
-      // std::cout << counter << std::endl;
 
       ranges::for_each(setups_by_filter, [&t](auto &x) {
         std::get<0>(x) = std::get<1>(x) || std::get<2>(x);
         std::get<0>(x).time = t;
-        // print(std::get<0>(x));
       });
     };
 
@@ -298,8 +295,6 @@ TEST_CASE("SEIR model works with state filter", "[sir_generator]") {
   auto filter_by_infected = [&counts_to_filter_to](const cfepi::sir_state<seir_epidemic_states>& param,
                        std::default_random_engine &rng __attribute__((unused))) {
     std::size_t this_time = static_cast<size_t>(param.time);
-    print(param);
-    std::cout << "at time " << this_time << " compared " << aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I] << " to " << counts_to_filter_to[this_time] << "\n";
     return (aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I] ==  counts_to_filter_to[this_time]);
     return (true);
   };
