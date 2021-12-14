@@ -18,8 +18,6 @@ concept uniform_random_number_engine = std::uniform_random_bit_generator<E> && r
   { E(s) };
   { E(x) };
   { E(e) };
-  // {e.seed(s)};
-  // {e.seed(x)};
   { x == y } -> std::same_as<bool>;
   { x != y } -> std::same_as<bool>;
 };

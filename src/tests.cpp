@@ -66,6 +66,8 @@ int main(int argc, char **argv) {
     }
     return (true);
   };
+  auto do_nothing = [](auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return; };
 
   double gamma = 1 / 2.25;
   double beta = 1.75 * gamma / static_cast<double>(population_size);
@@ -73,12 +75,15 @@ int main(int argc, char **argv) {
   auto initial_conditions = cfepi::default_state<sir_epidemic_states>(
     sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);
 
-  std::vector<std::function<bool(const any_sir_event &, std::default_random_engine &)>> filters{
-    always_true, sometimes_true, always_false
-  };
-
-  auto simulation = cfepi::run_simulation<sir_epidemic_states, any_sir_event>(
-    initial_conditions, std::array<double, 2>({ beta, gamma }), filters, epidemic_time, seed);
+  auto simulation = cfepi::run_simulation<sir_epidemic_states, any_sir_event>(initial_conditions,
+    std::array<double, 2>({ beta, gamma }),
+    {
+      std::make_tuple(always_true, always_true, do_nothing),
+      std::make_tuple(sometimes_true, always_true, do_nothing),
+      std::make_tuple(always_false, always_true, do_nothing),
+    },
+    epidemic_time,
+    seed);
 
   for (auto state : simulation) { cfepi::print(state, "current : "); }
 }

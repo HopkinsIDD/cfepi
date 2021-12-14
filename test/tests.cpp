@@ -44,10 +44,13 @@ TEST_CASE("SIR model works modularly", "[sir_generator]") {
   auto initial_conditions = cfepi::default_state<sir_epidemic_states>(
     sir_epidemic_states::S, sir_epidemic_states::I, population_size, 1UL);
   auto always_true = [](const auto &param __attribute__((unused)),
-                       std::default_random_engine &rng __attribute__((unused))) { return (true); };
+                       std::default_random_engine &rng __attribute__((unused))) { return true; };
+  auto do_nothing = [](auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return; };
   cfepi::run_simulation<sir_epidemic_states, any_sir_event>(initial_conditions,
     std::array<double, 2>({ .1, 2. / static_cast<double>(population_size) }),
-    { always_true, always_true });
+    { std::make_tuple(always_true, always_true, do_nothing),
+      std::make_tuple(always_true, always_true, do_nothing) });
 }
 
 TEST_CASE("Single Time Event Generator works as expected") {
@@ -268,8 +271,47 @@ TEST_CASE("SEIR model works modularly", "[sir_generator]") {
     seir_epidemic_states::S, seir_epidemic_states::I, population_size, 1UL);
   auto always_true = [](const auto &param __attribute__((unused)),
                        std::default_random_engine &rng __attribute__((unused))) { return (true); };
+  auto do_nothing = [](auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return; };
   cfepi::run_simulation<seir_epidemic_states, any_seir_event>(initial_conditions,
     std::array<double, 3>({ .1, .8, 2. / static_cast<double>(population_size) }),
-    { always_true, always_true });
+    { std::make_tuple(always_true, always_true, do_nothing),
+      std::make_tuple(always_true, always_true, do_nothing) });
+}
+
+TEST_CASE("SEIR model works with state filter", "[sir_generator]") {
+  cfepi::person_t population_size = 10000;
+  auto initial_conditions = cfepi::default_state<seir_epidemic_states>(
+    seir_epidemic_states::S, seir_epidemic_states::I, population_size, 1UL);
+  auto always_true = [](const auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return (true); };
+  auto do_nothing = [](auto &param __attribute__((unused)),
+                       std::default_random_engine &rng __attribute__((unused))) { return; };
+  constexpr cfepi::epidemic_time_t simulation_length{35};
+  std::array<cfepi::person_t, static_cast<size_t>(simulation_length + 1)> counts_to_filter_to{
+    1,
+      1,4,5,20,31,57,113,211,367,659,
+      1169,2017,3260,4787,6243,6993,6995,6575,6005,5417,
+      4911,4420,3966,3567,3210,2890,2599,2329,2071,1870,
+      1693,1529,1371,1237
+  };
+  auto filter_by_infected = [&counts_to_filter_to](const cfepi::sir_state<seir_epidemic_states>& param,
+                       std::default_random_engine &rng __attribute__((unused))) {
+    std::size_t this_time = static_cast<size_t>(param.time);
+    print(param);
+    std::cout << "at time " << this_time << " compared " << aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I] << " to " << counts_to_filter_to[this_time] << "\n";
+    return (aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I] ==  counts_to_filter_to[this_time]);
+    return (true);
+  };
+  auto test_results =
+    cfepi::run_simulation<seir_epidemic_states, any_seir_event>(initial_conditions,
+      std::array<double, 3>({ .1, .8, 2. / static_cast<double>(population_size) }),
+      { std::make_tuple(always_true, always_true, do_nothing),
+        std::make_tuple(always_true, filter_by_infected, do_nothing) },
+      simulation_length,
+      2);
+  for(auto this_idx : std::views::iota(0UL, std::size(test_results)/2)) {
+    REQUIRE(test_results[2*this_idx] == test_results[2*this_idx+1]);
+  }
 }
 }// namespace detail

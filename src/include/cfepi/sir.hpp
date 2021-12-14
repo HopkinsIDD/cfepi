@@ -41,7 +41,7 @@ namespace detail {
 namespace cfepi {
 
 // REMOVE ME
-typedef float epidemic_time_t;
+typedef long long epidemic_time_t;
 // REMOVE ME
 typedef size_t person_t;
 
@@ -110,6 +110,18 @@ template<typename states_t> struct aggregated_sir_state {
     : potential_state_counts(_potential_state_counts), time(_time){};
   aggregated_sir_state(const sir_state<states_t> &sir_state)
     : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time){};
+  bool operator==(const aggregated_sir_state<states_t>& other __attribute__((unused))) const {
+    bool rc = true;
+    for(auto i : std::views::iota(0UL, detail::int_pow(2, std::size(states_t{})) + 1)) {
+      rc = rc && (other.potential_state_counts[i] == potential_state_counts[i]);
+      if (!rc) {
+	print(other);
+	print(*this);
+	return(false);
+      }
+    };
+    return rc;
+  };
 };
 
 template<typename states_t> bool is_simple(const aggregated_sir_state<states_t> &state) {
