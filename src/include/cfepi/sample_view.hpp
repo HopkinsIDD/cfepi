@@ -8,6 +8,9 @@
 
 namespace probability {
 // Replace me with the real concept when available
+//! @defgroup uniform_random_number_engine Uniform Random Number Engine
+//! @ingroup generalconcepts
+//! @{
 template<typename E>
 concept uniform_random_number_engine = std::uniform_random_bit_generator<E> && requires(E e,
   typename E::result_type s,
@@ -21,6 +24,36 @@ concept uniform_random_number_engine = std::uniform_random_bit_generator<E> && r
   { x == y } -> std::same_as<bool>;
   { x != y } -> std::same_as<bool>;
 };
+//!@}
+
+} // namespace probability
+
+namespace probability {
+
+/*!
+ * \class sample_view
+ * \brief A forward_view iterator that samples each element with some uniform probability
+ *
+ * Requires:
+ * The input range needs to be a forward range
+ *
+ * Category:
+ * Forward range if R is a Forward range
+ * Otherwise, input_range
+ *
+ * Reference:
+ * Same as R
+ *
+ * Sized: Never.
+ *
+ * Common: No.
+ *
+ * Const-iterable: Always.
+ *
+ * Borrowed: Never.
+ *
+ * Got this style of documentation from TartanLlama's range library
+ */
 
 template<std::ranges::input_range R, class Gen>
 requires uniform_random_number_engine<std::remove_reference_t<Gen>> && std::ranges::view<R>
@@ -81,14 +114,16 @@ private:
   };
 
 public:
+  //! \brief begin iterator
   constexpr auto begin() const {
     return (iterator<true>{ std::ranges::begin(base_), &base_, gen_, dist_ });
   }
+  //! \brief end sentinel
   constexpr auto end() const { return (sentinel<true>{ &base_ }); }
 
+  //! \brief Default constructor
   sample_view() = default;
-  sample_view(const R &base, double probability)
-    : base_(std::move(base)), gen_(), dist_(probability) {}
+  //! \brief Constructor from a random number generator and a probability of keeping each event
   sample_view(const R &base, double probability, Gen gen)
     : base_(std::move(base)), gen_(gen), dist_(probability) {}
 };

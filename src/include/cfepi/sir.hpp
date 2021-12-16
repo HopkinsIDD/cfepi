@@ -22,7 +22,7 @@
 #define __SIR_H_
 
 
-//! \defgroup General_Purpose_Code
+//! \defgroup General_Purpose_Code General Purpose Code
 namespace cfepi {
 
 namespace detail {
@@ -36,9 +36,12 @@ namespace detail {
   }
 }// namespace detail
 
+  //! @defgroup generalconcepts General Concepts
 }// namespace cfepi
 
 namespace cfepi {
+//! \defgroup compartment_model Compartmental Models
+//!@{
 
 // REMOVE ME
 typedef long long epidemic_time_t;
@@ -50,7 +53,7 @@ typedef size_t person_t;
  * SIR Helper Type Definitions                                                 *
  *******************************************************************************/
 
-//! @defgroup is_sized_enum
+//! @defgroup is_sized_enum Sized Enum
 //! @ingroup generalconcepts
 //! @{
 template<typename enum_type>
@@ -70,13 +73,22 @@ concept is_sized_enum = requires(enum_type e) {
  * @description The state of the model.
  */
 
+//! \brief Class for keeping track of the current state of a compartmental model (with potential states).
+//!
+//! Has a few methods and operators, but is essentially just a std::vector<std::bitset<std::size(states_t{})>> containing potential states
+
 template<typename states_t>
 requires is_sized_enum<states_t>
 struct sir_state {
+  //! \brief Main part of the class. A state representation for each person, representing whether they could be part of each state in states_t
   std::vector<std::bitset<std::size(states_t{})>> potential_states;
+  //! \brief Time that this state represents
   epidemic_time_t time = -1;
+  //! \brief Default constructor with size 0.
   sir_state() noexcept = default;
+  //! \brief Default constructor by size.
   sir_state(person_t _population_size) noexcept { potential_states.resize(_population_size); }
+  //! \brief The or operator applies to potential states, so elementwise or on potential_states
   sir_state operator||(const sir_state &other) const {
     sir_state rc{ *this };
     if (rc.potential_states.size() != other.potential_states.size()) {
@@ -92,25 +104,38 @@ struct sir_state {
     return (rc);
   }
 
+  //! \brief Set all potential states to false
   void reset() {
     for (auto &i : potential_states) {
-      // for (auto &j : i) { j = false; }
       i.reset();
     }
   }
+
 };
 
+
+//! \brief Class for keeping track of the current state of a compartmental model (without potential states).
+//!
+//! Has an == operator for testing, but otherwise just a wrapper for potential_state_counts.
+//! There is also an external print method
 template<typename states_t> struct aggregated_sir_state {
+  //! \brief The main part of the class. For each element of the powerset of states_t, stores counts of people in that potential states
   std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> potential_state_counts;
+  //! \brief Time that this state represents
   epidemic_time_t time = -1;
+  //! \brief Default constructor with size 0
   aggregated_sir_state() = default;
+  //! \brief Default constructor by component
   aggregated_sir_state(const std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1>
                          &_potential_state_counts,
     epidemic_time_t _time)
     : potential_state_counts(_potential_state_counts), time(_time){};
+  //! \brief Conversion constructor from states with potential states
+  // Wrapper for aggregate_state_to_array
   aggregated_sir_state(const sir_state<states_t> &sir_state)
     : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time){};
-  bool operator==(const aggregated_sir_state<states_t>& other __attribute__((unused))) const {
+  //! \brief basically only for testing
+  bool operator==(const aggregated_sir_state<states_t>& other) const {
     bool rc = true;
     for(auto i : std::views::iota(0UL, detail::int_pow(2, std::size(states_t{})) + 1)) {
       rc = rc && (other.potential_state_counts[i] == potential_state_counts[i]);
@@ -124,6 +149,13 @@ template<typename states_t> struct aggregated_sir_state {
   };
 };
 
+/*!
+ * \fn is_simple
+ * \brief Determine if an sir_state represents a single world.
+ *
+ * \param state The state to check
+ * \return Returns true if every person in the state has exactly one potential state, otherwise returns false
+ */
 template<typename states_t> bool is_simple(const aggregated_sir_state<states_t> &state) {
   size_t pow_idx = 1;
   bool rc = true;
@@ -137,6 +169,8 @@ template<typename states_t> bool is_simple(const aggregated_sir_state<states_t> 
   return (rc);
 }
 
+
+//! \brief
 template<typename states_t>
 sir_state<states_t> default_state(const typename states_t::state base_state,
   const typename states_t::state infected_state,
@@ -447,6 +481,7 @@ struct single_time_event_generator<N, std::index_sequence<event_index...>> {
 };
 */
 
+//!@}
 }// namespace cfepi
 
 #endif

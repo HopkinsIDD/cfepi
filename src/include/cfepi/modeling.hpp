@@ -4,8 +4,9 @@
 
 namespace cfepi {
 /*!
- * \class
+ * \class filtration_setup
  * \brief Data structure for storing a single world's worth of data.
+ *
  * Includes the current state of the system, pending changes to that state, and filter functions
  * needed to update that state.
  */
@@ -22,7 +23,7 @@ template<typename states_t, typename any_event> struct filtration_setup {
   std::function<bool(const sir_state<states_t>&, std::default_random_engine &)> state_filter_;
   //! \brief A filter to modify the state used to apply certain kinds of interventions.
   std::function<void(sir_state<states_t>&, std::default_random_engine &)> state_modifier_;
-  /*! \brief Construct from an initial state and a filter. This is the standard constructor*/
+  //! \brief Construct from an initial state and a filter. This is the standard constructor
   filtration_setup(const sir_state<states_t> &initial_state,
     const std::function<bool(const any_event &, std::default_random_engine &)> &event_filter,
     const std::function<bool(const sir_state<states_t> &, std::default_random_engine &)> &state_filter,
@@ -31,29 +32,30 @@ template<typename states_t, typename any_event> struct filtration_setup {
       event_filter_(event_filter), state_filter_(state_filter), state_modifier_(state_modifier) {
     states_entered.reset();
   };
-  /*! \brief Apply pending changes to current state, then clear them */
+  //! \brief Apply pending changes to current state, then clear them
   void apply() {
     current_state = states_entered || states_remained;
     states_entered.reset();
     states_remained = current_state;
   };
-  /*! \brief Clear pending changes */
+  //! \brief Clear pending changes
   void reset() {
     states_entered.reset();
     states_remained = current_state;
   };
 };
+
 }// namespace cfepi
 
 
 namespace cfepi {
-//! \defgroup Model_Construction
+//! \defgroup Model_Construction Model Construction
 //! @{
 /*!
  * \brief Run a counterfactual simulation
  * Run a counterfactual simulation with a different filter for each world.
  * @param initial_conditions An sir_state to use as the state of the population at time 0.
- * @param event probabilities An array with one element for each event containing the probability of
+ * @param event_probabilities An array with one element for each event containing the probability of
  * that event.
  * @param filters A vector of filters containing one filter for each scenario.  A filter is a
  * function which takes events and a random number generator and returns true if that event should
@@ -76,9 +78,8 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
 		   > filters,
   const epidemic_time_t epidemic_duration = 365,
   size_t simulation_seed = 2) {
-  std::default_random_engine random_source_1{ 1UL };
 
-  // BEGIN
+  std::default_random_engine random_source_1{ 1UL };
   auto current_state = initial_conditions;
 
   auto setups_by_filter =
@@ -98,15 +99,12 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
       std::end(setups_by_filter),
       current_state,
       [](const auto &x, const auto &y) { return (x || y); },
-      // [](const auto &x) { return (std::get<0>(x)); });
       [](const auto &x) { return (x.current_state); });
-    // ranges::for_each(setups_by_filter, [](auto &x) { x.apply(); });
 
 
     const auto single_event_type_run =
       [&t, &setups_by_filter, &random_source_1, &current_state, &event_probabilities](
         const auto event_index, const size_t seed) {
-        // ranges::for_each(setups_by_filter, [](auto &x) { x.reset(); });
 
         random_source_1.seed(seed);
         auto event_range_generator =
@@ -120,9 +118,9 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
         size_t counter = 0UL;
         auto setup_view = std::ranges::views::iota(0UL, setups_by_filter.size());
         auto view_to_filter = ranges::views::cartesian_product(setup_view, sampled_event_view);
+
         auto filtered_view = ranges::filter_view(view_to_filter,
           [setups_by_filter = std::as_const(setups_by_filter), &random_source_1](const auto &x) {
-            // auto filter = std::get<3>(setups_by_filter[std::get<0>(x)]);
             auto filter = setups_by_filter[std::get<0>(x)].event_filter_;
             any_event event = std::get<1>(x);
             return (filter(event, random_source_1));
@@ -137,6 +135,7 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
           }
           ++counter;
         });
+
       };
 
     const auto seeded_single_event_type_run = [&single_event_type_run, &simulation_seed](
@@ -157,6 +156,7 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
 	states_next.time = t;
 	return x.state_filter_(states_next, random_source_1);
       });
+
     if (all_states_allowed) {
       ranges::for_each(setups_by_filter, [&t](auto &x) {
 	x.apply();
