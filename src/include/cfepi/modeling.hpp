@@ -18,15 +18,15 @@ template<typename states_t, typename any_event> struct filtration_setup {
   //! \brief The states that have not been left since reset
   sir_state<states_t> states_remained;
   //! \brief A filter to use to apply only some events. Returns true if event should be kept.
-  std::function<bool(const any_event &, std::default_random_engine &)> event_filter_;
+  std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)> event_filter_;
   //! \brief A filter to use to restrict which states are allowed. Applies at each time step to determine if the current state is valid. Returns true if state is ok, and false if this time step should be re-done.
-  std::function<bool(const sir_state<states_t>&, std::default_random_engine &)> state_filter_;
+  std::function<bool(const filtration_setup<states_t, any_event>&, const sir_state<states_t>&, std::default_random_engine & )> state_filter_;
   //! \brief A filter to modify the state used to apply certain kinds of interventions.
   std::function<void(sir_state<states_t>&, std::default_random_engine &)> state_modifier_;
   //! \brief Construct from an initial state and a filter. This is the standard constructor
   filtration_setup(const sir_state<states_t> &initial_state,
-    const std::function<bool(const any_event &, std::default_random_engine &)> &event_filter,
-    const std::function<bool(const sir_state<states_t> &, std::default_random_engine &)> &state_filter,
+    const std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)> &event_filter,
+    const std::function<bool(const filtration_setup<states_t, any_event>&, const sir_state<states_t>&, std::default_random_engine & )> &state_filter,
     const std::function<void(sir_state<states_t> &, std::default_random_engine &)> &state_modifier)
     : current_state(initial_state), states_entered(initial_state), states_remained(initial_state),
       event_filter_(event_filter), state_filter_(state_filter), state_modifier_(state_modifier) {
@@ -71,27 +71,35 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
   const std::array<double, std::variant_size_v<any_event>> event_probabilities,
   const std::vector<
 		    std::tuple<
-		    std::function<bool(const any_event &, std::default_random_engine &)>,
-		    std::function<bool(const sir_state<states_t>&, std::default_random_engine &)>,
+		    std::function<bool(const any_event &, const sir_state<states_t>&, std::default_random_engine &)>,
+		    std::function<bool(const filtration_setup<states_t, any_event>&, const sir_state<states_t>&, std::default_random_engine & )>,
 		    std::function<void(sir_state<states_t>&, std::default_random_engine &)>
 		    >
-		   > filters,
+		   > &filters,
   const epidemic_time_t epidemic_duration = 365,
   size_t simulation_seed = 2) {
+  size_t resets = 0;
 
   std::default_random_engine random_source_1{ 1UL };
   auto current_state = initial_conditions;
 
   auto setups_by_filter =
     ranges::to<std::vector>(ranges::views::transform(filters, [&current_state](auto &x) {
-      return (filtration_setup{current_state, std::get<0>(x), std::get<1>(x), std::get<2>(x)});
+      return (filtration_setup<states_t, any_event>{current_state, std::get<0>(x), std::get<1>(x), std::get<2>(x)});
     }));
 
-  std::vector results{ { aggregate_state(current_state) } };
-  results.clear();
-  results.reserve(static_cast<size_t>(epidemic_duration));
+  ;
+
+  std::vector results{ {ranges::to<std::vector>(ranges::views::transform(setups_by_filter, [](const auto&x){return(aggregate_state(x.current_state));}))} };
+  // results.clear();
+  results.reserve(static_cast<size_t>(epidemic_duration+1));
+
 
   for (epidemic_time_t t = 0UL; t < epidemic_duration; ++t) {
+    auto this_result = results[0];
+    this_result.clear();
+    this_result.reserve(std::size(setups_by_filter));
+    std::cout << t << "\n";
 
     current_state.reset();
     current_state = std::transform_reduce(
@@ -122,8 +130,9 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
         auto filtered_view = ranges::filter_view(view_to_filter,
           [setups_by_filter = std::as_const(setups_by_filter), &random_source_1](const auto &x) {
             auto filter = setups_by_filter[std::get<0>(x)].event_filter_;
+            auto state = setups_by_filter[std::get<0>(x)].current_state;
             any_event event = std::get<1>(x);
-            return (filter(event, random_source_1));
+            return (filter(event, state, random_source_1));
           });
 
         ranges::for_each(filtered_view, [&setups_by_filter, &counter](const auto &x) {
@@ -146,33 +155,43 @@ auto run_simulation(const sir_state<states_t> &initial_conditions,
 
     cfor::constexpr_for<0, std::variant_size_v<any_event>, 1>(seeded_single_event_type_run);
 
-    bool all_states_allowed = std::transform_reduce(
+    for (auto setup: setups_by_filter) {
+    }
+  auto states_next =
+    ranges::to<std::vector>(ranges::views::transform(setups_by_filter, [t,&random_source_1](auto &x) {
+      auto rc = x.states_entered || x.states_remained;
+      rc.time = t;
+      x.state_modifier_(rc, random_source_1);
+      return(rc);
+    }));
+
+
+    bool all_states_allowed = std::inner_product(
       std::begin(setups_by_filter),
       std::end(setups_by_filter),
+      std::begin(states_next),
       true,
       [](bool x, bool y) { return (x && y); },
-      [t,&random_source_1](filtration_setup<states_t, any_event> &x) {
-	auto states_next = x.states_entered || x.states_remained;
-	states_next.time = t;
-	return x.state_filter_(states_next, random_source_1);
+      [t,&random_source_1](filtration_setup<states_t, any_event> &setup, sir_state<states_t> new_state) {
+	return setup.state_filter_(setup, new_state, random_source_1);
       });
 
     if (all_states_allowed) {
-      ranges::for_each(setups_by_filter, [&t](auto &x) {
-	x.apply();
-	x.current_state.time = t;
-      });
-      ranges::for_each(setups_by_filter, [&results](filtration_setup<states_t, any_event> &x) {
-	results.push_back(aggregate_state(x.current_state));
-      });
+      for(auto i : std::ranges::views::iota(0UL, std::size(states_next))) {
+	setups_by_filter[i].current_state = states_next[i];
+	setups_by_filter[i].reset();
+      }
+      results.push_back(ranges::to<std::vector>(ranges::views::transform(
+        setups_by_filter, [](const auto &x) { return (aggregate_state(x.current_state)); })));
     } else {
       ranges::for_each(setups_by_filter, [&t](auto &x) {
 	x.reset();
       });
       --t;
+      ++resets;
     }
-
   }
+  std::cout << "Ran with " << resets << " resets\n";
 
   return (results);
 }

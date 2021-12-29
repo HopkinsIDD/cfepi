@@ -12,7 +12,7 @@ TEST_CASE("Sized Enum concept works", "[sir_state]") {
   struct simple_enum {
   public:
     enum state { A, B, C, D, E, state_count };
-    constexpr auto size() const { return (static_cast<size_t>(state_count)); }
+    constexpr static auto size() { return (static_cast<size_t>(state_count)); }
   };
 
   constexpr bool simple_enum_is_sized_enum = cfepi::is_sized_enum<simple_enum>;

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 
 # Set the project name to your project name, my project isn't very descriptive
 project(cfepi CXX)
@@ -65,6 +65,8 @@ set(CONAN_EXTRA_OPTIONS "")
 
 set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} range-v3/0.11.0)
 set(CONAN_EXTRA_REQUIRES ${CONAN_EXTRA_REQUIRES} rangesnext/cci.20210426)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake/module)
 
 
 include(cmake/Conan.cmake)

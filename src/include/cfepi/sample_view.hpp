@@ -106,7 +106,7 @@ private:
     std::ranges::sentinel_t<Base> end_{};
 
     sentinel() = default;
-    constexpr sentinel(const Base *base) : end_(std::ranges::end(*base)) {}
+    constexpr explicit sentinel(const Base *base) : end_(std::ranges::end(*base)) {}
 
     friend bool operator==(const iterator<Const> it, const sentinel<Const> &st) {
       return (it.current_ == st.end_);

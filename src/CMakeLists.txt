@@ -11,3 +11,5 @@ target_link_libraries(
 )
 add_executable(cfepi_test tests.cpp)
 target_link_libraries(cfepi_test cfepi)
+add_executable(uvira uvira.cpp)
+target_link_libraries(uvira cfepi)

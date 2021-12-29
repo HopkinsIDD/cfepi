@@ -11,6 +11,7 @@
 #include <vector>
 #include <span>
 #include <bitset>
+#include <numeric>
 
 #include <cor3ntin/rangesnext/to.hpp>
 #include <cor3ntin/rangesnext/product.hpp>
@@ -83,11 +84,12 @@ struct sir_state {
   //! \brief Main part of the class. A state representation for each person, representing whether they could be part of each state in states_t
   std::vector<std::bitset<std::size(states_t{})>> potential_states;
   //! \brief Time that this state represents
-  epidemic_time_t time = -1;
+  epidemic_time_t time;
   //! \brief Default constructor with size 0.
   sir_state() noexcept = default;
   //! \brief Default constructor by size.
-  sir_state(person_t _population_size) noexcept { potential_states.resize(_population_size); }
+  explicit sir_state(person_t _population_size) noexcept : potential_states(_population_size), time(-1) {}
+  sir_state(const sir_state &other) = default;
   //! \brief The or operator applies to potential states, so elementwise or on potential_states
   sir_state operator||(const sir_state &other) const {
     sir_state rc{ *this };
@@ -132,20 +134,22 @@ template<typename states_t> struct aggregated_sir_state {
     : potential_state_counts(_potential_state_counts), time(_time){};
   //! \brief Conversion constructor from states with potential states
   // Wrapper for aggregate_state_to_array
-  aggregated_sir_state(const sir_state<states_t> &sir_state)
+  explicit aggregated_sir_state(const sir_state<states_t> &sir_state)
     : potential_state_counts(aggregate_state_to_array(sir_state)), time(sir_state.time){};
   //! \brief basically only for testing
   bool operator==(const aggregated_sir_state<states_t>& other) const {
-    bool rc = true;
-    for(auto i : std::views::iota(0UL, detail::int_pow(2, std::size(states_t{})) + 1)) {
-      rc = rc && (other.potential_state_counts[i] == potential_state_counts[i]);
-      if (!rc) {
-	print(other);
-	print(*this);
-	return(false);
-      }
-    };
-    return rc;
+    return(std::transform_reduce(
+			  std::begin(potential_state_counts),
+			  std::end(potential_state_counts),
+			  std::begin(other.potential_state_counts),
+			  true,
+			  [](const auto &x, const auto &y) {
+			    return(x || y);
+			  },
+			  [](const auto &x, const auto &y) {
+			    return(x == y);
+			  }
+				 ));
   };
 };
 
@@ -215,8 +219,8 @@ template<typename states_t> struct interaction_event : public sir_event<states_t
   constexpr interaction_event(person_t p1,
     person_t p2,
     epidemic_time_t _time,
-    const std::bitset<std::size(states_t{})> preconditions_for_first_person,
-    const std::bitset<std::size(states_t{})> preconditions_for_second_person,
+    const std::bitset<std::size(states_t{})> &preconditions_for_first_person,
+    const std::bitset<std::size(states_t{})> &preconditions_for_second_person,
     const typename states_t::state result_state) {
     time = _time;
     affected_people = { p1, p2 };
@@ -224,8 +228,8 @@ template<typename states_t> struct interaction_event : public sir_event<states_t
     postconditions[0] = result_state;
   }
   constexpr interaction_event(
-    const std::array<bool, std::size(states_t{})> preconditions_for_first_person,
-    const std::array<bool, std::size(states_t{})> preconditions_for_second_person,
+    const std::array<bool, std::size(states_t{})> &preconditions_for_first_person,
+    const std::array<bool, std::size(states_t{})> &preconditions_for_second_person,
     const typename states_t::state result_state) noexcept
     : interaction_event(0UL,
       0UL,
@@ -243,14 +247,14 @@ template<typename states_t> struct transition_event : public sir_event<states_t,
   transition_event(const transition_event &) = default;
   constexpr transition_event(person_t p1,
     epidemic_time_t _time,
-    const std::bitset<std::size(states_t{})> _preconditions,
+    const std::bitset<std::size(states_t{})> &_preconditions,
     const states_t::state result_state) {
     time = _time;
     affected_people = { p1 };
     preconditions = { _preconditions };
     postconditions[0] = result_state;
   }
-  constexpr transition_event(const std::array<bool, std::size(states_t{})> _preconditions,
+  constexpr transition_event(const std::array<bool, std::size(states_t{})> &_preconditions,
     const typename states_t::state result_state) noexcept
     : transition_event(0, -1, _preconditions, result_state) {}
 };
@@ -276,6 +280,15 @@ struct any_sir_event_print {
     std::cout << "size " << x.affected_people.size() << " ";
     for (auto it : x.affected_people) { std::cout << it << ", "; }
     std::cout << std::endl;
+  }
+};
+
+template<typename states_t>
+struct any_sir_event_get_affected_person{
+  size_t index;
+  template<size_t size>
+  person_t operator()(const sir_event<states_t, size> &x) const {
+    return x.affected_people[index];
   }
 };
 
@@ -365,7 +378,7 @@ template<typename states_t>
 std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> aggregate_state_to_array(
   const sir_state<states_t> &state) {
   std::array<size_t, detail::int_pow(2, std::size(states_t{})) + 1> rc;
-  for (auto &elem : rc) { elem = 0; }
+  std::fill(std::begin(rc), std::end(rc), 0);
   for (auto possible_states : state.potential_states) { rc[possible_states.to_ulong()] += 1; }
   return (rc);
 }
