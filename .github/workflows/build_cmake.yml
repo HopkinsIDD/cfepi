@@ -20,8 +20,8 @@ jobs:
         os: [ubuntu-latest]
         include:
           - runs-on: ubuntu-latest
-            C_COMPILER: gcc-10
-            CXX_COMPILER: g++-10
+            C_COMPILER: gcc-12
+            CXX_COMPILER: g++-12
 
     steps:
     - uses: actions/checkout@v2

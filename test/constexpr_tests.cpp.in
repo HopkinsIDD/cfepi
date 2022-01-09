@@ -316,6 +316,7 @@ TEST_CASE("JSON config parsing works for event type tuple.", "[config]") {
     constexpr auto event_type_tuple =
       parse_json_array_event_type_struct<decltype(sirv), event_sizes>{}.parse(sirv, json_config);
 
+
     constexpr std::array<size_t, 5> test{ 5, 4, 3, 2, 5 };
     print_first_element<test>();
 
@@ -347,6 +348,7 @@ TEST_CASE("JSON config parsing works for event type tuple.", "[config]") {
     typedef parse_json_array_event_type_struct<decltype(sirv), event_sizes>::any_event_type
       any_event;
     STATIC_REQUIRE(std::variant_size_v<any_event> == 2);
+
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
     exit(1);
@@ -370,8 +372,8 @@ TEST_CASE("JSON config parsing works for event probabilities.", "[config]") {
 }
 
 TEST_CASE("JSON config parsing works for initial conditions.", "[config]") {
-  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
-  constexpr std::string_view json_config = "{\"S\": 9999,\"I\": 1}";
+  // constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  // constexpr std::string_view json_config = "{\"S\": 9999,\"I\": 1}";
   // auto parse_json
   // static_assert(event_probabilities[0] == 0.44444);
   // static_assert(event_probabilities[1] == 1.05);
@@ -384,16 +386,18 @@ TEST_CASE("JSON config parsing works for whole config.", "[config]") {
     std::cout << json_config << "\n";
     constexpr auto states_size =
       parse_json_array_size<std::string_view>(parse_json_select(json_config, "states"));
-    STATIC_REQUIRE(states_size == 3);
+    STATIC_REQUIRE(states_size == 4);
     constexpr auto states_arr = parse_json_array_values<std::string_view, states_size>(
       parse_json_select(json_config, "states"));
     STATIC_REQUIRE(states_arr[0] == "S");
     STATIC_REQUIRE(states_arr[1] == "I");
     STATIC_REQUIRE(states_arr[2] == "R");
+    STATIC_REQUIRE(states_arr[3] == "V");
     constexpr cfepi::config_epidemic_states<states_size> states(states_arr);
     STATIC_REQUIRE(states["S"] == 0);
     STATIC_REQUIRE(states["I"] == 1);
     STATIC_REQUIRE(states["R"] == 2);
+    STATIC_REQUIRE(states["V"] == 3);
 
     constexpr auto num_events = parse_json_array_size<json_delayed<no_name, std::string_view>>(
       parse_json_select(json_config, "events"));
@@ -410,6 +414,23 @@ TEST_CASE("JSON config parsing works for whole config.", "[config]") {
       parse_json_array_event_type_struct<decltype(states), event_sizes>{}.parse(
         states, parse_json_select(json_config, "events"));
 
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][states["S"]] == false);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][states["I"]] == true);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][states["R"]] == false);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][states["V"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][states["S"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][states["I"]] == true);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][states["R"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][states["V"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][states["S"]] == true);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][states["I"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][states["R"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][states["V"]] == true);
+    STATIC_REQUIRE(false_const > std::size(states));
+    STATIC_REQUIRE(!std::get<1>(event_type_tuple).postconditions[0].has_value());
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).postconditions[1].has_value());
+    STATIC_REQUIRE(
+      std::get<1>(event_type_tuple).postconditions[1].value_or(false_const) == states["I"]);
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
     exit(1);

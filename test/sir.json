@@ -1,5 +1,5 @@
 {
-    "states": ["S", "I", "R"],
+    "states": ["S", "I", "R", "V"],
     "events":
     [
 	{
