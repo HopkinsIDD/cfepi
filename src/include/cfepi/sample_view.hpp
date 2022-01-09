@@ -26,7 +26,7 @@ concept uniform_random_number_engine = std::uniform_random_bit_generator<E> && r
 };
 //!@}
 
-} // namespace probability
+}// namespace probability
 
 namespace probability {
 

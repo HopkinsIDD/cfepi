@@ -1,0 +1,30 @@
+{
+    "states": ["S", "I", "R"],
+    "events":
+    [
+	{
+	    "source": [ ["I"] ],
+	    "destination": [ {"index": 0, "compartment": "R"} ]
+	},
+	{
+	    "source": [ [ "I" ], [ "S" ] ],
+	    "destination": [ {"index": 1, "compartment": "I"} ]
+	}
+    ],
+    "parameters": {
+	"population_size": 10000,
+	"initial_infected": 1
+    },
+    "worlds": [
+	{
+	    "event_filter": { "function": "do_nothing" },
+	    "state_modifier": { "function": "do_nothing" },
+	    "state_filter": { "function": "do_nothing" }
+	},
+	{
+	    "event_filter": { "function": "do_nothing" },
+	    "state_modifier": { "function": "do_nothing" },
+	    "state_filter": { "function": "do_nothing" }
+	}
+    ]
+}

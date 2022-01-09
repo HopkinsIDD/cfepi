@@ -1,4 +1,9 @@
 # Automatically enable catch2 to generate ctest targets
+FILE(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/sir.json JSON_CONFIG_CONTENTS_RAW)
+STRING(REPLACE ";" "" JSON_CONFIG_CONTENTS ${JSON_CONFIG_CONTENTS_RAW})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/constexpr_tests.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/constexpr_tests.cpp ESCAPE_QUOTES NEWLINE_STYLE UNIX)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/tests.cpp ESCAPE_QUOTES NEWLINE_STYLE UNIX)
+
 if(CONAN_CATCH2_ROOT_DEBUG)
   include(${CONAN_CATCH2_ROOT_DEBUG}/lib/cmake/Catch2/Catch.cmake)
 else()
@@ -7,6 +12,7 @@ endif()
 
 add_library(catch_main STATIC catch_main.cpp)
 target_link_libraries(catch_main PUBLIC CONAN_PKG::catch2)
+target_link_libraries(catch_main PUBLIC CONAN_PKG::daw_json_link)
 target_link_libraries(catch_main PRIVATE project_options)
 target_link_libraries(catch_main INTERFACE cfepi)
 

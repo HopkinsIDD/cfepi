@@ -1,0 +1,419 @@
+#include <catch2/catch.hpp>
+#include <type_traits>
+#include <daw/json/daw_json_link.h>
+#include <daw/daw_read_file.h>
+
+#include <cfepi/sir.hpp>
+#include <cfepi/config.hpp>
+
+constexpr size_t false_const = 55UL;
+
+TEST_CASE("Repeat works", "[repeat]") {
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int, 1>, int>::value);
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int, 2>, int>::value);
+  STATIC_REQUIRE(std::is_same<cfepi::detail::repeat<int, 3>, int>::value);
+}
+
+TEST_CASE("Sized Enum concept works", "[sir_state]") {
+
+  struct simple_enum {
+  public:
+    enum state { A, B, C, D, E, state_count };
+    constexpr static auto size() { return (static_cast<size_t>(state_count)); }
+  };
+
+  constexpr bool simple_enum_is_sized_enum = cfepi::is_sized_enum<simple_enum>;
+  STATIC_REQUIRE(simple_enum_is_sized_enum);
+
+  auto x = cfepi::sir_state<simple_enum>{ 1UL }.potential_states[0];
+  STATIC_REQUIRE(std::is_same<decltype(x), std::bitset<simple_enum::state_count>>::value);
+  cfepi::sir_state<simple_enum> test_state{ 1UL };
+  test_state.potential_states[0][simple_enum::D] = true;
+  test_state.potential_states[0][simple_enum::D] = true;
+}
+
+struct map_sir_epidemic_states {
+public:
+  using state = std::string_view;
+  constexpr static std::array<std::tuple<std::string_view, size_t>, 3> state_array{
+    std::make_tuple("S", 0UL),
+    std::make_tuple("I", 1UL),
+    std::make_tuple("R", 2UL)
+  };
+  constexpr static auto size() { return (std::size(state_array)); };
+  constexpr size_t operator[](std::string_view s) {
+    return (
+      std::get<1>(*std::find_if(std::begin(state_array), std::end(state_array), [&s](auto &x) {
+        return (std::get<0>(x) == s);
+      })));
+  }
+};
+
+TEST_CASE("map_sir_epidemic_states gives sizes when accessed by string", "[sir_state]") {
+  map_sir_epidemic_states s{};
+  STATIC_REQUIRE(s["S"] == 0);
+  STATIC_REQUIRE(s["I"] == 1);
+  STATIC_REQUIRE(s["R"] == 2);
+  STATIC_REQUIRE(std::size(s) == 3UL);
+  std::bitset<std::size(s)>{ 1UL << s["I"] };
+  constexpr bool map_sir_epidemic_states_is_sized_enum =
+    cfepi::is_sized_enum<map_sir_epidemic_states>;
+  STATIC_REQUIRE(map_sir_epidemic_states_is_sized_enum);
+}
+
+struct map_sir_recovery_event_type : public cfepi::transition_event_type<map_sir_epidemic_states> {
+  constexpr map_sir_recovery_event_type() noexcept
+    : transition_event_type<map_sir_epidemic_states>(
+      { std::bitset<std::size(map_sir_epidemic_states{})>{
+        1UL << map_sir_epidemic_states{}["I"] } },
+      "R"){};
+};
+
+struct map_sir_infection_event_type
+  : public cfepi::interaction_event_type<map_sir_epidemic_states> {
+  constexpr map_sir_infection_event_type() noexcept
+    : interaction_event_type<map_sir_epidemic_states>(
+      { std::bitset<std::size(map_sir_epidemic_states{})>{
+        1UL << map_sir_epidemic_states{}["S"] } },
+      { std::bitset<std::size(map_sir_epidemic_states{})>{
+        1UL << map_sir_epidemic_states{}["I"] } },
+      "I"){};
+};
+
+typedef std::variant<map_sir_recovery_event_type, map_sir_infection_event_type>
+  any_map_sir_event_type;
+
+
+namespace daw::json {
+
+TEST_CASE("Basic JSON parser tests", "[config]") {
+  constexpr std::string_view json_config =
+    "{    \"name\": \"test_config\",    \"states\": [\"S\", \"I\", \"R\"],    \"events\": [	"
+    "{	    \"name\": \"sir_recovery_event\",	    \"type\": \"transition_event\",	    "
+    "\"parameters\": {		\"source\": [\"I\"],		\"destination\": \"R\",		"
+    "\"probability\": \".1\"	    }	},	{	    \"name\": \"sir_infection_event\",	   "
+    " \"type\": \"interaction_event\",	    \"parameters\": {		\"source\": [\"S\"],	"
+    "	\"contact\": [\"I\"],		\"destination\": \"I\",		\"probability\": "
+    "\".2\",		\"population_dependence\": \"frequency\"	    }	}    ],    "
+    "\"parameters\": {	\"population_size\": 10000,	\"initial_infected\": 1    },    "
+    "\"worlds\": [	{	    \"event_filter\": { \"function\": \"do_nothing\" }	    "
+    "\"state_modifier\": { \"function\": \"do_nothing\" },	    \"state_filter\": { "
+    "\"function\": \"do_nothing\" }	},	{	    \"event_filter\": { \"function\": "
+    "\"do_nothing\" },	    \"state_modifier\": { \"function\": \"do_nothing\" },	    "
+    "\"state_filter\": { \"function\": \"do_nothing\" }	}    ]}";
+  constexpr auto t1 = daw::json::from_json<std::string_view>(json_config, "name");
+  STATIC_REQUIRE(t1 == "test_config");
+  try {
+    std::string_view test __attribute__((unused)) = std::get<1>(
+      daw::json::json_details::find_range<NoCommentSkippingPolicyChecked>(json_config, "states"));
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for compartment set.", "[config]") {
+
+  constexpr const std::string_view json_states_member_1 = "[\"S\", \"I\", \"R\"]";
+  constexpr auto json_size_1 = parse_json_array_size<std::string_view>(json_states_member_1);
+  STATIC_REQUIRE(json_size_1 == 3);
+  constexpr auto json_vals_1 =
+    parse_json_array_values<std::string_view, json_size_1>(json_states_member_1);
+  STATIC_REQUIRE(json_vals_1[0] == "S");
+  STATIC_REQUIRE(json_vals_1[1] == "I");
+  STATIC_REQUIRE(json_vals_1[2] == "R");
+  constexpr cfepi::config_epidemic_states<json_size_1> s_1(json_vals_1);
+  STATIC_REQUIRE(s_1.size() == 3UL);
+
+  constexpr const std::string_view json_states_member_2 = "[\"S\", \"E\", \"I\", \"R\"]";
+  constexpr auto json_size_2 = parse_json_array_size<std::string_view>(json_states_member_2);
+  STATIC_REQUIRE(json_size_2 == 4);
+  constexpr auto json_vals_2 =
+    parse_json_array_values<std::string_view, json_size_2>(json_states_member_2);
+  STATIC_REQUIRE(json_vals_2[0] == "S");
+  STATIC_REQUIRE(json_vals_2[1] == "E");
+  STATIC_REQUIRE(json_vals_2[2] == "I");
+  STATIC_REQUIRE(json_vals_2[3] == "R");
+  constexpr cfepi::config_epidemic_states<json_size_2> s_2(json_vals_2);
+  STATIC_REQUIRE(s_2.size() == 4UL);
+
+  constexpr std::string_view json_config_full =
+    "{    \"name\": \"test_config\",    \"states\": [\"S\", \"I\", \"R\"],    \"events\": [	"
+    "{	    \"name\": \"sir_recovery_event\",	    \"type\": \"transition_event\",	    "
+    "\"parameters\": {		\"source\": [\"I\"],		\"destination\": \"R\",		"
+    "\"probability\": \".1\"	    }	},	{	    \"name\": \"sir_infection_event\",	   "
+    " \"type\": \"interaction_event\",	    \"parameters\": {		\"source\": [\"S\"],	"
+    "	\"contact\": [\"I\"],		\"destination\": \"I\",		\"probability\": "
+    "\".2\",		\"population_dependence\": \"frequency\"	    }	}    ],    "
+    "\"parameters\": {	\"population_size\": 10000,	\"initial_infected\": 1    },    "
+    "\"worlds\": [	{	    \"event_filter\": { \"function\": \"do_nothing\" }	    "
+    "\"state_modifier\": { \"function\": \"do_nothing\" },	    \"state_filter\": { "
+    "\"function\": \"do_nothing\" }	},	{	    \"event_filter\": { \"function\": "
+    "\"do_nothing\" },	    \"state_modifier\": { \"function\": \"do_nothing\" },	    "
+    "\"state_filter\": { \"function\": \"do_nothing\" }	}    ]}";
+  constexpr std::string_view json_states_member_3 =
+    std::get<1>(daw::json::json_details::find_range<NoCommentSkippingPolicyChecked>(
+      json_config_full, "states"));
+  constexpr auto json_size_3 = parse_json_array_size<std::string_view>(json_states_member_3);
+  STATIC_REQUIRE(json_size_3 == 3);
+  constexpr auto json_vals_3 =
+    parse_json_array_values<std::string_view, json_size_3>(json_states_member_3);
+  STATIC_REQUIRE(json_vals_3[0] == "S");
+  STATIC_REQUIRE(json_vals_3[1] == "I");
+  STATIC_REQUIRE(json_vals_3[2] == "R");
+  constexpr cfepi::config_epidemic_states<json_size_3> s_3(json_vals_3);
+  STATIC_REQUIRE(s_3.size() == 3UL);
+
+  auto initial_conditions_1 =
+    cfepi::default_state<decltype(s_1)>(s_1[json_vals_1[0]], s_1[json_vals_1[1]], 1000UL, 1UL);
+  auto initial_conditions_2 =
+    cfepi::default_state<decltype(s_2)>(s_2[json_vals_2[0]], s_2[json_vals_2[2]], 1000UL, 1UL);
+  auto initial_conditions_3 =
+    cfepi::default_state<decltype(s_3)>(s_3[json_vals_3[0]], s_3[json_vals_3[1]], 1000UL, 1UL);
+}
+
+TEST_CASE("JSON config parsing works for single event source", "[config]") {
+  constexpr cfepi::config_epidemic_states<3> sir({ "S", "I", "R" });
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view json_config_1{ "[\"I\"]" };
+  constexpr std::string_view json_config_2{ "[\"S\", \"V\"]" };
+  constexpr auto event_source_1_sir =
+    parse_json_event_type_source<decltype(sir)>(sir, json_config_1);
+  std::cout << event_source_1_sir << "\n";
+  STATIC_REQUIRE(event_source_1_sir[0] == false);
+  STATIC_REQUIRE(event_source_1_sir[1] == true);
+  STATIC_REQUIRE(event_source_1_sir[2] == false);
+  constexpr auto event_source_1_sirv =
+    parse_json_event_type_source<decltype(sirv)>(sirv, json_config_1);
+  std::cout << event_source_1_sirv << "\n";
+  STATIC_REQUIRE(event_source_1_sirv[0] == false);
+  STATIC_REQUIRE(event_source_1_sirv[1] == true);
+  STATIC_REQUIRE(event_source_1_sirv[2] == false);
+  STATIC_REQUIRE(event_source_1_sirv[3] == false);
+  constexpr auto event_source_2_sirv =
+    parse_json_event_type_source<decltype(sirv)>(sirv, json_config_2);
+  std::cout << event_source_2_sirv << "\n";
+  STATIC_REQUIRE(event_source_2_sirv[0] == true);
+  STATIC_REQUIRE(event_source_2_sirv[1] == false);
+  STATIC_REQUIRE(event_source_2_sirv[2] == false);
+  STATIC_REQUIRE(event_source_2_sirv[3] == true);
+}
+
+TEST_CASE("JSON config parsing works for multiple event sources", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view json_config{ "[[\"I\"], [\"S\", \"V\"]]" };
+  constexpr auto event_source =
+    parse_json_event_type_all_sources<decltype(sirv), 2>(sirv, json_config);
+  STATIC_REQUIRE(event_source[0][0] == false);
+  STATIC_REQUIRE(event_source[0][1] == true);
+  STATIC_REQUIRE(event_source[0][2] == false);
+  STATIC_REQUIRE(event_source[0][3] == false);
+  STATIC_REQUIRE(event_source[1][0] == true);
+  STATIC_REQUIRE(event_source[1][1] == false);
+  STATIC_REQUIRE(event_source[1][2] == false);
+  STATIC_REQUIRE(event_source[1][3] == true);
+}
+
+TEST_CASE("JSON config parsing works for single event destination", "[config]") {
+  constexpr cfepi::config_epidemic_states<3> sir({ "S", "I", "R" });
+  constexpr std::string_view json_config_1{ "[ {\"index\": 0, \"compartment\": \"R\"} ]" };
+  constexpr std::string_view json_config_2{
+    "[ {\"index\": 0, \"compartment\": \"V\"}, {\"index\": 1, "
+    "\"compartment\": \"V\"} ]"
+  };
+
+  try {
+    constexpr auto event_destination_1_1 =
+      parse_json_event_type_destination<decltype(sir), 1>(sir, json_config_1);
+
+    STATIC_REQUIRE(std::size(event_destination_1_1) == 1);
+    STATIC_REQUIRE(false_const > std::size(sir));
+    STATIC_REQUIRE(event_destination_1_1[0].has_value());
+    STATIC_REQUIRE(event_destination_1_1[0].value_or(false_const) == sir["R"]);
+
+    constexpr auto event_destination_2_1 =
+      parse_json_event_type_destination<decltype(sir), 2>(sir, json_config_1);
+
+    STATIC_REQUIRE(std::size(event_destination_2_1) == 2);
+    STATIC_REQUIRE(event_destination_2_1[0].has_value());
+    STATIC_REQUIRE(event_destination_2_1[0].value_or(false_const) == sir["R"]);
+    STATIC_REQUIRE(!event_destination_2_1[1].has_value());
+
+    constexpr auto event_destination_2_2 =
+      parse_json_event_type_destination<decltype(sir), 2>(sir, json_config_2);
+
+    STATIC_REQUIRE(std::size(event_destination_2_2) == 2);
+    STATIC_REQUIRE(event_destination_2_2[0].has_value());
+    STATIC_REQUIRE(event_destination_2_2[0].value_or(false_const) == sir["V"]);
+    STATIC_REQUIRE(event_destination_2_2[1].has_value());
+    STATIC_REQUIRE(event_destination_2_2[1].value_or(false_const) == sir["V"]);
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for single event", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view recovery_event_config{
+    "{\"source\": [ [\"I\"] ], \"destination\": [ {\"index\": 0, \"compartment\": \"R\"} ]}"
+  };
+  constexpr std::string_view infection_event_config{
+    "{\"source\": [ [ \"I\" ], [ \"S\", \"V\" ] ], \"destination\": [ {\"index\": 1, "
+    "\"compartment\": \"I\"} ] }"
+  };
+
+  try {
+    constexpr auto recovery_event_size = parse_json_event_type_size(recovery_event_config);
+    STATIC_REQUIRE(recovery_event_size == 1);
+    constexpr auto recovery_event_type =
+      parse_json_event_type<decltype(sirv), recovery_event_size>(sirv, recovery_event_config);
+    STATIC_REQUIRE(recovery_event_type.preconditions[0][sirv["S"]] == false);
+    STATIC_REQUIRE(recovery_event_type.preconditions[0][sirv["I"]] == true);
+    STATIC_REQUIRE(recovery_event_type.preconditions[0][sirv["R"]] == false);
+    STATIC_REQUIRE(recovery_event_type.preconditions[0][sirv["V"]] == false);
+    STATIC_REQUIRE(false_const > std::size(sirv));
+    STATIC_REQUIRE(recovery_event_type.postconditions[0].has_value());
+    STATIC_REQUIRE(recovery_event_type.postconditions[0].value_or(false_const) == sirv["R"]);
+
+    constexpr auto infection_event_size = parse_json_event_type_size(infection_event_config);
+    STATIC_REQUIRE(infection_event_size == 2);
+    constexpr auto infection_event_type =
+      parse_json_event_type<decltype(sirv), infection_event_size>(sirv, infection_event_config);
+    STATIC_REQUIRE(infection_event_type.preconditions[0][sirv["S"]] == false);
+    STATIC_REQUIRE(infection_event_type.preconditions[0][sirv["I"]] == true);
+    STATIC_REQUIRE(infection_event_type.preconditions[0][sirv["R"]] == false);
+    STATIC_REQUIRE(infection_event_type.preconditions[0][sirv["V"]] == false);
+    STATIC_REQUIRE(infection_event_type.preconditions[1][sirv["S"]] == true);
+    STATIC_REQUIRE(infection_event_type.preconditions[1][sirv["I"]] == false);
+    STATIC_REQUIRE(infection_event_type.preconditions[1][sirv["R"]] == false);
+    STATIC_REQUIRE(infection_event_type.preconditions[1][sirv["V"]] == true);
+    STATIC_REQUIRE(false_const > std::size(sirv));
+    STATIC_REQUIRE(!infection_event_type.postconditions[0].has_value());
+    STATIC_REQUIRE(infection_event_type.postconditions[1].has_value());
+    STATIC_REQUIRE(infection_event_type.postconditions[1].value_or(false_const) == sirv["I"]);
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for event type tuple.", "[config]") {
+  try {
+    constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+    constexpr std::string_view json_config =
+      "[{\"source\": [ [\"I\"] ], \"destination\": [ {\"index\": 0, "
+      "\"compartment\": \"R\"} ]}, {\"source\": [ [ \"I\" ], [ \"S\", \"V\" "
+      "] "
+      "], \"destination\": [ {\"index\": 1, \"compartment\": \"I\"} ] }]";
+
+    constexpr auto num_events =
+      parse_json_array_size<json_delayed<no_name, std::string_view>>(json_config);
+    constexpr std::array<size_t, num_events> event_sizes =
+      parse_json_array_event_type_sizes<decltype(sirv), num_events>(json_config);
+    print_first_element<event_sizes>();
+
+    constexpr auto event_type_tuple =
+      parse_json_array_event_type_struct<decltype(sirv), event_sizes>{}.parse(sirv, json_config);
+
+    constexpr std::array<size_t, 5> test{ 5, 4, 3, 2, 5 };
+    print_first_element<test>();
+
+    STATIC_REQUIRE(num_events == 2);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][sirv["S"]] == false);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][sirv["I"]] == true);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][sirv["R"]] == false);
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).preconditions[0][sirv["V"]] == false);
+    STATIC_REQUIRE(false_const > std::size(sirv));
+    STATIC_REQUIRE(std::get<0>(event_type_tuple).postconditions[0].has_value());
+    STATIC_REQUIRE(
+      std::get<0>(event_type_tuple).postconditions[0].value_or(false_const) == sirv["R"]);
+
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][sirv["S"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][sirv["I"]] == true);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][sirv["R"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[0][sirv["V"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][sirv["S"]] == true);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][sirv["I"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][sirv["R"]] == false);
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).preconditions[1][sirv["V"]] == true);
+    STATIC_REQUIRE(false_const > std::size(sirv));
+    STATIC_REQUIRE(!std::get<1>(event_type_tuple).postconditions[0].has_value());
+    STATIC_REQUIRE(std::get<1>(event_type_tuple).postconditions[1].has_value());
+    STATIC_REQUIRE(
+      std::get<1>(event_type_tuple).postconditions[1].value_or(false_const) == sirv["I"]);
+
+
+    typedef parse_json_array_event_type_struct<decltype(sirv), event_sizes>::any_event_type
+      any_event;
+    STATIC_REQUIRE(std::variant_size_v<any_event> == 2);
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for event probabilities.", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view json_config =
+    "[{\"source\": [ [\"I\"] ], \"destination\": [ {\"index\": 0, "
+    "\"compartment\": \"R\"} ], \"probability\": 0.44444}, {\"source\": [ [ \"I\" ], [ \"S\", "
+    "\"V\" "
+    "] "
+    "], \"destination\": [ {\"index\": 1, \"compartment\": \"I\"} ] , \"probability\": 1.05}]";
+  constexpr auto num_events =
+    parse_json_array_size<json_delayed<no_name, std::string_view>>(json_config);
+  constexpr std::array<double, num_events> event_probabilities =
+    parse_json_array_event_type_probabilities<double, num_events>(json_config);
+  static_assert(event_probabilities[0] == 0.44444);
+  static_assert(event_probabilities[1] == 1.05);
+}
+
+TEST_CASE("JSON config parsing works for initial conditions.", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view json_config = "{\"S\": 9999,\"I\": 1}";
+  // auto parse_json
+  // static_assert(event_probabilities[0] == 0.44444);
+  // static_assert(event_probabilities[1] == 1.05);
+}
+
+TEST_CASE("JSON config parsing works for whole config.", "[config]") {
+  constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
+  try {
+
+    std::cout << json_config << "\n";
+    constexpr auto states_size =
+      parse_json_array_size<std::string_view>(parse_json_select(json_config, "states"));
+    STATIC_REQUIRE(states_size == 3);
+    constexpr auto states_arr = parse_json_array_values<std::string_view, states_size>(
+      parse_json_select(json_config, "states"));
+    STATIC_REQUIRE(states_arr[0] == "S");
+    STATIC_REQUIRE(states_arr[1] == "I");
+    STATIC_REQUIRE(states_arr[2] == "R");
+    constexpr cfepi::config_epidemic_states<states_size> states(states_arr);
+    STATIC_REQUIRE(states["S"] == 0);
+    STATIC_REQUIRE(states["I"] == 1);
+    STATIC_REQUIRE(states["R"] == 2);
+
+    constexpr auto num_events = parse_json_array_size<json_delayed<no_name, std::string_view>>(
+      parse_json_select(json_config, "events"));
+    STATIC_REQUIRE(num_events == 2);
+
+    constexpr std::array<size_t, num_events> event_sizes =
+      parse_json_array_event_type_sizes<decltype(states), num_events>(
+        parse_json_select(json_config, "events"));
+    STATIC_REQUIRE(std::size(event_sizes) == num_events);
+    STATIC_REQUIRE(event_sizes[0] == 1);
+    STATIC_REQUIRE(event_sizes[1] == 2);
+
+    constexpr auto event_type_tuple =
+      parse_json_array_event_type_struct<decltype(states), event_sizes>{}.parse(
+        states, parse_json_select(json_config, "events"));
+
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+}// namespace daw::json

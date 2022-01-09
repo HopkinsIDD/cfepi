@@ -1,0 +1,32 @@
+{
+    "states": ["S", "I", "R", "V"],
+    "events":
+    [
+	{
+	    "source": [ [ "I" ], [ "S", "V" ] ],
+	    "destination": [ {"index": 1, "compartment": "I"} ],
+	    "probability": 1.05412
+	},
+	{
+	    "source": [ ["I"] ],
+	    "destination": [ {"index": 0, "compartment": "R"} ],
+	    "probability": 0.444444
+	}
+    ],
+    "initial_conditions": {
+	"S": 9999,
+	"I": 1
+    },
+    "worlds": [
+	{
+	    "event_filter": { "function": "do_nothing" },
+	    "state_modifier": { "function": "do_nothing" },
+	    "state_filter": { "function": "do_nothing" }
+	},
+	{
+	    "event_filter": { "function": "do_nothing" },
+	    "state_modifier": { "function": "do_nothing" },
+	    "state_filter": { "function": "do_nothing" }
+	}
+    ]
+}
