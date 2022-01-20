@@ -16,7 +16,7 @@ public:
       std::find_if(std::begin(state_array), std::end(state_array), the_lambda))));
   }
   constexpr config_epidemic_states() : state_array(){};
-  constexpr config_epidemic_states(std::array<std::string_view, num_states> state_array_)
+  constexpr explicit config_epidemic_states(std::array<std::string_view, num_states> state_array_)
     : state_array(state_array_){};
 };
 
@@ -121,7 +121,7 @@ constexpr std::array<size_t, num_events> parse_json_array_event_type_sizes(std::
   std::vector<std::string_view> events_vec{
     from_json_array<json_delayed<no_name, std::string_view>>(json)
   };
-  std::transform(std::begin(events_vec), std::end(events_vec), std::begin(rc), [](auto &x) {
+  std::transform(std::begin(events_vec), std::end(events_vec), std::begin(rc), [](const auto &x) {
     return (parse_json_event_type_size(x));
   });
   return (rc);

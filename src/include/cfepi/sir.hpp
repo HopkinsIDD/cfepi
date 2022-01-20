@@ -226,7 +226,7 @@ struct sir_event {
   event_type type;
   sir_event() noexcept = default;
   sir_event(const sir_event &) = default;
-  sir_event(const sir_event_type<typename event_type::state_type, event_type::size()> &other)
+  explicit sir_event(const sir_event_type<typename event_type::state_type, event_type::size()> &other)
     : time(-1), affected_people({}),
       type(sir_event_type<typename event_type::state_type, event_type::size()>(other)){};
 };
