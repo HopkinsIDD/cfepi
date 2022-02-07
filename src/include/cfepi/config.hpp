@@ -140,9 +140,37 @@ constexpr std::array<double_type, num_events> parse_json_array_event_type_probab
   return (rc);
 }
 
-template<typename states_t, size_t num_events>
-constexpr cfepi::sir_state<states_t> parse_json_initial_conditions(std::string_view json) {
-  cfepi::sir_state<states_t> rc{};
+template<typename states_t>
+// requires std::same_as<states_t, cfepi::config_epidemic_states>
+constexpr cfepi::sir_state<states_t> parse_json_initial_conditions(states_t states, std::string_view json) {
+
+  size_t counter{0};
+  for(auto compartment_name : states.state_array) {
+    try {
+      auto initial_count_for_this_compartment = from_json<cfepi::person_t>(json, compartment_name);
+      counter += initial_count_for_this_compartment;
+    } catch (daw::json::json_exception const &jex) {
+      if (jex.reason() == "JSON Path specified not found in document") {
+	std::cerr << "No initial conditions provided for state " << compartment_name << "\n";
+      } else {
+	throw jex;
+      }
+    }
+  }
+  cfepi::sir_state<states_t> rc{counter};
+
+  counter = 0UL;
+  for(auto compartment_name : states.state_array) {
+    try {
+      auto initial_count_for_this_compartment = from_json<cfepi::person_t>(json, compartment_name);
+      for(auto index : std::ranges::views::iota(counter, counter + initial_count_for_this_compartment)) {
+	rc.potential_states[index] = std::bitset<std::size(states_t{})>{(1UL << states[compartment_name])};
+      }
+    counter += initial_count_for_this_compartment;
+    } catch (daw::json::json_exception const &jex) {
+      // This should have already happened
+    }
+  }
   return (rc);
 }
 

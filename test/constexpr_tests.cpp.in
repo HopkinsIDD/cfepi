@@ -372,11 +372,26 @@ TEST_CASE("JSON config parsing works for event probabilities.", "[config]") {
 }
 
 TEST_CASE("JSON config parsing works for initial conditions.", "[config]") {
-  // constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
-  // constexpr std::string_view json_config = "{\"S\": 9999,\"I\": 1}";
-  // auto parse_json
-  // static_assert(event_probabilities[0] == 0.44444);
-  // static_assert(event_probabilities[1] == 1.05);
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  constexpr std::string_view json_config = "{\"S\": 9999,\"I\": 1}";
+  try {
+    auto initial_conditions = parse_json_initial_conditions<decltype(sirv)>(sirv, json_config);
+    for(auto i = 0UL; i < 9999UL; ++i){
+      REQUIRE(initial_conditions.potential_states[i][sirv["S"]] == true);
+      REQUIRE(initial_conditions.potential_states[i][sirv["I"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][sirv["R"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][sirv["V"]] == false);
+    }
+    for(auto i = 9999UL; i < 10000UL; ++i){
+      REQUIRE(initial_conditions.potential_states[i][sirv["S"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][sirv["I"]] == true);
+      REQUIRE(initial_conditions.potential_states[i][sirv["R"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][sirv["V"]] == false);
+    }
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
 }
 
 TEST_CASE("JSON config parsing works for whole config.", "[config]") {
@@ -431,6 +446,20 @@ TEST_CASE("JSON config parsing works for whole config.", "[config]") {
     STATIC_REQUIRE(std::get<1>(event_type_tuple).postconditions[1].has_value());
     STATIC_REQUIRE(
       std::get<1>(event_type_tuple).postconditions[1].value_or(false_const) == states["I"]);
+
+    auto initial_conditions = parse_json_initial_conditions<decltype(states)>(states, parse_json_select(json_config, "initial_conditions"));
+    for(auto i = 0UL; i < 9999UL; ++i){
+      REQUIRE(initial_conditions.potential_states[i][states["S"]] == true);
+      REQUIRE(initial_conditions.potential_states[i][states["I"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][states["R"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][states["V"]] == false);
+    }
+    for(auto i = 9999UL; i < 10000UL; ++i){
+      REQUIRE(initial_conditions.potential_states[i][states["S"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][states["I"]] == true);
+      REQUIRE(initial_conditions.potential_states[i][states["R"]] == false);
+      REQUIRE(initial_conditions.potential_states[i][states["V"]] == false);
+    }
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
     exit(1);
