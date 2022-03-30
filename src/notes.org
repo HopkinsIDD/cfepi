@@ -1,0 +1,2 @@
+* Rename probability -> rate for config
+* Room for more general parameters for rate
