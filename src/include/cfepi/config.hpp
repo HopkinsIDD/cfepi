@@ -128,14 +128,14 @@ constexpr std::array<size_t, num_events> parse_json_array_event_type_sizes(std::
 }
 
 template<typename double_type, size_t num_events>
-constexpr std::array<double_type, num_events> parse_json_array_event_type_probabilities(
+constexpr std::array<double_type, num_events> parse_json_array_event_type_rates(
   std::string_view json) {
   std::array<double_type, num_events> rc{};
   std::vector<std::string_view> events_vec{
     from_json_array<json_delayed<no_name, std::string_view>>(json)
   };
   std::transform(std::begin(events_vec), std::end(events_vec), std::begin(rc), [](auto &x) {
-    return (from_json<double_type>(x, "probability"));
+    return (from_json<double_type>(x, "rate"));
   });
   return (rc);
 }
@@ -194,6 +194,54 @@ struct parse_json_array_event_type_struct<states_t,
     any_event_type;
 };
 
+constexpr auto trivial_event_filter = [](const auto &param __attribute__((unused)),
+                                        const auto &state __attribute__((unused)),
+                                        std::default_random_engine &rng
+                                        __attribute__((unused))) { return (true); };
+constexpr auto trivial_state_filter = [](const auto &first_param __attribute__((unused)),
+                                        const auto &second_param __attribute__((unused)),
+                                        std::default_random_engine &rng
+                                        __attribute__((unused))) { return (true); };
+constexpr auto trivial_state_modifier = [](auto &param __attribute__((unused)),
+                                          std::default_random_engine &rng
+                                          __attribute__((unused))) { return; };
+
+  /*
+constexpr auto sometimes_true_event =
+  [](auto probability) {
+    return ([probability](const any_config_event &event,
+              const cfepi::sir_state<decltype(states)> &state __attribute__((unused)),
+              std::default_random_engine &rng) {
+      std::uniform_real_distribution<> dist(0.0, 1.0);
+      if (std::holds_alternative<std::variant_alternative_t<1, any_config_event>>(event)
+        // std::holds_alternative<infection_event>(event)
+      ) {
+        if (dist(rng) < probability) { return (false); }
+      }
+      return (true);
+    });
+  };
+  */
+
+consteval auto parse_json_event_filter(std::string_view json) {
+  std::string_view function_name = from_json<std::string_view>(json, "function");
+  if (function_name == "do_nothing") { return trivial_event_filter; }
+  throw "No such event filter function";
+};
+
+consteval auto parse_json_state_filter(std::string_view json) {
+  std::string_view function_name = from_json<std::string_view>(json, "function");
+  if (function_name == "do_nothing") { return trivial_state_filter; }
+  throw "No such state filter function";
+};
+
+consteval auto parse_json_state_modifier(std::string_view json) {
+  std::string_view function_name = from_json<std::string_view>(json, "function");
+  if (function_name == "do_nothing") {
+    return trivial_state_modifier;
+  }
+  throw "No such state modifier function";
+};
 
 }// namespace daw::json
 

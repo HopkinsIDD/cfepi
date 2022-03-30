@@ -5,12 +5,12 @@
 	{
 	    "source": [ [ "I" ], [ "S", "V" ] ],
 	    "destination": [ {"index": 1, "compartment": "I"} ],
-	    "probability": 1.05412
+	    "rate": 1.05412
 	},
 	{
 	    "source": [ ["I"] ],
 	    "destination": [ {"index": 0, "compartment": "R"} ],
-	    "probability": 0.444444
+	    "rate": 0.444444
 	}
     ],
     "initial_conditions": {
@@ -19,13 +19,38 @@
     },
     "worlds": [
 	{
-	    "event_filter": { "function": "do_nothing" },
-	    "state_modifier": { "function": "do_nothing" },
-	    "state_filter": { "function": "do_nothing" }
+	    "event_filter": {
+		"function": "flat_reduction",
+		"parameters" : {
+
+		    "reduction_percentage": 1.0
+		}
+	    },
+	    "state_modifier": {
+		"function": "single_time_move",
+		"parameters" : {
+		    "percent_to_move": .24,
+		    "source_compartments": ["S"],
+		    "destination_compartment": "V",
+		    "time": [0]
+		}
+	    },
+	    "state_filter": {
+		"function": "strict_incidence_filter",
+		"parameters" : {
+		    "compartment" : "I",
+		    "counts": [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 6, 1, 1, 3, 3, 4, 8, 2, 4, 2, 7, 3, 9, 4, 5, 7, 8, 4, 7, 7, 6, 7, 9, 7, 9, 12, 7, 13, 15, 8, 21, 17, 11, 11, 14, 11, 3, 4, 14, 9, 7, 8]
+		}
+	    }
 	},
 	{
-	    "event_filter": { "function": "do_nothing" },
-	    "state_modifier": { "function": "do_nothing" },
+	    "event_filter": {
+		"function": "vaccination_reduction" ,
+		"parameters" : {"vaccine_efficacy": 1.0}},
+	    "state_modifier": {
+		"function": "do_vaccination",
+		"parameters": {"vaccination_rate": .5}
+	    },
 	    "state_filter": { "function": "do_nothing" }
 	}
     ]
