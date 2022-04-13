@@ -1,10 +1,10 @@
-#ifndef PROBABILITY_SAMPLE_VIEW_HPP
-#define PROBABILITY_SAMPLE_VIEW_HPP
-
 #include <ranges>
 #include <concepts>
 #include <iterator>
 #include <random>
+
+#ifndef PROBABILITY_SAMPLE_VIEW_HPP
+#define PROBABILITY_SAMPLE_VIEW_HPP
 
 namespace probability {
 // Replace me with the real concept when available

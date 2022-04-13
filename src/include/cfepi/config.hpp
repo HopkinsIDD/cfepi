@@ -1,6 +1,10 @@
 #include <cfepi/sir.hpp>
+#include <cfepi/modeling.hpp>
 #include <daw/daw_read_file.h>
 #include <daw/json/daw_json_link.h>
+
+#ifndef __CONFIG_H_
+#define __CONFIG_H_
 
 namespace cfepi {
 
@@ -25,7 +29,8 @@ public:
 namespace daw::json {
 constexpr auto parse_json_select(std::string_view json, std::string_view elem) {
   return (
-    std::get<1>(daw::json::json_details::find_range<NoCommentSkippingPolicyChecked>(json, elem)));
+    std::get<1>(daw::json::json_details::find_range<NoCommentSkippingPolicyChecked>(json, elem))
+	  );
 }
 template<typename T> constexpr size_t parse_json_array_size(std::string_view json) {
   const auto vec = from_json_array<T>(json);
@@ -142,7 +147,7 @@ constexpr std::array<double_type, num_events> parse_json_array_event_type_rates(
 
 template<typename states_t>
 // requires std::same_as<states_t, cfepi::config_epidemic_states>
-constexpr cfepi::sir_state<states_t> parse_json_initial_conditions(states_t states, std::string_view json) {
+cfepi::sir_state<states_t> parse_json_initial_conditions(states_t states, std::string_view json) {
 
   size_t counter{0};
   for(auto compartment_name : states.state_array) {
@@ -194,7 +199,7 @@ struct parse_json_array_event_type_struct<states_t,
     any_event_type;
 };
 
-constexpr auto trivial_event_filter = [](const auto &param __attribute__((unused)),
+constexpr auto trivial_event_filter = [](const auto &event __attribute__((unused)),
                                         const auto &state __attribute__((unused)),
                                         std::default_random_engine &rng
                                         __attribute__((unused))) { return (true); };
@@ -223,24 +228,113 @@ constexpr auto sometimes_true_event =
   };
   */
 
-consteval auto parse_json_event_filter(std::string_view json) {
+template<typename states_t, typename any_event>
+std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>
+  parse_json_event_filter(std::string_view json) {
   std::string_view function_name = from_json<std::string_view>(json, "function");
   if (function_name == "do_nothing") { return trivial_event_filter; }
+  if (function_name == "flat_reduction") {
+    return parse_json_event_filter_flat_reduction<states_t, any_event>(
+      parse_json_select(json, "parameters"));
+  }
+  // fprintf(stderr, "No event filter function named %s", function_name);
   throw "No such event filter function";
 };
 
-consteval auto parse_json_state_filter(std::string_view json) {
+template<typename states_t, typename any_event>
+std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)> parse_json_event_filter_flat_reduction(std::string_view json) {
+  auto reduction_percentage = from_json<double>(json, "reduction_percentage");
+  auto event_index = from_json<size_t>(json, "event_index");
+  return [reduction_percentage, event_index](const any_event &event,
+					     const cfepi::sir_state<states_t> &state __attribute__((unused)),
+           std::default_random_engine &rng) {
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+    if (event.index() == event_index) {
+      if (dist(rng) < reduction_percentage) { return (false); }
+    }
+    return (true);
+  };
+}
+
+template<typename states_t, typename any_event>
+std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
+  const cfepi::sir_state<states_t> &,
+  std::default_random_engine &)>
+parse_json_state_filter(std::string_view json, states_t states) {
   std::string_view function_name = from_json<std::string_view>(json, "function");
   if (function_name == "do_nothing") { return trivial_state_filter; }
-  throw "No such state filter function";
+  if (function_name == "string_incidence_filter") { return parse_json_state_filter_strict_incidence<states_t, any_event>(parse_json_select(json, "parameters"), states); }
+  // throw "No such state filter function";
+      return trivial_state_filter;
 };
 
-consteval auto parse_json_state_modifier(std::string_view json) {
+template<typename states_t, typename any_event>
+std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
+  const cfepi::sir_state<states_t> &,
+  std::default_random_engine &)>
+parse_json_state_filter_strict_incidence(std::string_view json, states_t states) {
+  std::vector<size_t> counts_to_filter_to = from_json<std::vector<size_t>>(json, "counts");
+  auto simulation_length = std::size(counts_to_filter_to);
+  auto compartment_to_filter = states[from_json<std::string_view>(json, "compartment")];
+  return [counts_to_filter_to, simulation_length, compartment_to_filter](const cfepi::filtration_setup<decltype(states), any_event> &setup,
+           const cfepi::sir_state<decltype(states)> &new_state,
+           std::default_random_engine &rng __attribute__((unused))) {
+    std::size_t this_time = static_cast<size_t>(new_state.time);
+    if (this_time <= simulation_length) {
+      auto incidence_counts =
+        cfepi::aggregate_state(setup.states_entered).potential_state_counts[1 << compartment_to_filter];
+      if (incidence_counts < counts_to_filter_to[this_time]) {
+        std::cout << "low ";
+      } else {
+        std::cout << "high ";
+      }
+      std::cout << incidence_counts << " modeled vs " << counts_to_filter_to[this_time]
+                << " expected\n";
+      return (incidence_counts == counts_to_filter_to[this_time]);
+    }
+    return (true);
+  };
+}
+
+template<typename states_t>
+std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)> parse_json_state_modifier(std::string_view json, states_t states) {
   std::string_view function_name = from_json<std::string_view>(json, "function");
-  if (function_name == "do_nothing") {
-    return trivial_state_modifier;
-  }
+  if (function_name == "do_nothing") { return trivial_state_modifier; }
+  if (function_name == "single_time_move") { return parse_json_state_modifier_single_move<states_t>(parse_json_select(json, "parameters"), states); }
   throw "No such state modifier function";
+};
+
+template<typename states_t>
+std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)> parse_json_state_modifier_single_move(std::string_view json, states_t states) {
+
+  std::cout << "  A\n";
+  auto percent_to_move = from_json<double>(json, "percent_to_move");
+  std::cout << "  B\n";
+  auto time_to_move = from_json<cfepi::epidemic_time_t>(json, "time");
+  std::cout << "  C\n";
+  auto to_compartment = states[from_json<std::string_view>(json, "destination_compartment")];
+  std::cout << "  D\n";
+  auto from_compartments_string = from_json_array<std::string_view>(json, "source_compartments");
+  std::cout << "  E\n";
+  auto from_compartments = ranges::to<std::vector>(std::ranges::views::transform(from_compartments_string, [states](auto&x) {return(states[x]);}));
+  std::cout << "  F\n";
+
+
+
+  return ([percent_to_move, time_to_move, to_compartment, from_compartments](
+            cfepi::sir_state<states_t> &state, std::default_random_engine &rng) {
+    if (state.time != time_to_move ) { return; }
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+    for (auto &this_state : state.potential_states) {
+      if (dist(rng) < percent_to_move) {
+        this_state.set(to_compartment, true);
+	for (auto compartment : from_compartments) {
+	  this_state.set(compartment, false);
+	}
+      }
+    }
+    return;
+  });
 };
 
 }// namespace daw::json
@@ -249,3 +343,5 @@ consteval auto parse_json_state_modifier(std::string_view json) {
 template<auto arr> void print_first_element() { std::cout << arr[0] << "\n"; }
 
 namespace daw::json {}// namespace daw::json
+
+#endif

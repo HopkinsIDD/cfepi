@@ -537,10 +537,11 @@ TEST_CASE("config based SIR model works", "[sir_generator]") {
     daw::json::parse_json_array_event_type_sizes<decltype(states), num_event_types>(
       daw::json::parse_json_select(json_config, "events"));
 
-  cfepi::person_t population_size = 10000;
+  auto initial_conditions = daw::json::parse_json_initial_conditions<decltype(states)>(
+    states, daw::json::parse_json_select(json_config, "initial_conditions"));
+  cfepi::person_t population_size = std::size(initial_conditions);
 
-  auto initial_conditions =
-    cfepi::default_state<decltype(states)>(states["S"], states["I"], population_size, 1UL);
+  REQUIRE(population_size == 10000);
 
   auto always_true_event = [](const auto &param __attribute__((unused)),
                              const auto &state __attribute__((unused)),
@@ -571,40 +572,40 @@ TEST_CASE("config based SIR model works", "[sir_generator]") {
       std::make_tuple(always_true_event, always_true_state, do_nothing) });
 }
 
-  TEST_CASE("Product view works for two zero length vectors", "[ranges]" ) {
-    std::vector<int> empty_vector{};
-    std::vector<int> nonempty_vector{1,2,3};
+TEST_CASE("Product view works for two zero length vectors", "[ranges]") {
+  std::vector<int> empty_vector{};
+  std::vector<int> nonempty_vector{ 1, 2, 3 };
 
-    auto r1 = cor3ntin::rangesnext::product(empty_vector, empty_vector);
-    for (auto event : r1) {
-      std::cout << "R1 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
-      REQUIRE(false);
-    }
+  auto r1 = cor3ntin::rangesnext::product(empty_vector, empty_vector);
+  for (auto event : r1) {
+    std::cout << "R1 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
+    REQUIRE(false);
+  }
+}
+
+TEST_CASE("Product view works for an empty and non-empty vector", "[ranges]") {
+  std::vector<int> empty_vector{};
+  std::vector<int> nonempty_vector{ 1, 2, 3 };
+
+  auto r2 = cor3ntin::rangesnext::product(empty_vector, nonempty_vector);
+  for (auto event : r2) {
+    std::cout << "R2 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
+    REQUIRE(false);
+  }
+}
+
+/*
+ * This test is failing, but nothing we can do about it
+TEST_CASE("Product view works for a non-empty and empty vector", "[ranges]" ) {
+  std::vector<int> empty_vector{};
+  std::vector<int> nonempty_vector{1,2,3};
+  auto r3 = cor3ntin::rangesnext::product(nonempty_vector, empty_vector);
+  for (auto event : r3) {
+    std::cout << "R3 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
+    REQUIRE(false);
   }
 
-  TEST_CASE("Product view works for an empty and non-empty vector", "[ranges]" ) {
-    std::vector<int> empty_vector{};
-    std::vector<int> nonempty_vector{1,2,3};
-
-    auto r2 = cor3ntin::rangesnext::product(empty_vector, nonempty_vector);
-    for (auto event : r2) {
-      std::cout << "R2 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
-      REQUIRE(false);
-    }
-  }
-
-  /*
-   * This test is failing, but nothing we can do about it
-  TEST_CASE("Product view works for a non-empty and empty vector", "[ranges]" ) {
-    std::vector<int> empty_vector{};
-    std::vector<int> nonempty_vector{1,2,3};
-    auto r3 = cor3ntin::rangesnext::product(nonempty_vector, empty_vector);
-    for (auto event : r3) {
-      std::cout << "R3 : " << std::get<0>(event) << ", " << std::get<1>(event) << "\n";
-      REQUIRE(false);
-    }
-
-  }
-  */
+}
+*/
 
 }// namespace detail

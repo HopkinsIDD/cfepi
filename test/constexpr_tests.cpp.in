@@ -395,24 +395,127 @@ TEST_CASE("JSON config parsing works for initial conditions.", "[config]") {
 }
 
 TEST_CASE("JSON config parsing works for trivial filtration setup functions.", "[config]") {
+  // TODO : convert this to constexpr if/when possible
   constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>>
+    sir_events_t;
+  auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  std::default_random_engine rng{};
+  sir_events_t an_event{};
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup{
+    sample_state,
+    trivial_event_filter,
+    trivial_state_filter,
+    trivial_state_modifier
+  };
   constexpr std::string_view json_config =
     "{\"event_filter\": { \"function\": \"do_nothing\" }, \"state_modifier\": { \"function\": "
     "\"do_nothing\" }, \"state_filter\": { \"function\": \"do_nothing\" }}";
   try {
-    constexpr auto event_filter = trivial_event_filter;
-    constexpr auto state_filter = trivial_state_filter;
-    constexpr auto state_modifier = trivial_state_modifier;
+    auto config_event_filter =
+      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"));
 
-    std::default_random_engine rng;
-    auto x = 1;
-    STATIC_REQUIRE(event_filter(x,x, rng) == true);
-    STATIC_REQUIRE(state_filter(x, x, rng) == true);
-    state_modifier(x, rng);
+    REQUIRE(config_event_filter(an_event, sample_state, rng) == true);
 
-    parse_json_event_filter(parse_json_select(json_config, "event_filter"));
-    parse_json_state_filter(parse_json_select(json_config, "state_filter"));
-    parse_json_state_modifier(parse_json_select(json_config, "state_modifier"));
+    auto config_state_filter =
+      parse_json_state_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "state_filter"), sirv);
+
+    REQUIRE(config_state_filter(a_filtration_setup, sample_state, rng) == true);
+
+    auto config_state_modifier =
+      parse_json_state_modifier<decltype(sirv)>(parse_json_select(json_config, "state_modifier"), sirv);
+
+    config_state_modifier(sample_state, rng);
+
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for flat reduction event filter functions.", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>>
+    sir_events_t;
+  std::default_random_engine rng{};
+  auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  sir_events_t a_recovery_event = cfepi::sir_event_type<decltype(sirv), 1>{};
+  sir_events_t an_infection_event = cfepi::sir_event_type<decltype(sirv), 2>{};
+  constexpr std::string_view json_config =
+    "{\"event_filter\": { \"function\": \"flat_reduction\", \"parameters\" : { \"event_index\": 1, "
+    "\"reduction_percentage\": 1.0 } }, \"state_modifier\": { \"function\": "
+    "\"do_nothing\" }, \"state_filter\": { \"function\": \"do_nothing\" }}";
+
+  try {
+    auto config_event_filter =
+      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"));
+
+    REQUIRE(config_event_filter(a_recovery_event, sample_state, rng) == true);
+    REQUIRE(config_event_filter(an_infection_event, sample_state, rng) == false);
+
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for strict incidence state filter functions.", "[config]") {
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>>
+    sir_events_t;
+  std::default_random_engine rng{};
+  auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup{
+    sample_state,
+    trivial_event_filter,
+    trivial_state_filter,
+    trivial_state_modifier
+  };
+  constexpr std::string_view json_config =
+    "{\"state_filter\": { \"function\": \"strict_incidence_filter\", \"parameters\" : { "
+    "\"compartment\" : \"I\", \"counts\": [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 6, 1, "
+    "1, 3, 3, 4, 8, 2, 4, 2, 7, 3, 9, 4, 5, 7, 8, 4, 7, 7, 6, 7, 9, 7, 9, 12, 7, 13, 15, 8, 21, "
+    "17, 11, 11, 14, 11, 3, 4, 14, 9, 7, 8] } } }";
+
+    try {
+      auto config_state_filter = parse_json_state_filter<decltype(sirv), sir_events_t>(
+        parse_json_select(json_config, "state_filter"), sirv);
+      /*
+
+      REQUIRE(config_state_filter(a_filtration_setup, sample_state, rng) == true);
+      */
+
+  } catch (daw::json::json_exception const &jex) {
+    std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;
+    exit(1);
+  }
+}
+
+TEST_CASE("JSON config parsing works for single move state modifier setup functions.", "[config]") {
+  // TODO : convert this to constexpr if/when possible
+  constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
+  typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>>
+    sir_events_t;
+  auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  std::default_random_engine rng{};
+  sir_events_t an_event{};
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup{
+    sample_state,
+    trivial_event_filter,
+    trivial_state_filter,
+    trivial_state_modifier
+  };
+  constexpr std::string_view json_config =
+    "{\"state_modifier\": { \"function\": \"single_time_move\", \"parameters\" : { "
+    "\"percent_to_move\": 0.24, \"source_compartments\": [\"S\"], \"destination_compartment\": "
+    "\"V\", \"time\": 0 } } }";
+
+  try {
+
+    auto config_state_modifier =
+      parse_json_state_modifier<decltype(sirv)>(parse_json_select(json_config, "state_modifier"), sirv);
+
+    config_state_modifier(sample_state, rng);
 
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;

@@ -22,14 +22,15 @@
 	    "event_filter": {
 		"function": "flat_reduction",
 		"parameters" : {
+		    "event_index": 0,
 
-		    "reduction_percentage": 1.0
+		    "reduction_percentage": 0.1
 		}
 	    },
 	    "state_modifier": {
 		"function": "single_time_move",
 		"parameters" : {
-		    "percent_to_move": .24,
+		    "percent_to_move": 0.24,
 		    "source_compartments": ["S"],
 		    "destination_compartment": "V",
 		    "time": [0]

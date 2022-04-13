@@ -2,6 +2,9 @@
 #include <cfepi/sample_view.hpp>
 #include <range/v3/all.hpp>
 
+#ifndef __MODELING_H_
+#define __MODELING_H_
+
 namespace cfepi {
 /*!
  * \class filtration_setup
@@ -214,3 +217,5 @@ auto run_simulation(auto all_event_types,
 //@}
 
 }// namespace cfepi
+
+#endif

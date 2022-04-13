@@ -24,7 +24,6 @@
 #ifndef __SIR_H_
 #define __SIR_H_
 
-
 //! \defgroup General_Purpose_Code General Purpose Code
 namespace cfepi {
 
@@ -110,6 +109,10 @@ struct sir_state {
       {},
       {});
     return (rc);
+  }
+
+  size_t size() const {
+    return(std::size(potential_states));
   }
 
   //! \brief Set all potential states to false
