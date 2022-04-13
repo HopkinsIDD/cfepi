@@ -489,7 +489,17 @@ struct single_type_event_generator<event_type_t, std::index_sequence<preconditio
       vectors(std::make_tuple(
         get_precondition_satisfying_indices<typename event_type_t::state_type, precondition_index>(
           event_type,
-          current_state)...)) {}
+          current_state)...)) {
+    // This size check is conditioned on the cartesian product of a non-empty range and an empty range segfaulting
+    // There is a commented out test called "Product view works for a non-empty and empty vector", which verifies this is still happening
+    std::vector<size_t> all_vector_sizes =
+      std::apply([](const auto&... x){ return (std::vector<size_t>{ std::size(x)... }); }, vectors);
+    for (auto this_size : all_vector_sizes) {
+      if (this_size == 0) {
+	std::apply([](auto&... x) { (..., x.clear());}, vectors);
+      }
+    }
+  }
 };
 
 /*
