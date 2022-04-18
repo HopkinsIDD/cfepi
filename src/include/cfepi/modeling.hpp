@@ -177,7 +177,6 @@ auto run_simulation(auto all_event_types,
 
     cfor::constexpr_for<0, std::variant_size_v<any_event_type>, 1>(seeded_single_event_type_run);
 
-    for (auto setup : setups_by_filter) {}
     auto states_next = ranges::to<std::vector>(
       ranges::views::transform(setups_by_filter, [t, &random_source_1](auto &x) {
         auto rc = x.states_entered || x.states_remained;

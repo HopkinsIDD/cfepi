@@ -465,12 +465,27 @@ TEST_CASE("JSON config parsing works for strict incidence state filter functions
     sir_events_t;
   std::default_random_engine rng{};
   auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
-  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup{
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup_low{
     sample_state,
     trivial_event_filter,
     trivial_state_filter,
     trivial_state_modifier
   };
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup_right{
+    sample_state,
+    trivial_event_filter,
+    trivial_state_filter,
+    trivial_state_modifier
+  };
+  a_filtration_setup_right.states_entered.potential_states[2].flip(sirv["I"]);
+  cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup_high{
+    sample_state,
+    trivial_event_filter,
+    trivial_state_filter,
+    trivial_state_modifier
+  };
+  a_filtration_setup_high.states_entered.potential_states[2].flip(sirv["I"]);
+  a_filtration_setup_high.states_entered.potential_states[3].flip(sirv["I"]);
   constexpr std::string_view json_config =
     "{\"state_filter\": { \"function\": \"strict_incidence_filter\", \"parameters\" : { "
     "\"compartment\" : \"I\", \"counts\": [1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 6, 1, "
@@ -480,10 +495,10 @@ TEST_CASE("JSON config parsing works for strict incidence state filter functions
     try {
       auto config_state_filter = parse_json_state_filter<decltype(sirv), sir_events_t>(
         parse_json_select(json_config, "state_filter"), sirv);
-      /*
 
-      REQUIRE(config_state_filter(a_filtration_setup, sample_state, rng) == true);
-      */
+      REQUIRE(config_state_filter(a_filtration_setup_low, sample_state, rng) == false);
+      REQUIRE(config_state_filter(a_filtration_setup_right, sample_state, rng) == true);
+      REQUIRE(config_state_filter(a_filtration_setup_high, sample_state, rng) == false);
 
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;

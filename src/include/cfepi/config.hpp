@@ -14,7 +14,7 @@ public:
   const std::array<std::string_view, num_states> state_array;
   constexpr static auto size() { return (num_states); };
   constexpr size_t operator[](std::string_view s) const {
-    auto the_lambda = [s](const std::string_view x) { return (s == x); };
+    auto the_lambda = [s](const std::string_view& x) { return (s == x); };
 
     return (static_cast<size_t>(std::distance(std::begin(state_array),
       std::find_if(std::begin(state_array), std::end(state_array), the_lambda))));
@@ -34,7 +34,7 @@ constexpr auto parse_json_select(std::string_view json, std::string_view elem) {
 }
 template<typename T> constexpr size_t parse_json_array_size(std::string_view json) {
   const auto vec = from_json_array<T>(json);
-  return (vec.size());
+  return (std::size(vec));
 };
 
 template<typename T, size_t count> constexpr auto parse_json_array_values(std::string_view json) {
@@ -263,7 +263,7 @@ std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
 parse_json_state_filter(std::string_view json, states_t states) {
   std::string_view function_name = from_json<std::string_view>(json, "function");
   if (function_name == "do_nothing") { return trivial_state_filter; }
-  if (function_name == "string_incidence_filter") { return parse_json_state_filter_strict_incidence<states_t, any_event>(parse_json_select(json, "parameters"), states); }
+  if (function_name == "strict_incidence_filter") { return parse_json_state_filter_strict_incidence<states_t, any_event>(parse_json_select(json, "parameters"), states); }
   // throw "No such state filter function";
       return trivial_state_filter;
 };
@@ -279,14 +279,16 @@ parse_json_state_filter_strict_incidence(std::string_view json, states_t states)
   return [counts_to_filter_to, simulation_length, compartment_to_filter](const cfepi::filtration_setup<decltype(states), any_event> &setup,
            const cfepi::sir_state<decltype(states)> &new_state,
            std::default_random_engine &rng __attribute__((unused))) {
-    std::size_t this_time = static_cast<size_t>(new_state.time);
+    std::size_t this_time = static_cast<size_t>(new_state.time > 0 ? new_state.time : 0);
     if (this_time <= simulation_length) {
       auto incidence_counts =
         cfepi::aggregate_state(setup.states_entered).potential_state_counts[1 << compartment_to_filter];
       if (incidence_counts < counts_to_filter_to[this_time]) {
         std::cout << "low ";
-      } else {
+      } else if (incidence_counts > counts_to_filter_to[this_time]){
         std::cout << "high ";
+      } else {
+	std::cout << "right ";
       }
       std::cout << incidence_counts << " modeled vs " << counts_to_filter_to[this_time]
                 << " expected\n";
@@ -307,17 +309,11 @@ std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)> 
 template<typename states_t>
 std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)> parse_json_state_modifier_single_move(std::string_view json, states_t states) {
 
-  std::cout << "  A\n";
   auto percent_to_move = from_json<double>(json, "percent_to_move");
-  std::cout << "  B\n";
   auto time_to_move = from_json<cfepi::epidemic_time_t>(json, "time");
-  std::cout << "  C\n";
   auto to_compartment = states[from_json<std::string_view>(json, "destination_compartment")];
-  std::cout << "  D\n";
   auto from_compartments_string = from_json_array<std::string_view>(json, "source_compartments");
-  std::cout << "  E\n";
-  auto from_compartments = ranges::to<std::vector>(std::ranges::views::transform(from_compartments_string, [states](auto&x) {return(states[x]);}));
-  std::cout << "  F\n";
+  auto from_compartments = ranges::to<std::vector>(std::ranges::views::transform(from_compartments_string, [states](const auto&x) {return(states[x]);}));
 
 
 
