@@ -45,7 +45,7 @@ template<typename T, size_t count> constexpr auto parse_json_array_values(std::s
 };
 
 constexpr auto parse_json_event_type_size(std::string_view json) {
-  std::string_view sub_json = std::get<1>(
+  auto sub_json = std::get<1>(
     daw::json::json_details::find_range<NoCommentSkippingPolicyChecked>(json, "source"));
   return (parse_json_array_size<json_delayed<no_name, std::string_view>>(sub_json));
 };

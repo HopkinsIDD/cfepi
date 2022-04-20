@@ -4,17 +4,28 @@ STRING(REPLACE ";" "" JSON_CONFIG_CONTENTS ${JSON_CONFIG_CONTENTS_RAW})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/constexpr_tests.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/constexpr_tests.cpp ESCAPE_QUOTES NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/tests.cpp ESCAPE_QUOTES NEWLINE_STYLE UNIX)
 
-if(CONAN_CATCH2_ROOT_DEBUG)
-  include(${CONAN_CATCH2_ROOT_DEBUG}/lib/cmake/Catch2/Catch.cmake)
-else()
-  include(${CONAN_CATCH2_ROOT}/lib/cmake/Catch2/Catch.cmake)
-endif()
+find_package(Catch2 REQUIRED)
+find_package(daw-json-link CONFIG)
 
-add_library(catch_main STATIC catch_main.cpp)
-target_link_libraries(catch_main PUBLIC CONAN_PKG::catch2)
-target_link_libraries(catch_main PUBLIC CONAN_PKG::daw_json_link)
+include(CTest)
+include(Catch)
+
+add_library(catch_main OBJECT catch_main.cpp)
+target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 target_link_libraries(catch_main PRIVATE project_options)
+target_link_libraries(catch_main PUBLIC daw::daw-json-link)
 target_link_libraries(catch_main INTERFACE cfepi)
+
+# Provide a simple smoke test to make sure that the CLI works and can display a --help message
+# add_test(NAME cli.has_help COMMAND cfepi --help)
+
+# Provide a test to verify that the version being reported from the application
+# matches the version given to CMake. This will be important once you package
+# your program. Real world shows that this is the kind of simple mistake that is easy
+# to make, but also easy to test for.
+# add_test(NAME cli.version_matches COMMAND cfepi --version)
+# set_tests_properties(cli.version_matches PROPERTIES PASS_REGULAR_EXPRESSION "${PROJECT_VERSION}")
+
 
 add_executable(tests tests.cpp)
 target_link_libraries(tests PRIVATE project_warnings project_options catch_main)

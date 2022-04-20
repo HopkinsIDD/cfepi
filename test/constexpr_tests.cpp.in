@@ -512,6 +512,7 @@ TEST_CASE("JSON config parsing works for single move state modifier setup functi
   typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>>
     sir_events_t;
   auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  sample_state.time = 0;
   std::default_random_engine rng{};
   sir_events_t an_event{};
   cfepi::filtration_setup<decltype(sirv), sir_events_t> a_filtration_setup{
@@ -522,7 +523,7 @@ TEST_CASE("JSON config parsing works for single move state modifier setup functi
   };
   constexpr std::string_view json_config =
     "{\"state_modifier\": { \"function\": \"single_time_move\", \"parameters\" : { "
-    "\"percent_to_move\": 0.24, \"source_compartments\": [\"S\"], \"destination_compartment\": "
+    "\"percent_to_move\": 1.0, \"source_compartments\": [\"S\"], \"destination_compartment\": "
     "\"V\", \"time\": 0 } } }";
 
   try {
@@ -531,6 +532,8 @@ TEST_CASE("JSON config parsing works for single move state modifier setup functi
       parse_json_state_modifier<decltype(sirv)>(parse_json_select(json_config, "state_modifier"), sirv);
 
     config_state_modifier(sample_state, rng);
+    REQUIRE(sample_state.potential_states[3][sirv["S"]] == 0);
+    REQUIRE(sample_state.potential_states[3][sirv["V"]] == 1);
 
   } catch (daw::json::json_exception const &jex) {
     std::cerr << "Exception thrown by parser: " << jex.reason() << std::endl;

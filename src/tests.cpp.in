@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
       states, daw::json::parse_json_select(json_config, "events"));
 
   auto simulation =
-    run_simulation<decltype(states), any_config_event_type, any_config_event>(event_type_tuple,
+    cfepi::run_simulation<decltype(states), any_config_event_type, any_config_event>(event_type_tuple,
       initial_conditions,
       std::array<double, 2>({ .1, 2. / static_cast<double>(population_size) }),
       {

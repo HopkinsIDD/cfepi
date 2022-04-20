@@ -1,0 +1,13 @@
+# Docs at https://docs.conan.io/en/latest/reference/conanfile_txt.html
+
+[requires]
+catch2/2.13.8
+docopt.cpp/0.6.3
+fmt/8.1.1
+spdlog/1.9.2
+daw_json_link/2.12.9
+rangesnext/cci.20210426
+range-v3/0.11.0
+
+[generators]
+cmake_find_package_multi

@@ -8,15 +8,20 @@ STRING(REPLACE ";" "" JSON_CONFIG_CONTENTS ${JSON_CONFIG_CONTENTS_RAW})
 message(${JSON_CONFIG_CONTENTS})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/uvira.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/uvira.cpp ESCAPE_QUOTES NEWLINE_STYLE UNIX)
 
+find_package(range-v3 CONFIG)
+find_package(rangesnext CONFIG)
+find_package(daw-json-link CONFIG REQUIRED)
+
 add_library(cfepi INTERFACE)
 target_include_directories(cfepi INTERFACE include)
 target_link_libraries(
   cfepi
-  INTERFACE project_options
+  INTERFACE
+          project_options
           project_warnings
-          CONAN_PKG::range-v3
-          CONAN_PKG::rangesnext
-          CONAN_PKG::daw_json_link
+          range-v3::range-v3
+          rangesnext::rangesnext
+          daw::daw-json-link
 )
 add_executable(cfepi_test tests.cpp)
 target_link_libraries(cfepi_test cfepi)
