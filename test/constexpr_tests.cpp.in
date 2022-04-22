@@ -413,7 +413,7 @@ TEST_CASE("JSON config parsing works for trivial filtration setup functions.", "
     "\"do_nothing\" }, \"state_filter\": { \"function\": \"do_nothing\" }}";
   try {
     auto config_event_filter =
-      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"));
+      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"), sirv);
 
     REQUIRE(config_event_filter(an_event, sample_state, rng) == true);
 
@@ -448,7 +448,7 @@ TEST_CASE("JSON config parsing works for flat reduction event filter functions."
 
   try {
     auto config_event_filter =
-      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"));
+      parse_json_event_filter<decltype(sirv), sir_events_t>(parse_json_select(json_config, "event_filter"), sirv);
 
     REQUIRE(config_event_filter(a_recovery_event, sample_state, rng) == true);
     REQUIRE(config_event_filter(an_infection_event, sample_state, rng) == false);
@@ -555,6 +555,9 @@ TEST_CASE("JSON config parsing works for full world.", "[config]") {
   constexpr cfepi::config_epidemic_states<4> sirv({ "S", "I", "R", "V" });
   typedef std::variant<cfepi::sir_event_type<decltype(sirv), 1>, cfepi::sir_event_type<decltype(sirv), 2>> sir_events_t;
 
+  auto sample_state{cfepi::default_state<decltype(sirv)>(sirv["S"], sirv["I"], 10000UL, 1UL)};
+  sample_state.time = 0;
+
   try {
     auto config_world = parse_json_filtration_setups<decltype(sirv), sir_events_t>(json_config, sirv);
   } catch (daw::json::json_exception const &jex) {
@@ -644,8 +647,8 @@ TEST_CASE("JSON config parsing works for whole config.", "[config]") {
     constexpr std::array<double, num_events> event_rates=
       parse_json_array_event_type_rates<double, num_events>(parse_json_select(json_config, "events"));
 
-    static_assert(event_rates[0] == 1.05412);
-    static_assert(event_rates[1] == 0.444444);
+    static_assert(event_rates[0] == 0.444444);
+    static_assert(fabs(event_rates[1] - (1.05 * .44444444444444 / 10000)) < 0.00000000000001 );
 
     auto config_world = parse_json_filtration_setups<decltype(states), any_event_t>(parse_json_select(json_config, "worlds"), states);
 
