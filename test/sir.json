@@ -37,7 +37,7 @@
 		    "percent_to_move": 0.24,
 		    "source_compartments": ["S"],
 		    "destination_compartment": "V",
-		    "time": [0]
+		    "time": 0
 		}
 	    },
 	    "state_filter": {

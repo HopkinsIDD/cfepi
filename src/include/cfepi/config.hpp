@@ -230,12 +230,12 @@ constexpr auto sometimes_true_event =
 
 template<typename states_t, typename any_event>
 std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>
-  parse_json_event_filter(std::string_view json) {
+parse_json_event_filter(std::string_view json) {
   std::string_view function_name = from_json<std::string_view>(json, "function");
   if (function_name == "do_nothing") { return trivial_event_filter; }
   if (function_name == "flat_reduction") {
     return parse_json_event_filter_flat_reduction<states_t, any_event>(
-      parse_json_select(json, "parameters"));
+								       parse_json_select(json, "parameters"));
   }
   // fprintf(stderr, "No event filter function named %s", function_name);
   throw "No such event filter function";
@@ -333,11 +333,34 @@ std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)> 
   });
 };
 
+template<typename states_t, typename any_event>
+std::tuple<std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>,
+  std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
+    const cfepi::sir_state<states_t> &,
+    std::default_random_engine &)>,
+  std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)>>
+  parse_json_single_filtration_setup(std::string_view json, states_t states)
+{
+  return std::make_tuple(parse_json_event_filter<states_t, any_event>(parse_json_select(json, "event_filter")),
+    parse_json_state_filter<states_t, any_event>(parse_json_select(json, "state_filter"), states),
+    parse_json_state_modifier<states_t>(parse_json_select(json, "state_modifier"), states));
+};
+
+template<typename states_t, typename any_event>
+std::vector<std::tuple<std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>,
+  std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
+    const cfepi::sir_state<states_t> &,
+    std::default_random_engine &)>,
+  std::function<void(cfepi::sir_state<states_t> &, std::default_random_engine &)>>>
+  parse_json_filtration_setups(std::string_view json, states_t states)
+{
+  return cor3ntin::rangesnext::to<std::vector>(
+    std::ranges::transform_view(from_json_array<json_delayed<no_name, std::string_view>>(json),
+      [states](auto x) { return (parse_json_single_filtration_setup<states_t, any_event>(x, states)); }));
+};
+
+  template<auto arr> void print_first_element() { std::cout << arr[0] << "\n"; }
+
 }// namespace daw::json
-
-
-template<auto arr> void print_first_element() { std::cout << arr[0] << "\n"; }
-
-namespace daw::json {}// namespace daw::json
 
 #endif
