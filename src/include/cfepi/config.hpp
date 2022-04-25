@@ -399,7 +399,7 @@ template<auto arr> void print_first_element() { std::cout << arr[0] << "\n"; }
 }// namespace daw::json
 
 namespace cfepi {
-template<const std::string_view &json_config> void run_simulation_from_config()
+  template<const std::string_view &json_config> void run_simulation_from_config(epidemic_time_t epidemic_length = 365, size_t simulation_seed = 2)
 {
   constexpr auto states_size = daw::json::parse_json_array_size<std::string_view>(daw::json::parse_json_select(json_config, "states"));
   constexpr auto states_arr =
@@ -442,10 +442,8 @@ template<const std::string_view &json_config> void run_simulation_from_config()
   constexpr std::array<double, num_events> event_rates =
     daw::json::parse_json_array_event_type_rates<double, num_events>(daw::json::parse_json_select(json_config, "events"));
 
-  cfepi::run_simulation<decltype(states), any_config_event_type, any_config_event>(event_type_tuple,
-    initial_conditions,
-    event_rates,
-    config_worlds);
+  cfepi::run_simulation<decltype(states), any_config_event_type, any_config_event>(
+    event_type_tuple, initial_conditions, event_rates, config_worlds, epidemic_length, simulation_seed);
 }
 }// namespace cfepi
 
