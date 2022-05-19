@@ -20,9 +20,18 @@
     },
     "worlds": [
 	{
-	    "event_filter": { "function": "do_nothing" }
+	    "event_filter": { "function": "do_nothing" },
 	    "state_modifier": { "function": "do_nothing" },
-	    "state_filter": { "function": "do_nothing" }
+	    "state_filter": {
+		"function": "strict_incidence_filter",
+		"parameters" : {
+		    "compartment" : "I",
+		    "counts": [
+		       1,
+		       2
+		     ]
+		}
+	    }
 	},
 	{
 	    "event_filter": {
@@ -41,36 +50,7 @@
 		    "time": 0
 		}
 	    },
-	    "state_filter": {
-		"function": "strict_incidence_filter",
-		"parameters" : {
-		    "compartment" : "I",
-		    "counts": [
-		       1,
-		       1,
-		       1,
-		       2,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       1,
-		       2,
-		       2,
-		       6,
-		       14,
-		       18,
-		       23,
-		       45,
-		       68
-		     ]
-		}
-	    }
+	    "state_filter": { "function": "do_nothing" }
 	}
     ]
 }

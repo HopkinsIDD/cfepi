@@ -1,0 +1,38 @@
+{
+    "states": [
+      "S",
+      "E",
+      "I",
+      "R"
+    ],
+    "events":
+    [
+	{
+	    "source": [ ["E"] ],
+	    "destination": [ {"index": 0, "compartment": "I"} ],
+	    "rate": 0.444444
+	},
+	{
+	    "source": [ ["I"] ],
+	    "destination": [ {"index": 0, "compartment": "R"} ],
+	    "rate": 0.444444
+	},
+	{
+	    "source": [ [ "I" ], [ "S" ] ],
+	    "destination": [ {"index": 1, "compartment": "E"} ],
+	    "comment_rate": "1.05 * .44444444444444 / 273613 = 0.000001705572",
+	    "rate": 0.000001705572
+	}
+    ],
+    "initial_conditions": {
+	"S": 273612,
+	"I": 1
+    },
+    "worlds": [
+	{
+    "event_filter": {"function": "do_nothing"},
+    "state_filter": {"function": "do_nothing"},
+    "state_modifier": {"function": "do_nothing"}
+	}
+    ]
+}

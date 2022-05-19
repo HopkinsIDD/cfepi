@@ -522,6 +522,118 @@ TEST_CASE("map based SIR model works", "[sir_generator]") {
       std::make_tuple(always_true_event, always_true_state, do_nothing) });
 }
 
+struct config_map_sir_epidemic_states {
+public:
+  using state = size_t;
+  constexpr static std::array<std::tuple<std::string_view, size_t>, 4> state_array{
+    std::make_tuple("S", 0UL),
+    std::make_tuple("I", 1UL),
+    std::make_tuple("R", 2UL),
+    std::make_tuple("V", 3UL)
+  };
+  constexpr static auto size() { return (std::size(state_array)); };
+  constexpr size_t operator[](std::string_view s) {
+    return (
+      std::get<1>(*std::find_if(std::begin(state_array), std::end(state_array), [&s](auto &x) {
+        return (std::get<0>(x) == s);
+      })));
+  }
+};
+
+struct config_map_sir_recovery_event_type : public cfepi::transition_event_type<config_map_sir_epidemic_states> {
+  constexpr config_map_sir_recovery_event_type() noexcept
+    : transition_event_type<config_map_sir_epidemic_states>(
+      { std::bitset<std::size(config_map_sir_epidemic_states{})>{
+        1UL << config_map_sir_epidemic_states{}["I"] } },
+      config_map_sir_epidemic_states{}["R"]){};
+};
+
+struct config_map_sir_infection_event_type
+  : public cfepi::interaction_event_type<config_map_sir_epidemic_states> {
+  constexpr config_map_sir_infection_event_type() noexcept
+    : interaction_event_type<config_map_sir_epidemic_states>(
+      { std::bitset<std::size(config_map_sir_epidemic_states{})>{
+        1UL << config_map_sir_epidemic_states{}["S"] } },
+      { std::bitset<std::size(config_map_sir_epidemic_states{})>{
+        1UL << config_map_sir_epidemic_states{}["I"] } },
+      config_map_sir_epidemic_states{}["I"]){};
+};
+
+typedef std::variant<config_map_sir_recovery_event_type, config_map_sir_infection_event_type>
+  any_config_map_sir_event_type;
+typedef cfepi::any_event<any_config_map_sir_event_type>::type any_config_map_sir_event;
+
+TEST_CASE("config based SIR model works without config", "[sir_generator]") {
+  cfepi::person_t population_size = 10000;
+  auto initial_conditions = cfepi::default_state<config_map_sir_epidemic_states>(
+    config_map_sir_epidemic_states{}["S"], config_map_sir_epidemic_states{}["I"], population_size, 1UL);
+
+  auto always_true_event = [](const auto &param __attribute__((unused)),
+                             const auto &state __attribute__((unused)),
+                             std::default_random_engine &rng __attribute__((unused))) { return (true); };
+  auto always_true_state = [](const auto &first_param __attribute__((unused)),
+                             const auto &second_param __attribute__((unused)),
+                             std::default_random_engine &rng __attribute__((unused))) { return (true); };
+  auto do_nothing = [](auto &param __attribute__((unused)), std::default_random_engine &rng __attribute__((unused))) {
+    return;
+  };
+
+  auto flat_reduction = [](const auto &param __attribute__((unused)),
+                          const auto &state __attribute__((unused)),
+                          std::default_random_engine &rng __attribute__((unused))) {
+    constexpr double reduction_percentage = 1.0;
+    constexpr size_t event_index = 0UL;
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+    if (param.index() == event_index) {
+      if (dist(rng) < reduction_percentage) { return (false); }
+    }
+    return (true);
+  };
+
+  auto single_time_move = [](auto &param __attribute__((unused)),
+                            std::default_random_engine &rng __attribute__((unused))) {
+    constexpr auto percent_to_move = 0.24;
+    constexpr auto time_to_move = 0;
+    constexpr auto to_compartment = config_map_sir_epidemic_states{}["V"];
+    constexpr auto from_compartments = std::array{config_map_sir_epidemic_states{}["S"]};
+
+    if (param.time != time_to_move) { return; }
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+    for (auto &this_state : param.potential_states) {
+      if (dist(rng) < percent_to_move) {
+        this_state.set(to_compartment, true);
+        for (auto compartment : from_compartments) { this_state.set(compartment, false); }
+      }
+    }
+    return;
+  };
+
+  auto strict_incidence_filter = [](const auto &setup,
+                                   const auto &new_state,
+                                   std::default_random_engine &rng __attribute__((unused))) {
+    constexpr std::array counts_to_filter_to{1UL, 2UL};
+    constexpr auto simulation_length = std::size(counts_to_filter_to);
+    constexpr auto compartment_to_filter = config_map_sir_epidemic_states{}["I"];
+    std::size_t this_time = static_cast<size_t>(new_state.time > 0 ? new_state.time : 0);
+    if (this_time < simulation_length) {
+      auto incidence_counts =
+        cfepi::aggregate_state(setup.states_entered).potential_state_counts[1 << compartment_to_filter];
+      return (incidence_counts == counts_to_filter_to[this_time]);
+    }
+    return (true);
+  };
+
+  cfepi::filtration_setup<config_map_sir_epidemic_states, any_config_map_sir_event_type>{
+    initial_conditions, always_true_event, always_true_state, do_nothing
+  };
+  cfepi::run_simulation<config_map_sir_epidemic_states, any_config_map_sir_event_type, any_config_map_sir_event>(
+    cfepi::all_event_types<any_config_map_sir_event_type>{},
+    initial_conditions,
+    std::array<double, 2>({ .1, 2. / static_cast<double>(population_size) }),
+    { std::make_tuple(always_true_event, strict_incidence_filter, do_nothing),
+      std::make_tuple(flat_reduction, always_true_state, single_time_move) });
+}
+
 TEST_CASE("config based SIR model works", "[sir_generator]") {
   const static constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
   cfepi::run_simulation_from_config<json_config>();
