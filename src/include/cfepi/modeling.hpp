@@ -4,8 +4,6 @@
 #include <cfepi/sir.hpp>
 #include <range/v3/all.hpp>
 
-#include <cfepi/profiler.hpp>
-
 #ifndef __MODELING_H_
 #define __MODELING_H_
 
@@ -80,8 +78,6 @@ auto single_timestep_run(auto &results,
   auto &simulation_seed,
   auto &resets)
 {
-
-  PROFILE_ME_AS("time_step");
 
   COZ_PROGRESS_NAMED("Beginning of timestep");
 
@@ -206,7 +202,6 @@ auto run_simulation(auto all_event_types,
   const epidemic_time_t epidemic_duration = 365,
   size_t simulation_seed = 2)
 {
-  PROFILE_ME_AS("run_simulation");
 
   size_t resets = 0;
 

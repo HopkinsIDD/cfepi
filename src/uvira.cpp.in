@@ -5,17 +5,14 @@
 #include <cfepi/config.hpp>
 #include <cfepi/sample_view.hpp>
 
-using namespace detail;
-
 int main() {
 
   const static constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
   // #pragma omp parallel for
   std::default_random_engine rand{};
-  for ( size_t i = 0 ; i < 20; ++i ) {
+  for ( size_t i = 0 ; i < 200; ++i ) {
     cfepi::run_simulation_from_config<json_config>(10UL ,rand());
     COZ_PROGRESS_NAMED("Simulation End");
   }
 
-  profiler::getInstance().print(std::cout, 60);
 }
