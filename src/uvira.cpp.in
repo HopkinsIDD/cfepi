@@ -8,11 +8,10 @@
 int main() {
 
   const static constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
-  // #pragma omp parallel for
   std::default_random_engine rand{};
-  for ( size_t i = 0 ; i < 200; ++i ) {
+  // #pragma omp parallel for
+  for ( size_t i = 0 ; i < 100; ++i ) {
     cfepi::run_simulation_from_config<json_config>(10UL ,rand());
-    COZ_PROGRESS_NAMED("Simulation End");
   }
 
 }
