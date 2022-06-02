@@ -1,5 +1,3 @@
-#include <coz.h>
-
 #include <cfepi/sample_view.hpp>
 #include <cfepi/sir.hpp>
 #include <range/v3/all.hpp>
@@ -124,9 +122,8 @@ auto single_event_type_run(auto &all_event_types,
 };
 
 template<typename states_t, typename any_event_type, typename any_event>
-auto single_reset_run(auto &results,
+auto single_time_run(auto &results,
   auto &setups_by_filter,
-  auto &current_state,
   auto &all_event_types,
   auto &t,
   auto &random_source_1,
@@ -135,20 +132,51 @@ auto single_reset_run(auto &results,
   auto &resets)
 {
 
-  COZ_PROGRESS_NAMED("Beginning of timestep");
-
-  current_state.reset();
-  current_state = std::transform_reduce(
-    std::begin(setups_by_filter),
+  if (std::begin(setups_by_filter) == std::end(setups_by_filter)){
+    throw "There should be at least one setup\n";
+  }
+  auto first_setup = (*std::begin(setups_by_filter)).current_state;
+  const auto current_state = std::transform_reduce(
+    std::begin(setups_by_filter)+1,
     std::end(setups_by_filter),
-    current_state,
+    first_setup,
     [](const auto &x, const auto &y) { return (x || y); },
     [](const auto &x) { return (x.current_state); });
+
+  bool still_working = true;
+  while( still_working ) {
+    still_working = single_reset_run<states_t, any_event_type, any_event>(
+      setups_by_filter,
+      current_state,
+      all_event_types,
+      t,
+      random_source_1,
+      event_probabilities,
+      simulation_seed);
+    ++resets;
+  }
+  --resets;
+
+  results.push_back(ranges::to<std::vector>(
+    ranges::views::transform(setups_by_filter, [](const auto &x) { return (aggregate_state(x.current_state)); })));
+}
+
+template<typename states_t, typename any_event_type, typename any_event>
+auto single_reset_run(
+  auto &setups_by_filter,
+  const auto &current_state,
+  auto &all_event_types,
+  auto &t,
+  auto &random_source_1,
+  auto &event_probabilities,
+  auto &simulation_seed)
+{
 
   const auto seeded_single_event_type_run =
     [&all_event_types, &t, &setups_by_filter, &random_source_1, &current_state, &event_probabilities, &simulation_seed](
       const auto event_index) {
-      ++simulation_seed;
+      simulation_seed = random_source_1();
+      // ++simulation_seed;
       single_event_type_run<states_t, any_event_type, any_event>(all_event_types,
         setups_by_filter,
         random_source_1,
@@ -185,15 +213,11 @@ auto single_reset_run(auto &results,
       setups_by_filter[i].current_state = states_next[i];
       setups_by_filter[i].reset();
     }
-    results.push_back(ranges::to<std::vector>(
-      ranges::views::transform(setups_by_filter, [](const auto &x) { return (aggregate_state(x.current_state)); })));
+    return false;
   } else {
     ranges::for_each(setups_by_filter, [&t](auto &x) { x.reset(); });
-    --t;
-    ++resets;
+    return(true);
   }
-
-  COZ_PROGRESS_NAMED("End of timestep");
 }
 
 template<typename states_t, typename any_event>
@@ -227,11 +251,10 @@ auto run_simulation(auto all_event_types,
   size_t resets = 0;
 
   std::default_random_engine random_source_1{ simulation_seed };
-  auto current_state{initial_conditions};
 
   std::vector<filtration_setup<states_t, any_event>> setups_by_filter{};
   for(auto filter : filters) {
-    setups_by_filter.push_back(filtration_setup<states_t, any_event>(current_state, filter));
+    setups_by_filter.push_back(filtration_setup<states_t, any_event>(initial_conditions, filter));
   }
 
   std::vector<aggregated_sir_state<states_t>> first_result{};
@@ -245,9 +268,8 @@ auto run_simulation(auto all_event_types,
   results.push_back(first_result);
 
   for (epidemic_time_t t = 0UL; t < epidemic_duration; ++t) {
-    single_reset_run<states_t, any_event_type, any_event>(results,
+    single_time_run<states_t, any_event_type, any_event>(results,
       setups_by_filter,
-      current_state,
       all_event_types,
       t,
       random_source_1,
@@ -257,7 +279,6 @@ auto run_simulation(auto all_event_types,
   }
 
   std::cout << "Ran with " << resets << " resets\n";
-  COZ_PROGRESS_NAMED("End of Filter\n");
 
   return (results);
 }

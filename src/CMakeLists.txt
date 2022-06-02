@@ -11,7 +11,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/uvira.cpp.in ${CMAKE_CURRENT_SOURCE_D
 find_package(range-v3 CONFIG)
 find_package(rangesnext CONFIG)
 find_package(daw-json-link CONFIG REQUIRED)
-find_package(coz-profiler CONFIG)
 
 add_library(cfepi INTERFACE)
 target_include_directories(cfepi INTERFACE include)
@@ -23,7 +22,6 @@ target_link_libraries(
           range-v3::range-v3
           rangesnext::rangesnext
           daw::daw-json-link
-          coz::coz
 )
 add_executable(cfepi_test tests.cpp)
 target_link_libraries(cfepi_test cfepi)
