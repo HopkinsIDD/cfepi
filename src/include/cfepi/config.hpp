@@ -222,7 +222,7 @@ constexpr auto sometimes_true_event =
 
 template<typename states_t, typename any_event>
 std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>
-parse_json_event_filter(std::string_view json, states_t states)
+  parse_json_event_filter(std::string_view json, states_t states)
 {
   std::string_view function_name = from_json<std::string_view>(json, "function");
   if (function_name == "do_nothing") { return trivial_event_filter; }
@@ -230,7 +230,8 @@ parse_json_event_filter(std::string_view json, states_t states)
     return parse_json_event_filter_flat_reduction<states_t, any_event>(parse_json_select(json, "parameters"));
   }
   if (function_name == "flat_reduction_single_compartment") {
-    return parse_json_event_filter_flat_reduction_single_compartment<states_t, any_event>(parse_json_select(json, "parameters"), states);
+    return parse_json_event_filter_flat_reduction_single_compartment<states_t, any_event>(
+      parse_json_select(json, "parameters"), states);
   }
   // fprintf(stderr, "No event filter function named %s", function_name);
   throw "No such event filter function";
@@ -255,7 +256,7 @@ std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::d
 
 template<typename states_t, typename any_event>
 std::function<bool(const any_event &, const cfepi::sir_state<states_t> &, std::default_random_engine &)>
-parse_json_event_filter_flat_reduction_single_compartment(std::string_view json, states_t states)
+  parse_json_event_filter_flat_reduction_single_compartment(std::string_view json, states_t states)
 {
   auto reduction_percentage = from_json<double>(json, "reduction_percentage");
   auto event_index = from_json<size_t>(json, "event_index");
@@ -268,8 +269,8 @@ parse_json_event_filter_flat_reduction_single_compartment(std::string_view json,
            std::default_random_engine &rng) {
     std::uniform_real_distribution<> dist(0.0, 1.0);
     if (event.index() == event_index) {
-      if ( state.potential_states[index_to_filter][compartment_to_filter] == 1 ) {
-	if (dist(rng) < reduction_percentage) { return (false); }
+      if (state.potential_states[index_to_filter][compartment_to_filter] == 1) {
+        if (dist(rng) < reduction_percentage) { return (false); }
       }
     }
     return (true);
@@ -306,21 +307,25 @@ std::function<bool(const cfepi::filtration_setup<states_t, any_event> &,
            std::default_random_engine &rng __attribute__((unused))) {
     std::size_t this_time = static_cast<size_t>(new_state.time > 0 ? new_state.time : 0);
     if (this_time < simulation_length) {
-      std::cout << "counts : ";
-      for (auto x : counts_to_filter_to) {
-	std::cout << x << ", ";
-      }
-      std::cout << "\n";
+
+      // std::cout << "counts : ";
+      // for (auto x : counts_to_filter_to) {
+       // std::cout << x << ", ";
+      // }
+      // std::cout << "\n";
+
       auto incidence_counts =
         cfepi::aggregate_state(setup.states_entered).potential_state_counts[1 << compartment_to_filter];
-      if (incidence_counts < counts_to_filter_to[this_time]) {
-        std::cout << "low ";
-      } else if (incidence_counts > counts_to_filter_to[this_time]) {
-        std::cout << "high ";
-      } else {
-        std::cout << "right ";
-      }
-      std::cout << incidence_counts << " modeled vs " << counts_to_filter_to[this_time] << " expected\n";
+
+      // if (incidence_counts < counts_to_filter_to[this_time]) {
+        // std::cout << "low ";
+      // } else if (incidence_counts > counts_to_filter_to[this_time]) {
+        // std::cout << "high ";
+      // } else {
+        // std::cout << "right ";
+      // }
+      // std::cout << incidence_counts << " modeled vs " << counts_to_filter_to[this_time] << " expected\n";
+
       return (incidence_counts == counts_to_filter_to[this_time]);
     }
     return (true);
@@ -399,19 +404,23 @@ template<auto arr> void print_first_element() { std::cout << arr[0] << "\n"; }
 }// namespace daw::json
 
 namespace cfepi {
-  template<const std::string_view &json_config> void run_simulation_from_config(epidemic_time_t epidemic_length = 365, size_t simulation_seed = 2)
+template<const std::string_view &json_config>
+void run_simulation_from_config(epidemic_time_t epidemic_length = 365, size_t simulation_seed = 2)
 {
-  constexpr auto states_size = daw::json::parse_json_array_size<std::string_view>(daw::json::parse_json_select(json_config, "states"));
-  constexpr auto states_arr =
-    daw::json::parse_json_array_values<std::string_view, states_size>(daw::json::parse_json_select(json_config, "states"));
+  constexpr auto states_size =
+    daw::json::parse_json_array_size<std::string_view>(daw::json::parse_json_select(json_config, "states"));
+  constexpr auto states_arr = daw::json::parse_json_array_values<std::string_view, states_size>(
+    daw::json::parse_json_select(json_config, "states"));
   constexpr cfepi::config_epidemic_states<states_size> states(states_arr);
   constexpr auto num_event_types =
-    daw::json::parse_json_array_size<daw::json::json_delayed<daw::json::no_name, std::string_view>>(daw::json::parse_json_select(json_config, "events"));
+    daw::json::parse_json_array_size<daw::json::json_delayed<daw::json::no_name, std::string_view>>(
+      daw::json::parse_json_select(json_config, "events"));
   constexpr std::array<size_t, num_event_types> event_sizes =
-    daw::json::parse_json_array_event_type_sizes<decltype(states), num_event_types>(daw::json::parse_json_select(json_config, "events"));
+    daw::json::parse_json_array_event_type_sizes<decltype(states), num_event_types>(
+      daw::json::parse_json_select(json_config, "events"));
 
-  auto initial_conditions =
-    daw::json::parse_json_initial_conditions<decltype(states)>(states, daw::json::parse_json_select(json_config, "initial_conditions"));
+  auto initial_conditions = daw::json::parse_json_initial_conditions<decltype(states)>(
+    states, daw::json::parse_json_select(json_config, "initial_conditions"));
 
   auto always_true_event = [](const auto &param __attribute__((unused)),
                              const auto &state __attribute__((unused)),
@@ -422,25 +431,28 @@ namespace cfepi {
   auto do_nothing = [](auto &param __attribute__((unused)), std::default_random_engine &rng __attribute__((unused))) {
     return;
   };
-  typedef
-    typename daw::json::parse_json_array_event_type_struct<decltype(states), event_sizes>::any_event_type any_config_event_type;
+  typedef typename daw::json::parse_json_array_event_type_struct<decltype(states), event_sizes>::any_event_type
+    any_config_event_type;
   typedef typename cfepi::any_event<any_config_event_type>::type any_config_event;
 
-  auto config_worlds =
-    daw::json::parse_json_filtration_setups<decltype(states), any_config_event>(daw::json::parse_json_select(json_config, "worlds"), states);
+  auto config_worlds = daw::json::parse_json_filtration_setups<decltype(states), any_config_event>(
+    daw::json::parse_json_select(json_config, "worlds"), states);
 
-  constexpr auto num_events = daw::json::parse_json_array_size<daw::json::json_delayed<daw::json::no_name, std::string_view>>(
-    daw::json::parse_json_select(json_config, "events"));
+  constexpr auto num_events =
+    daw::json::parse_json_array_size<daw::json::json_delayed<daw::json::no_name, std::string_view>>(
+      daw::json::parse_json_select(json_config, "events"));
 
-  constexpr auto event_type_tuple = daw::json::parse_json_array_event_type_struct<decltype(states), event_sizes>{}.parse(
-    states, daw::json::parse_json_select(json_config, "events"));
+  constexpr auto event_type_tuple =
+    daw::json::parse_json_array_event_type_struct<decltype(states), event_sizes>{}.parse(
+      states, daw::json::parse_json_select(json_config, "events"));
 
   cfepi::filtration_setup<decltype(states), any_config_event_type>{
     initial_conditions, always_true_event, always_true_state, do_nothing
   };
 
   constexpr std::array<double, num_events> event_rates =
-    daw::json::parse_json_array_event_type_rates<double, num_events>(daw::json::parse_json_select(json_config, "events"));
+    daw::json::parse_json_array_event_type_rates<double, num_events>(
+      daw::json::parse_json_select(json_config, "events"));
 
   cfepi::run_simulation<decltype(states), any_config_event_type, any_config_event>(
     event_type_tuple, initial_conditions, event_rates, config_worlds, epidemic_length, simulation_seed);

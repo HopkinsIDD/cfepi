@@ -87,6 +87,7 @@ auto single_event_type_run(auto &all_event_types,
   const size_t seed)
 {
   random_source_1.seed(seed);
+  // This could be constructed once per time and accessed as a tuple
   auto event_range_generator = single_type_event_generator<std::variant_alternative_t<event_index, any_event_type>>(
     std::get<event_index>(all_event_types), current_state);
 
@@ -94,24 +95,33 @@ auto single_event_type_run(auto &all_event_types,
   if constexpr (!std::ranges::input_range<decltype(event_range_generator.cartesian_range())>) {
     throw "This shouldn't happen";
   }
-  auto this_event_range = event_range_generator.event_range();
+  auto all_possible_events_range = event_range_generator.event_range();
 
-  auto sampled_event_view =
-    this_event_range | probability::views::sample(event_probabilities[event_index], random_source_1);
+  auto all_sampled_events_view =
+    all_possible_events_range | probability::views::sample(event_probabilities[event_index], random_source_1);
 
   size_t counter = 0UL;
-  auto setup_view = std::ranges::views::iota(0UL, setups_by_filter.size());
-  auto view_to_filter = ranges::views::cartesian_product(setup_view, sampled_event_view);
+  auto setup_index_range = std::ranges::views::iota(0UL, setups_by_filter.size());
+  auto sampled_events_by_setup_view = ranges::views::cartesian_product(setup_index_range, all_sampled_events_view);
 
-  auto filtered_view = ranges::filter_view(
-    view_to_filter, [setups_by_filter = std::as_const(setups_by_filter), &random_source_1](const auto &x) {
+  auto filtered_events_by_setup_view = ranges::filter_view(sampled_events_by_setup_view,
+    [setups_by_filter = std::as_const(setups_by_filter), &random_source_1, &event_index](const auto &x) {
       const auto &filter = setups_by_filter[std::get<0>(x)].event_filter_;
       const auto &state = setups_by_filter[std::get<0>(x)].current_state;
-      const auto &event = std::get<1>(x);
+      std::in_place_index_t<event_index> variant_index{};
+      const any_event event(variant_index, std::get<1>(x));
       return (filter(event, state, random_source_1));
     });
 
-  for(const auto x : filtered_view) {
+  /*
+  auto valid_events_by_setup_view = ranges::filter_view(
+    filtered_events_by_setup_view, [setups_by_filter = std::as_const(setups_by_filter)](const auto &x) {
+      return (any_state_check_preconditions<any_event_type, states_t>{ setups_by_filter[std::get<0>(x)].current_state }(
+        std::get<1>(x)));
+    });
+  */
+
+  for (const auto x : sampled_events_by_setup_view) {
     auto &setup = setups_by_filter[std::get<0>(x)];
     if (any_state_check_preconditions<any_event_type, states_t>{ setup.current_state }(std::get<1>(x))) {
       any_event_apply_entered_states{ setup.states_entered }(std::get<1>(x));

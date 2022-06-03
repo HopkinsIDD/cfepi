@@ -567,7 +567,7 @@ TEST_CASE("JSON config parsing works for full world.", "[config]") {
 }
 
 TEST_CASE("JSON config parsing works for whole config.", "[config]") {
-  constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
+  constexpr std::string_view json_config = "@SIR_JSON_CONFIG_CONTENTS@";
   try {
 
     std::cout << json_config << "\n";

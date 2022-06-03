@@ -306,9 +306,9 @@ TEST_CASE("SEIR model works with state filter", "[sir_generator]") {
                       std::default_random_engine &rng __attribute__((unused))) { return; };
   constexpr cfepi::epidemic_time_t simulation_length{ 35 };
   std::array<cfepi::person_t, static_cast<size_t>(simulation_length + 1)> counts_to_filter_to{ 1,
-    1,
     4,
     5,
+    10,
     20,// 5
     31,
     57,
@@ -347,8 +347,24 @@ TEST_CASE("SEIR model works with state filter", "[sir_generator]") {
       const cfepi::sir_state<seir_epidemic_states> &param __attribute__((unused)),
       std::default_random_engine &rng __attribute__((unused))) {
       std::size_t this_time = static_cast<size_t>(param.time);
-      return (aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I]
-              == counts_to_filter_to[this_time]);
+
+      // std::cout << "counts : ";
+      // for (auto x : counts_to_filter_to) {
+      //   std::cout << x << ", ";
+      // }
+      // std::cout << "\n";
+
+      auto incidence_counts = cfepi::aggregate_state(param).potential_state_counts[1 << seir_epidemic_states::I];
+      // if (incidence_counts < counts_to_filter_to[this_time]) {
+      //   std::cout << "low ";
+      // } else if (incidence_counts > counts_to_filter_to[this_time]) {
+      //   std::cout << "high ";
+      // } else {
+      //   std::cout << "right ";
+      // }
+      // std::cout << incidence_counts << " modeled vs " << counts_to_filter_to[this_time] << " expected\n";
+
+      return (incidence_counts == counts_to_filter_to[this_time]);
     };
   cfepi::filtration_setup<seir_epidemic_states, any_seir_event> test{
     initial_conditions, always_true_event, filter_by_infected, do_nothing
@@ -635,7 +651,12 @@ TEST_CASE("config based SIR model works without config", "[sir_generator]") {
 }
 
 TEST_CASE("config based SIR model works", "[sir_generator]") {
-  const static constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
+  const static constexpr std::string_view json_config = "@SIR_JSON_CONFIG_CONTENTS@";
+  cfepi::run_simulation_from_config<json_config>();
+}
+
+TEST_CASE("config based SEIR model works", "[seir_generator]") {
+  const static constexpr std::string_view json_config = "@SEIR_JSON_CONFIG_CONTENTS@";
   cfepi::run_simulation_from_config<json_config>();
 }
 

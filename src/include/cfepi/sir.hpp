@@ -290,7 +290,7 @@ template<typename states_t> struct any_sir_event_get_affected_person {
 };
 
 template<typename any_event, typename states_t> struct any_state_check_preconditions {
-  sir_state<states_t> &this_sir_state;
+  const sir_state<states_t> &this_sir_state;
   bool operator()(const auto x) const {
     auto rc = true;
     size_t event_size = x.affected_people.size();

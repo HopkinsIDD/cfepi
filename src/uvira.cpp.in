@@ -10,7 +10,7 @@ int main() {
   const static constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
   std::default_random_engine rand{};
   // #pragma omp parallel for
-  for ( size_t i = 0 ; i < 100; ++i ) {
+  for ( size_t i = 0 ; i < 200; ++i ) {
     cfepi::run_simulation_from_config<json_config>(10UL ,rand());
   }
 
