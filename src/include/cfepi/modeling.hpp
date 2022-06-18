@@ -7,6 +7,29 @@
 
 namespace cfepi {
 
+template<typename states_t, typename any_event, typename F>
+concept event_filter_function_like =
+  requires(F f, const any_event &e, const sir_state<states_t> &s, std::default_random_engine &r)
+{
+  {
+    F(e, s, r)
+    } -> std::same_as<bool>;
+};
+
+template<typename states_t, typename any_event, typename F>
+concept state_filter_function_like = requires(F f, const sir_state<states_t> &s, std::default_random_engine &r)
+{
+  {
+    F(s, s, s, r)
+    } -> std::same_as<bool>;
+};
+
+template<typename states_t, typename any_event, typename F>
+concept state_modifier_function_like = requires(F f, sir_state<states_t> &s, std::default_random_engine &r)
+{
+  { F(s, r) };
+};
+
 /*!
  * \class filtration_setup
  * \brief Data structure for storing a single world's worth of data.
@@ -16,11 +39,12 @@ namespace cfepi {
  */
 template<typename states_t, typename any_event> struct filtration_setup
 {
-  using filtration_tuple =
-    std::tuple<std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)>,
-      std::function<
-        bool(const filtration_setup<states_t, any_event> &, const sir_state<states_t> &, std::default_random_engine &)>,
-      std::function<void(sir_state<states_t> &, std::default_random_engine &)>>;
+  using event_filter_fun_type =
+    std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)>;
+  using state_filter_fun_type = std::function<
+    bool(const filtration_setup<states_t, any_event> &, const sir_state<states_t> &, std::default_random_engine &)>;
+  using state_modify_fun_type = std::function<void(sir_state<states_t> &, std::default_random_engine &)>;
+  using filtration_tuple = std::tuple<event_filter_fun_type, state_filter_fun_type, state_modify_fun_type>;
 
   //! \brief The current state of the world
   sir_state<states_t> current_state;
@@ -29,29 +53,24 @@ template<typename states_t, typename any_event> struct filtration_setup
   //! \brief The states that have not been left since reset
   sir_state<states_t> states_remained;
   //! \brief A filter to use to apply only some events. Returns true if event should be kept.
-  std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)> event_filter_;
+  event_filter_fun_type event_filter_;
   //! \brief A filter to use to restrict which states are allowed. Applies at each time step to
   //! determine if the current state is valid. Returns true if state is ok, and false if this time
   //! step should be re-done.
-  std::function<
-    bool(const filtration_setup<states_t, any_event> &, const sir_state<states_t> &, std::default_random_engine &)>
-    state_filter_;
+  state_filter_fun_type state_filter_;
   //! \brief A filter to modify the state used to apply certain kinds of interventions.
-  std::function<void(sir_state<states_t> &, std::default_random_engine &)> state_modifier_;
+  state_modify_fun_type state_modifier_;
   //! \brief Construct from an initial state and a filter. This is the standard constructor
   filtration_setup(const sir_state<states_t> &initial_state,
-    const std::function<bool(const any_event &, const sir_state<states_t> &, std::default_random_engine &)>
-      &event_filter,
-    const std::function<bool(const filtration_setup<states_t, any_event> &,
-      const sir_state<states_t> &,
-      std::default_random_engine &)> &state_filter,
-    const std::function<void(sir_state<states_t> &, std::default_random_engine &)> &state_modifier)
+    const event_filter_fun_type &event_filter,
+    const state_filter_fun_type &state_filter,
+    const state_modify_fun_type &state_modifier)
     : current_state(initial_state), states_entered(initial_state), states_remained(initial_state),
       event_filter_(event_filter), state_filter_(state_filter), state_modifier_(state_modifier)
   {
     states_entered.reset();
   };
-  filtration_setup(const sir_state<states_t> &initial_state, const filtration_tuple &filters )
+  filtration_setup(const sir_state<states_t> &initial_state, const filtration_tuple &filters)
     : current_state(initial_state), states_entered(initial_state), states_remained(initial_state),
       event_filter_(std::get<0>(filters)), state_filter_(std::get<1>(filters)), state_modifier_(std::get<2>(filters))
   {
@@ -78,11 +97,11 @@ template<typename states_t, typename any_event> struct filtration_setup
 namespace cfepi {
 
 template<typename states_t, typename any_event_type, typename any_event>
-auto single_event_type_run(auto &all_event_types,
+auto single_event_type_run(const auto &all_event_types,
   auto &setups_by_filter,
   auto &random_source_1,
-  auto &current_state,
-  auto &event_probabilities,
+  const auto &current_state,
+  const auto &event_probabilities,
   const auto event_index,
   const size_t seed)
 {
@@ -95,12 +114,9 @@ auto single_event_type_run(auto &all_event_types,
   if constexpr (!std::ranges::input_range<decltype(event_range_generator.cartesian_range())>) {
     throw "This shouldn't happen";
   }
-  auto all_possible_events_range = event_range_generator.event_range();
 
   auto all_sampled_events_view =
-    all_possible_events_range | probability::views::sample(event_probabilities[event_index], random_source_1);
-
-  size_t counter = 0UL;
+    event_range_generator.event_range() | probability::views::sample(event_probabilities[event_index], random_source_1);
   auto setup_index_range = std::ranges::views::iota(0UL, setups_by_filter.size());
   auto sampled_events_by_setup_view = ranges::views::cartesian_product(setup_index_range, all_sampled_events_view);
 
@@ -113,77 +129,28 @@ auto single_event_type_run(auto &all_event_types,
       return (filter(event, state, random_source_1));
     });
 
-  /*
-  auto valid_events_by_setup_view = ranges::filter_view(
-    filtered_events_by_setup_view, [setups_by_filter = std::as_const(setups_by_filter)](const auto &x) {
-      return (any_state_check_preconditions<any_event_type, states_t>{ setups_by_filter[std::get<0>(x)].current_state }(
-        std::get<1>(x)));
-    });
-  */
-
   for (const auto x : sampled_events_by_setup_view) {
     auto &setup = setups_by_filter[std::get<0>(x)];
     if (any_state_check_preconditions<any_event_type, states_t>{ setup.current_state }(std::get<1>(x))) {
       any_event_apply_entered_states{ setup.states_entered }(std::get<1>(x));
       any_event_apply_left_states{ setup.states_remained }(std::get<1>(x));
     }
-    ++counter;
   }
 };
-
-template<typename states_t, typename any_event_type, typename any_event>
-auto single_time_run(auto &results,
-  auto &setups_by_filter,
-  auto &all_event_types,
-  auto &t,
-  auto &random_source_1,
-  auto &event_probabilities,
-  auto &simulation_seed,
-  auto &resets)
-{
-
-  if (std::begin(setups_by_filter) == std::end(setups_by_filter)){
-    throw "There should be at least one setup\n";
-  }
-  auto first_setup = (*std::begin(setups_by_filter)).current_state;
-  const auto current_state = std::transform_reduce(
-    std::begin(setups_by_filter)+1,
-    std::end(setups_by_filter),
-    first_setup,
-    [](const auto &x, const auto &y) { return (x || y); },
-    [](const auto &x) { return (x.current_state); });
-
-  bool still_working = true;
-  while( still_working ) {
-    still_working = single_reset_run<states_t, any_event_type, any_event>(
-      setups_by_filter,
-      current_state,
-      all_event_types,
-      t,
-      random_source_1,
-      event_probabilities,
-      simulation_seed);
-    ++resets;
-  }
-  --resets;
-
-  results.push_back(ranges::to<std::vector>(
-    ranges::views::transform(setups_by_filter, [](const auto &x) { return (aggregate_state(x.current_state)); })));
-}
 
 template<typename states_t, typename any_event_type, typename any_event>
 auto single_reset_run(
   auto &setups_by_filter,
   const auto &current_state,
-  auto &all_event_types,
-  auto &t,
+  const auto &all_event_types,
+  auto t,
   auto &random_source_1,
-  auto &event_probabilities,
+  const auto &event_probabilities,
   auto &simulation_seed)
 {
 
   const auto seeded_single_event_type_run =
-    [&all_event_types, &t, &setups_by_filter, &random_source_1, &current_state, &event_probabilities, &simulation_seed](
+    [&all_event_types, &setups_by_filter, &random_source_1, &current_state, &event_probabilities, &simulation_seed](
       const auto event_index) {
       simulation_seed = random_source_1();
       // ++simulation_seed;
@@ -218,16 +185,58 @@ auto single_reset_run(
       return setup.state_filter_(setup, new_state, random_source_1);
     });
 
-  if (all_states_allowed) {
-    for (auto i : std::ranges::views::iota(0UL, std::size(states_next))) {
-      setups_by_filter[i].current_state = states_next[i];
-      setups_by_filter[i].reset();
-    }
-    return false;
-  } else {
+  return(all_states_allowed ? std::optional<decltype(states_next)>{states_next} : std::nullopt);
+
+}
+
+template<typename states_t, typename any_event_type, typename any_event>
+auto single_time_run(
+  auto &setups_by_filter,
+  auto &all_event_types,
+  auto &t,
+  auto &random_source_1,
+  auto &event_probabilities,
+  auto &simulation_seed,
+  auto &resets)
+{
+  // std::cout << "t is " << t << "\n";
+
+  // setups_by_filter should be garaunteed non-empty
+
+  auto first_setup = (*std::begin(setups_by_filter)).current_state;
+  const auto current_state = std::transform_reduce(
+    std::begin(setups_by_filter)+1,
+    std::end(setups_by_filter),
+    first_setup,
+    [](const auto &x, const auto &y) { return (x || y); },
+    [](const auto &x) { return (x.current_state); });
+
+  std::optional<std::vector<cfepi::sir_state<states_t>>> run_results;
+
+
+  do {
     ranges::for_each(setups_by_filter, [&t](auto &x) { x.reset(); });
-    return(true);
+    run_results = single_reset_run<states_t, any_event_type, any_event>(
+      setups_by_filter,
+      current_state,
+      all_event_types,
+      t,
+      random_source_1,
+      event_probabilities,
+      simulation_seed);
+    ++resets;
+  } while ( !run_results.has_value() );
+  --resets;
+
+  const auto states_new = (*run_results);
+
+  for (auto i : std::ranges::views::iota(0UL, std::size(states_new))) {
+    setups_by_filter[i].current_state = states_new[i];
+    setups_by_filter[i].reset();
   }
+
+  return(ranges::to<std::vector>(
+    ranges::views::transform(setups_by_filter, [](const auto &x) { return (aggregate_state(x.current_state)); })));
 }
 
 template<typename states_t, typename any_event>
@@ -258,6 +267,10 @@ auto run_simulation(auto all_event_types,
   const epidemic_time_t epidemic_duration = 365,
   size_t simulation_seed = 2)
 {
+
+  if (std::begin(filters) == std::end(filters)){
+    throw "There should be at least one setup\n";
+  }
   size_t resets = 0;
 
   std::default_random_engine random_source_1{ simulation_seed };
@@ -278,7 +291,8 @@ auto run_simulation(auto all_event_types,
   results.push_back(first_result);
 
   for (epidemic_time_t t = 0UL; t < epidemic_duration; ++t) {
-    single_time_run<states_t, any_event_type, any_event>(results,
+    std::cout << "Time " << t << "\n";
+    auto result = single_time_run<states_t, any_event_type, any_event>(
       setups_by_filter,
       all_event_types,
       t,
@@ -286,6 +300,7 @@ auto run_simulation(auto all_event_types,
       event_probabilities,
       simulation_seed,
       resets);
+    results.push_back(result);
   }
 
   std::cout << "Ran with " << resets << " resets\n";

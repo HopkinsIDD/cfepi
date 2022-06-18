@@ -1,31 +1,36 @@
 {
-    "states": [
-      "S",
-      "E",
-      "I",
-      "R"
-    ],
+    "states": ["S", "E", "I1", "I2", "I3", "R"],
     "events":
     [
 	{
 	    "source": [ ["E"] ],
-	    "destination": [ {"index": 0, "compartment": "I"} ],
-	    "rate": 0.444444
+	    "destination": [ {"index": 0, "compartment": "I1"} ],
+	    "rate": 0.192307692307692
 	},
 	{
-	    "source": [ ["I"] ],
+	    "source": [ ["I1"] ],
+	    "destination": [ {"index": 0, "compartment": "I2"} ],
+	    "rate": 0.75
+	},
+	{
+	    "source": [ ["I2"] ],
+	    "destination": [ {"index": 0, "compartment": "I3"} ],
+	    "rate": 0.75
+	},
+	{
+	    "source": [ ["I3"] ],
 	    "destination": [ {"index": 0, "compartment": "R"} ],
-	    "rate": 0.444444
+	    "rate": 0.75
 	},
 	{
 	    "source": [ [ "I" ], [ "S" ] ],
 	    "destination": [ {"index": 1, "compartment": "E"} ],
-	    "comment_rate": "1.05 * .44444444444444 / 273613 = 0.000001705572",
-	    "rate": 0.000001705572
+	    "comment_rate": "2.3 * 0.25 / 331002651 = 0.000000001737146",
+	    "rate": 0.000000001737146
 	}
     ],
     "initial_conditions": {
-	"S": 273612,
+	"S": 33100265,
 	"I": 1
     },
     "worlds": [

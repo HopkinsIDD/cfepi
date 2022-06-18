@@ -8,6 +8,9 @@
 int main() {
 
   const static constexpr std::string_view json_config = "@COVID_JSON_CONFIG_CONTENTS@";
-  cfepi::run_simulation_from_config<json_config>(365*3, 1000);
+  for (auto i : std::ranges::views::iota(0,1)) {
+    std::cout << "New run\n";
+    cfepi::run_simulation_from_config<json_config>(365*3, 1000);
+  }
 
 }

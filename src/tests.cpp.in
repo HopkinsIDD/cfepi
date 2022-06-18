@@ -6,7 +6,7 @@
 #include <cfepi/sample_view.hpp>
 
 namespace detail {
-constexpr std::string_view json_config = "@JSON_CONFIG_CONTENTS@";
+constexpr std::string_view json_config = "@TEST_JSON_CONFIG_CONTENTS@";
 constexpr auto states_size = daw::json::parse_json_array_size<std::string_view>(
   daw::json::parse_json_select(json_config, "states"));
 constexpr auto states_arr = daw::json::parse_json_array_values<std::string_view, states_size>(

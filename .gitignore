@@ -43,3 +43,8 @@ $RECYCLE.BIN/
 .TemporaryItems
 ehthumbs.db
 Thumbs.db
+/src/covid.cpp
+/src/tests.cpp
+/src/uvira.cpp
+/test/constexpr_tests.cpp
+/test/tests.cpp

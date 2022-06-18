@@ -20,6 +20,7 @@
 #include <cor3ntin/rangesnext/to.hpp>
 #include <cor3ntin/rangesnext/product.hpp>
 #include <cor3ntin/rangesnext/enumerate.hpp>
+#include <fmt/core.h>
 
 #ifndef __SIR_H_
 #define __SIR_H_
@@ -217,7 +218,7 @@ concept is_event_type_like =
   std::same_as<typename T::state_type, typename T::state_type> && requires(T e, size_t i) {
   { T::size() } -> std::unsigned_integral;
   { e.preconditions[i][i] } -> std::convertible_to<bool>;
-  // { e.postconditions[i] } -> std::convertible_to<typename T::state_type>;
+  { e.postconditions[i] } -> std::convertible_to<std::optional<typename T::state_type::state>>;
   { std::size(e) } -> std::unsigned_integral;
 };
 
@@ -227,39 +228,32 @@ struct sir_event {
   epidemic_time_t time = -1;
   std::array<person_t, event_type::size()> affected_people = {};
   event_type type;
-  sir_event() noexcept = default;
-  sir_event(const sir_event &) = default;
-  explicit sir_event(const sir_event_type<typename event_type::state_type, event_type::size()> &other)
-    : time(-1), affected_people({}),
-      type(sir_event_type<typename event_type::state_type, event_type::size()>(other)){};
 };
 
-template<typename states_t> struct interaction_event_type : public sir_event_type<states_t, 2> {
+template<typename states_t> struct interaction_event_type : public sir_event_type<states_t, 2>
+{
   using sir_event_type<states_t, 2>::preconditions;
   using sir_event_type<states_t, 2>::postconditions;
   interaction_event_type(const interaction_event_type &) = default;
-  constexpr interaction_event_type(
-    const std::bitset<std::size(states_t{})> &preconditions_for_first_person,
+  constexpr interaction_event_type(const std::bitset<std::size(states_t{})> &preconditions_for_first_person,
     const std::bitset<std::size(states_t{})> &preconditions_for_second_person,
-    const typename states_t::state result_state) {
-    preconditions = { preconditions_for_first_person, preconditions_for_second_person };
-    postconditions[0] = result_state;
-  }
+    const typename states_t::state result_state)
+    : sir_event_type<states_t, 2>(std::array<std::bitset<std::size(states_t{})>, 2>{ preconditions_for_first_person,
+                                    preconditions_for_second_person },
+      std::array<std::optional<typename states_t::state>, 2>{ result_state, std::nullopt }){};
 };
 
-template<typename states_t> struct transition_event_type : public sir_event_type<states_t, 1> {
+template<typename states_t> struct transition_event_type : public sir_event_type<states_t, 1>
+{
   using sir_event_type<states_t, 1>::preconditions;
   using sir_event_type<states_t, 1>::postconditions;
   transition_event_type(const transition_event_type &) = default;
   constexpr transition_event_type(const std::bitset<std::size(states_t{})> &_preconditions,
-    const states_t::state result_state) {
-    preconditions = { _preconditions };
-    postconditions[0] = result_state;
-  }
+    const states_t::state result_state)
+    : sir_event_type<states_t, 1>(std::array<std::bitset<std::size(states_t{})>, 1>{ _preconditions },
+      std::array<std::optional<typename states_t::state>, 1>{ result_state })
+  {}
 };
-
-template<typename states_t, size_t N, typename = std::make_index_sequence<N>>
-struct sir_event_constructor;
 
 /*******************************************************************************
  * Helper functions for any_sir_event variant type                             *
@@ -274,11 +268,16 @@ template<typename any_event_type, size_t event_index> struct event_size_by_event
 struct any_sir_event_print {
   std::string prefix;
   void operator()(const auto &x) const {
+    fmt::print("{} : {} {} {}", prefix, time, x.affected_people.size(), x.affected_people);
+    /*
+    printf("%s", prefix);
+    printf("%s", std::fmt
     std::cout << prefix;
     std::cout << "time " << x.time << " ";
     std::cout << "size " << x.affected_people.size() << " ";
     for (auto it : x.affected_people) { std::cout << it << ", "; }
     std::cout << std::endl;
+    */
   }
 };
 
