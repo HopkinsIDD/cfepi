@@ -11,7 +11,7 @@ int main() {
   std::default_random_engine rand{};
 
   for (auto i = 0; i < 100; ++i) {
-    cfepi::run_simulation_from_config<json_config>(10UL ,rand());
-    // cfepi::run_simulation_from_config<json_config>(365UL ,rand());
+    // cfepi::run_simulation_from_config<json_config>(10UL ,rand());
+    cfepi::run_simulation_from_config<json_config>(365UL ,rand());
   }
 }
