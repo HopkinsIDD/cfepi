@@ -4,8 +4,16 @@
 \alias{run_scenario}
 \title{run_scenario}
 \usage{
-run_scenario(filename, init, beta_type, susceptible_type, beta_pars,
-  susceptible_pars, ntime, ntrial = 1000)
+run_scenario(
+  filename,
+  init,
+  beta_type,
+  susceptible_type,
+  beta_pars,
+  susceptible_pars,
+  ntime,
+  ntrial = 1000
+)
 }
 \arguments{
 \item{filename}{A string containing the desired output stub.

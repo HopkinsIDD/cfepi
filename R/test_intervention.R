@@ -1,6 +1,6 @@
-try({remove.packages('counterfactual')},silent=T)
+try({remove.packages('cfepi')},silent=T)
 install.packages('package',type='source',repos=NULL)
-library(counterfactual)
+library(cfepi)
 
 source("R/intervention_params.R")
 

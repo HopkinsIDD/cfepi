@@ -27,7 +27,7 @@
 #'   making it agent based, and so multiple trials are recommended.
 #' @return This function generates \code{2*ntrial} files where
 #'   determined by \code{filename}
-#' @useDynLib counterfactual setupCounterfactualAnalysis
+#' @useDynLib cfepi setupCounterfactualAnalysis
 setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
   .Call('setupCounterfactualAnalysis',
     filename,
@@ -80,7 +80,7 @@ setup_counterfactual <- function(filename,init,inter,trans,ntime,ntrial = 1000){
 #'   state and one column for the simulation number.  It has one row
 #'   for each time step, and the values are the number of people in
 #'   that state at that time.
-#' @useDynLib counterfactual runIntervention
+#' @useDynLib cfepi runIntervention
 run_scenario <- function(filename,init,beta_type,susceptible_type,beta_pars,susceptible_pars,ntime,ntrial = 1000){
   .Call('runIntervention',
     filename,

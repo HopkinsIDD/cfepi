@@ -1,5 +1,5 @@
 source("R/intervention_params.R")
-library(counterfactual)
+library(cfepi)
 library(dplyr)
 
 testing = TRUE

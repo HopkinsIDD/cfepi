@@ -4,8 +4,13 @@
 \alias{calculate_residual}
 \title{calculate_residual}
 \usage{
-calculate_residual(counterfactual_frame)
+calculate_residual(counterfactual_frame, base_name = "None_None")
 }
 \arguments{
 \item{counterfactual_frame}{The data frame returned by read_scenario}
+
+\item{base_name}{Name of a column in the counterfactual_frame to compare other columns to.  Defaults to None_None (or no intervention).}
+}
+\description{
+Compare each intervention in a scenario to the Uncontrolled version.
 }

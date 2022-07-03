@@ -11,4 +11,4 @@ Encoding: UTF-8
 License: GPL (>= 2)
 Suggests:
     testthat
-RoxygenNote: 6.0.1
+RoxygenNote: 7.2.0

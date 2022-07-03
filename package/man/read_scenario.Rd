@@ -8,7 +8,9 @@ read_scenario(filename, ntrial = NULL)
 }
 \arguments{
 \item{filename}{The file stub used in setup_counterfactual and run_scenario}
+
+\item{ntrial}{optional parameter for number of trials to read (up to the maximum run)}
 }
 \description{
-Reads the results of a scenario into R.
+Reads the results of a counterfactual scenario into R.
 }

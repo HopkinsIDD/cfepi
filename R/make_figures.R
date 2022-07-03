@@ -2,9 +2,9 @@
 working_directory = rprojroot::find_root(rprojroot::has_file('.root')) # The location of the repository
 setwd(working_directory)
 
-try({remove.packages('counterfactual')},silent=T)
+try({remove.packages('cfepi')},silent=T)
 install.packages('package',type='source',repos=NULL)
-# try({remove.packages('counterfactual')},silent=T)
+# try({remove.packages('cfepi')},silent=T)
 # install.packages('package',type='source',repos=NULL)
 
 ## Some parameters:
@@ -12,10 +12,10 @@ ci_width = .9
 alpha = 1-ci_width
 
 
-if(!require(counterfactual)){
+if(!require(cfepi)){
   source("package/R/read.R")
 }
-# library(counterfactual)
+# library(cfepi)
 library(cowplot)
 library(ggplot2)
 library(dplyr)
