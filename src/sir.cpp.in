@@ -1,0 +1,16 @@
+#include <iostream>
+#include <range/v3/all.hpp>
+
+#include <cfepi/modeling.hpp>
+#include <cfepi/config.hpp>
+#include <cfepi/sample_view.hpp>
+
+int main() {
+
+  const static constexpr std::string_view json_config = "@SIR_JSON_CONFIG_CONTENTS@";
+  std::default_random_engine rand{};
+
+  for (auto i = 0; i < 10; ++i) {
+    cfepi::run_simulation_from_config<json_config>(365UL ,rand());
+  }
+}
