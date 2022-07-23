@@ -139,7 +139,7 @@ jobs:
     strategy:
       matrix:
         compiler:
-          - gcc-11
+          - gcc-12
         generator:
           - "Unix Makefiles"
         build_type:
